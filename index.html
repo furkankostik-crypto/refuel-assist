@@ -1279,18 +1279,23 @@
                 actSelect.appendChild(o);
             }
 
-            // Daha önce seçilmiş bir değer varsa (örn. kuyruk kodu ile), onu koru
-            if (state.selectedAct && actOptions.some(o => o.value === state.selectedAct)) {
-                actSelect.value = state.selectedAct;
-            }
+            // Seçilen varyant ACT içermiyorsa (veya belirsizse) varsayılan: YOK
+            // Not: A320 FAMILY varyantları kapasiteye göre gruplanıp PW1100G tek seçeneğe indirgenebilir;
+            // bu yüzden ACT bilgisi çoğu zaman state.selectedAct üzerinden yürür.
+            const vU = selectedValue;
+            if (vU.includes('3ACT')) state.selectedAct = '3ACT';
+            else if (vU.includes('1ACT')) state.selectedAct = '1ACT';
+            else if (!state.selectedAct || !actOptions.some(o => o.value === state.selectedAct)) state.selectedAct = 'YOK';
 
             actRow.classList.remove('is-hidden');
 
             // Eğer kullanıcı seçmediyse, default olarak YOK'u tamamlanmış say
             if (!state.selectedAct) {
                 state.selectedAct = 'YOK';
-                actSelect.value = 'YOK';
             }
+
+            // Seçimi her zaman UI'a yansıt (placeholder'da kalmasın)
+            actSelect.value = state.selectedAct;
 
             // Kuyruk kodu ile kilitliyse ve ACT'li uçaksa değiştirmeyi engelle
             actSelect.disabled = !!state.lockedByTail;

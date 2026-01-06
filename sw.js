@@ -1,4 +1,4 @@
-const CACHE_NAME = 'refuel-assist-v7.3.43';
+const CACHE_NAME = 'refuel-assist-v7.3.44';
 const urlsToCache = [
   './',
   './index.html',
