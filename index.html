@@ -350,7 +350,6 @@
                         </div>
                         <div class="selector-row is-hidden" id="act-row">
                             <select id="act-select" class="selector-select" aria-label="ACT Option">
-                                <option value="">ACT Seçeneği</option>
                             </select>
                         </div>
                     </div>
@@ -480,7 +479,12 @@
                 guide_foot: 'Bu pencere ilk kullanımda bir kez otomatik gösterilir.'
                 ,
                 sw_update_ready: 'Yeni sürüm hazır.',
-                sw_update_reload: 'YENİLE'
+                sw_update_reload: 'YENİLE',
+                act_none: 'İlave Merkez Tank Yok',
+                act_1: '1 İlave Merkez Tank',
+                act_2: '2 İlave Merkez Tank',
+                act_3: '3 İlave Merkez Tank',
+                act_placeholder: 'ACT Seçeneği'
             },
             en: {
                 subtitle: 'Flight Operations Support',
@@ -518,7 +522,12 @@
                 guide_foot: 'This dialog is auto-shown once on first use.'
                 ,
                 sw_update_ready: 'A new version is ready.',
-                sw_update_reload: 'RELOAD'
+                sw_update_reload: 'RELOAD',
+                act_none: 'No Additional Centre Tank',
+                act_1: '1 Additional Centre Tank',
+                act_2: '2 Additional Centre Tank',
+                act_3: '3 Additional Centre Tank',
+                act_placeholder: 'ACT Option'
             }
         };
 
@@ -678,8 +687,13 @@
             // Narrowbody canonical keys
             if (famU === 'A320 FAMILY' || famU === 'A319' || famU === 'A320' || famU === 'A321') {
                 const vU = v.toUpperCase();
+                const act = String(state.selectedAct || '').trim().toUpperCase();
+                // Eğer ACT seçiliyse, varyant ne olursa olsun A320neo-1ACT gibi anahtar dön
+                if (act === '1ACT' || act === '2ACT' || act === '3ACT') return 'A320neo-' + act;
                 // Basit eşleme: PW1100G -> neo, diğerleri -> ceo
-                if (vU.startsWith('PW1100G')) return 'A320neo';
+                if (vU.startsWith('PW1100G')) {
+                    return 'A320neo';
+                }
                 return 'A320-200';
             }
             if (famU === 'B737' || famU === 'B737 NG/MAX') {
@@ -785,8 +799,12 @@
                 return;
             }
 
+            console.log('[DEBUG] selectionTankKey:', key);
             window.fetchTankLimitsKg(key)
-                .then((limits) => renderKg(limits))
+                .then((limits) => {
+                    console.log('[DEBUG] limits:', limits);
+                    renderKg(limits);
+                })
                 .catch(() => renderKg(null));
         }
 
@@ -865,7 +883,7 @@
             return !!f;
         }
 
-        function calcUrlForSelection(model, variant, oem) {
+        function calcUrlForSelection(model, variant, oem, act) {
             const fam = String(model || '').toUpperCase();
             const mod = String(variant || '').toUpperCase();
             const brand = (oem === 'BOEING') ? 'BOEING' : 'AIRBUS';
@@ -873,7 +891,11 @@
             // tankLimitsKg anahtarını ayrı gönder (calc sayfasında limitler buradan okunur)
             const tankKey = (() => {
                 if (fam === 'A320 FAMILY' || fam === 'A319' || fam === 'A320' || fam === 'A321') {
-                    if (mod.startsWith('PW1100G')) return 'A320neo';
+                    if (mod.startsWith('PW1100G')) {
+                        const actU = String(act || '').toUpperCase();
+                        if (actU === '1ACT' || actU === '2ACT' || actU === '3ACT') return 'A320neo-' + actU;
+                        return 'A320neo';
+                    }
                     return 'A320-200';
                 }
                 if (fam === 'B737' || fam === 'B737 NG/MAX') {
@@ -1002,31 +1024,50 @@
         }
 
         function groupVariantsByCapacity(model, variants) {
+            const famU = String(model || '').trim().toUpperCase();
+
+            function variantTankKeyForGrouping(fam, variant) {
+                const fU = String(fam || '').trim().toUpperCase();
+                const vU = String(variant || '').trim().toUpperCase();
+                if (!fU || !vU) return '';
+
+                // Narrowbody capacity groups
+                if (fU === 'A320 FAMILY' || fU === 'A319' || fU === 'A320' || fU === 'A321') {
+                    // ACT seçim alanı ayrı: burada tüm PW1100G alt varyantlarını tek grupta topla
+                    if (vU.startsWith('PW1100G')) return 'A320neo';
+                    return 'A320-200';
+                }
+                if (fU === 'B737' || fU === 'B737 NG/MAX') {
+                    if (vU.includes('MAX')) return 'B737MAX8/MAX9';
+                    return 'B737-700/800/900ER';
+                }
+
+                // A330 capacity groups
+                if (fU === 'A330') {
+                    if (vU.startsWith('200') || vU === '243') return 'A330-200';
+                    if (vU.startsWith('300')) return 'A330-300';
+                    return 'A330-' + vU; // fallback
+                }
+
+                // Widebody: default grouping by exact variant (capacity may still be same, but this is deterministic)
+                return fU + ' ' + vU;
+            }
+
+            function pickMainVariant(members) {
+                const uniq = Array.from(new Set(members)).filter(Boolean);
+                // Prefer a representative that is NOT an ACT-specific and NOT -AJ
+                const nonAct = uniq.filter(v => !/\dACT$/i.test(v) && !v.includes('-1ACT') && !v.includes('-2ACT') && !v.includes('-3ACT'));
+                const nonAj = nonAct.filter(v => !v.endsWith('-AJ'));
+                const pool = (nonAj.length ? nonAj : (nonAct.length ? nonAct : uniq));
+                pool.sort((a, b) => a.length - b.length || a.localeCompare(b));
+                return pool[0] || '';
+            }
+
             const groups = new Map();
             for (const raw of variants) {
                 const v = String(raw || '').trim().toUpperCase();
                 if (!v) continue;
-                let key;
-                // A320 FAMILY: ACT alt seçimde; burada NEO/CEO tek seçenek olsun
-                if (model.toUpperCase() === 'A320 FAMILY') {
-                    if (v.startsWith('PW1100G')) {
-                        key = 'PW1100G';
-                    } else if (v.startsWith('V2500')) {
-                        key = 'V2500';
-                    } else {
-                        key = 'NAME:' + v;
-                    }
-                } else if (model.toUpperCase().startsWith('B737')) {
-                    if (/^(7[0-9]{2}|8[0-9]{2}|9[0-9]{2})(-AJ)?$/.test(v)) {
-                        key = 'NG';
-                    } else if (/^(MAX-)?[78910](-AJ)?$/.test(v) || v.includes('MAX')) {
-                        key = 'MAX';
-                    } else {
-                        key = 'NAME:' + v;
-                    }
-                } else {
-                    key = 'NAME:' + v;
-                }
+                const key = variantTankKeyForGrouping(famU, v) || ('NAME:' + v);
                 if (!groups.has(key)) groups.set(key, []);
                 groups.get(key).push(v);
             }
@@ -1036,21 +1077,23 @@
 
             for (const [key, members] of groups.entries()) {
                 const sorted = Array.from(new Set(members)).sort();
-                const main = sorted.find(x => !x.endsWith('-AJ')) || sorted[0] || '';
+                const main = pickMainVariant(sorted);
                 for (const m of sorted) memberToMain.set(m, main);
 
                 let label = '';
-                // A320 FAMILY için NEO/CEO tek seçenek göster
-                if (model.toUpperCase() === 'A320 FAMILY') {
-                    if (key === 'PW1100G') label = 'NEO A319/A320/A321';
-                    else if (key === 'V2500') label = 'CEO A319/A320/A321';
-                    else label = variantDisplayToken(model, main);
-                } else if (key === 'NG') {
-                    label = 'NG ' + sorted.map(v => variantDisplayToken(model, v).replace(/^NG /, '')).join(' / ');
-                } else if (key === 'MAX') {
-                    label = 'MAX ' + sorted.map(v => variantDisplayToken(model, v).replace(/^MAX /, '')).join(' / ');
+                if (famU === 'A320 FAMILY') {
+                    if (key === 'A320neo') label = 'NEO A319/A320/A321';
+                    else if (key === 'A320-200') label = 'CEO A319/A320/A321';
+                    else label = variantDisplayToken(famU, main);
+                } else if (famU === 'B737' || famU === 'B737 NG/MAX') {
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken('B737', v)).filter(Boolean)));
+                    // Küçük/tekrarlı token'ları sadeleştir
+                    label = tokens.sort().join(' / ');
+                } else if (famU === 'A330') {
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken('A330', v)).filter(Boolean)));
+                    label = tokens.sort().join(' / ');
                 } else {
-                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken(model, v)).filter(Boolean)));
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken(famU, v)).filter(Boolean)));
                     label = tokens.sort().join(' / ');
                 }
 
@@ -1097,16 +1140,31 @@
             // Marka seçildi: Model alanını aç
             setReveal('model-row', true);
 
-            // Model listesi (eski "family")
-            let models = Array.from(state.byOem[state.selectedOem]?.keys() || []);
-            models = models.map(m => (["A319","A320","A321"].includes(m) ? "A320 FAMILY" : m));
-            // Sadece B737 için filtre uygula, diğer Boeing modelleri ve varyantları normal listelensin
-            if (state.selectedOem === 'BOEING' && models.includes('B737')) {
-                // B737, B777, B787 hepsi listelensin
-                models = Array.from(new Set(models)).sort();
-            } else {
-                models = Array.from(new Set(models)).sort();
-            }
+            // Model listesi (sadeleştirilmiş)
+            let models = [];
+            try {
+                const m = state.byOem?.[state.selectedOem];
+                if (m && typeof m.keys === 'function') {
+                    models = Array.from(m.keys()).map(x => normalizeFamilyName(x));
+                }
+            } catch (e) {}
+            models = Array.from(new Set(models)).sort();
+
+            // Daha okunur sıralama: dar gövdeleri öne al
+            try {
+                const preferred = ['A320 FAMILY', 'B737 NG/MAX', 'B737', 'A330', 'A350-900', 'B777', 'B787'];
+                models.sort((a, b) => {
+                    const ia = preferred.indexOf(a);
+                    const ib = preferred.indexOf(b);
+                    if (ia !== -1 || ib !== -1) {
+                        if (ia === -1) return 1;
+                        if (ib === -1) return -1;
+                        return ia - ib;
+                    }
+                    return a.localeCompare(b);
+                });
+            } catch (e) {}
+
             modelSelect.disabled = models.length === 0;
             fillSelect(modelSelect, modelPlaceholder, models);
             if (state.selectedModel && models.includes(state.selectedModel)) {
@@ -1117,34 +1175,28 @@
                 modelSelect.value = '';
             }
 
-            // Varyant listesi
+            // Varyant listesi (sadeleştirilmiş)
             let variants = [];
             if (state.selectedModel) {
-                const key = state.selectedModel;
-                let fams = [key];
-                if (key === 'A320 FAMILY') fams = ['A319','A320','A321','A320 FAMILY'];
-                const set = new Set();
-                for (const fam of fams) {
-                    const ms = state.byOem[state.selectedOem].get(fam);
-                    if (ms) for (const v of ms) set.add(v);
-                }
-                variants = Array.from(set).sort();
+                try {
+                    const m = state.byOem?.[state.selectedOem];
+                    const set = m?.get?.(state.selectedModel);
+                    if (set) variants = Array.from(set);
+                } catch (e) {}
             }
 
-            const grouped = groupVariantsByCapacity(state.selectedModel, variants);
-            const mergedOptions = grouped.mergedOptions;
-            const memberToMain = grouped.memberToMain;
-            const hasVariants = variants.length > 0;
+            // Seçili varyant ACT içeriyorsa, ACT state'ini koru (merge sonrası kaybolmasın)
+            try {
+                const rawV = String(state.selectedVariant || '').toUpperCase();
+                if (String(state.selectedModel || '').toUpperCase() === 'A320 FAMILY') {
+                    if (rawV.includes('1ACT')) state.selectedAct = '1ACT';
+                    else if (rawV.includes('2ACT')) state.selectedAct = '2ACT';
+                    else if (rawV.includes('3ACT')) state.selectedAct = '3ACT';
+                }
+            } catch (e) {}
 
-            // (debug kaldırıldı)
-
-            if (!state.selectedModel) {
-                setReveal('variant-row', false);
-                variantSelect.disabled = true;
-                fillSelect(variantSelect, variantPlaceholder, []);
-                state.selectedVariant = '';
-                variantSelect.value = '';
-            } else if (!hasVariants) {
+            const { mergedOptions, memberToMain } = groupVariantsByCapacity(state.selectedModel || '', variants);
+            if (!state.selectedModel || mergedOptions.length === 0) {
                 setReveal('variant-row', false);
                 variantSelect.disabled = true;
                 fillSelect(variantSelect, variantPlaceholder, []);
@@ -1251,26 +1303,23 @@
                 actSelect.value = '';
                 state.selectedAct = '';
                 actSelect.disabled = false;
+                updateBrandTankInfo();
                 return;
             }
 
-            // Filodaki ACT varyantlarını bul
-            const allVariants = [];
-            const fams = ['A319', 'A320', 'A321', 'A320 FAMILY'];
-            for (const fam of fams) {
-                const ms = state.byOem?.AIRBUS?.get(fam);
-                if (ms) for (const v of ms) allVariants.push(String(v || '').toUpperCase());
-            }
-
-            const actOptions = [];
-            if (allVariants.some(v => v.startsWith('PW1100G-3ACT'))) actOptions.push({ value: '3ACT', label: '3ACT' });
-            if (allVariants.some(v => v.startsWith('PW1100G-1ACT'))) actOptions.push({ value: '1ACT', label: '1ACT' });
-            actOptions.push({ value: 'YOK', label: 'YOK' });
+            // A320neo için ACT seçenekleri: fleet.json'da ACT'li varyant olmasa bile kullanıcı seçebilsin.
+            const lang = getLang();
+            const actOptions = [
+                { value: 'YOK', label: t(lang, 'act_none') },
+                { value: '1ACT', label: t(lang, 'act_1') },
+                { value: '2ACT', label: t(lang, 'act_2') },
+                { value: '3ACT', label: t(lang, 'act_3') }
+            ];
 
             actSelect.innerHTML = '';
             const opt0 = document.createElement('option');
             opt0.value = '';
-            opt0.textContent = 'ACT Seçeneği';
+            opt0.textContent = t(lang, 'act_placeholder');
             actSelect.appendChild(opt0);
             for (const opt of actOptions) {
                 const o = document.createElement('option');
@@ -1283,8 +1332,9 @@
             // Not: A320 FAMILY varyantları kapasiteye göre gruplanıp PW1100G tek seçeneğe indirgenebilir;
             // bu yüzden ACT bilgisi çoğu zaman state.selectedAct üzerinden yürür.
             const vU = selectedValue;
-            if (vU.includes('3ACT')) state.selectedAct = '3ACT';
-            else if (vU.includes('1ACT')) state.selectedAct = '1ACT';
+            if (vU.includes('1ACT')) state.selectedAct = '1ACT';
+            else if (vU.includes('2ACT')) state.selectedAct = '2ACT';
+            else if (vU.includes('3ACT')) state.selectedAct = '3ACT';
             else if (!state.selectedAct || !actOptions.some(o => o.value === state.selectedAct)) state.selectedAct = 'YOK';
 
             actRow.classList.remove('is-hidden');
@@ -1295,14 +1345,21 @@
             }
 
             // Seçimi her zaman UI'a yansıt (placeholder'da kalmasın)
+            const prevValue = actSelect.value;
             actSelect.value = state.selectedAct;
+            // Eğer programatik olarak değiştiyse, change event tetikle
+            if (prevValue !== actSelect.value) {
+                const event = new Event('change', { bubbles: true });
+                actSelect.dispatchEvent(event);
+            }
 
             // Kuyruk kodu ile kilitliyse ve ACT'li uçaksa değiştirmeyi engelle
             actSelect.disabled = !!state.lockedByTail;
+            updateBrandTankInfo();
         }
 
         document.getElementById('go-btn')?.addEventListener('click', () => {
-            const url = calcUrlForSelection(state.selectedModel, state.selectedVariant, state.selectedOem);
+            const url = calcUrlForSelection(state.selectedModel, state.selectedVariant, state.selectedOem, state.selectedAct);
             if (url) window.location.href = url;
         });
 
@@ -1355,13 +1412,16 @@
                 if (!actRow || actRow.classList.contains('is-hidden')) return;
                 let actValue = '';
                 if (typeof hit.model === 'string' && hit.model.toUpperCase().startsWith('PW1100G')) {
-                    if (hit.model.toUpperCase().includes('3ACT')) { actValue = '3ACT'; }
-                    else if (hit.model.toUpperCase().includes('1ACT')) { actValue = '1ACT'; }
+                    const mU = hit.model.toUpperCase();
+                    if (mU.includes('1ACT')) { actValue = '1ACT'; }
+                    else if (mU.includes('2ACT')) { actValue = '2ACT'; }
+                    else if (mU.includes('3ACT')) { actValue = '3ACT'; }
                     else { actValue = 'YOK'; }
                 }
                 if (actValue) {
                     actSelect.value = actValue;
                     state.selectedAct = actValue;
+                    try { updateBrandTankInfo(); } catch (e) {}
                 }
                 // Kuyruk kodu ile seçim kilitliyse ACT seçimi her zaman pasif
                 actSelect.disabled = !!state.lockedByTail;
@@ -1436,16 +1496,27 @@
         function seedFamiliesIfEmpty() {
             // Make manual selection usable even if fleet data fails to load.
             if (state.byOem.AIRBUS.size === 0) {
-                ['A319','A320','A321','A330','A350'].forEach(f => state.byOem.AIRBUS.set(f, new Set()));
+                ['A320 FAMILY', 'A330', 'A350-900'].forEach(f => state.byOem.AIRBUS.set(f, new Set()));
             }
             if (state.byOem.BOEING.size === 0) {
-                ['B737','B777','B787'].forEach(f => state.byOem.BOEING.set(f, new Set()));
+                ['B737 NG/MAX', 'B777', 'B787'].forEach(f => state.byOem.BOEING.set(f, new Set()));
             }
         }
 
         function normalizeFamilyName(familyRaw) {
             const f = String(familyRaw || '').trim().toUpperCase();
             if (f === 'A319' || f === 'A320' || f === 'A321') return 'A320 FAMILY';
+            if (f === 'A350') return 'A350-900';
+            if (f.startsWith('A350')) return 'A350-900';
+
+            // Keep widebody families merged under a single model name
+            if (f === 'A330' || f.startsWith('A330')) return 'A330';
+
+            // Boeing families
+            if (f === 'B737' || f.startsWith('B737')) return 'B737 NG/MAX';
+            if (f === 'B777' || f.startsWith('B777')) return 'B777';
+            if (f === 'B787' || f.startsWith('B787')) return 'B787';
+            // Already-canonical values pass through
             return f;
         }
 

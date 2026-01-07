@@ -1,5 +1,6 @@
 // tailCapacityLoader.js
 // Bu dosya, tailCapacity.json içindeki tankLimitsKg tablosunu yükler.
+// ACT'li modeller için (örn: A320neo-1ACT) ACT kapasitesini merkezi tanka ekler.
 
 function normalizeKey(s) {
     return String(s || '')
@@ -20,26 +21,51 @@ async function fetchTankLimitsKg(modelOrFleet) {
         const raw = String(modelOrFleet || '').trim();
         if (!raw) return null;
 
-        if (map[raw]) return map[raw];
+        // ACT suffix desteği: base anahtarı üzerinden limit bul, sonra ACT'yi ekle.
+        // Örn: "A320neo-1ACT" -> base: "A320neo" + actCount: 1
+        const actMatch = raw.match(/-(\d+)ACT$/i);
+        const baseRaw = actMatch ? raw.replace(/-(\d+)ACT$/i, '') : raw;
 
-        const noPrefix = raw.replace(/^AIRBUS\s+/i, '').replace(/^BOEING\s+/i, '');
-        if (map[noPrefix]) return map[noPrefix];
+        let limits = null;
 
-        const target = normalizeKey(raw);
-        const hit = Object.keys(map).find(k => normalizeKey(k) === target);
-        if (hit) return map[hit];
+        if (map[baseRaw]) limits = { ...map[baseRaw] };
+        else {
+            const noPrefix = baseRaw.replace(/^AIRBUS\s+/i, '').replace(/^BOEING\s+/i, '');
+            if (map[noPrefix]) limits = { ...map[noPrefix] };
+            else {
+                const target = normalizeKey(baseRaw);
+                const hit = Object.keys(map).find(k => normalizeKey(k) === target);
+                if (hit) limits = { ...map[hit] };
+                else {
+                    const target2 = normalizeKey(noPrefix);
+                    const hit2 = Object.keys(map).find(k => normalizeKey(k) === target2);
+                    if (hit2) limits = { ...map[hit2] };
+                    else {
+                        const partial = Object.keys(map).find(k => {
+                            const nk = normalizeKey(k);
+                            return (nk && (target.includes(nk) || target2.includes(nk) || nk.includes(target2) || nk.includes(target)));
+                        });
+                        if (partial) limits = { ...map[partial] };
+                    }
+                }
+            }
+        }
 
-        const target2 = normalizeKey(noPrefix);
-        const hit2 = Object.keys(map).find(k => normalizeKey(k) === target2);
-        if (hit2) return map[hit2];
+        if (!limits) return null;
 
-        const partial = Object.keys(map).find(k => {
-            const nk = normalizeKey(k);
-            return (nk && (target.includes(nk) || target2.includes(nk) || nk.includes(target2) || nk.includes(target)));
-        });
-        if (partial) return map[partial];
+        // ACT kapasitesini dahil et (konstante göre)
+        if (actMatch) {
+            const actCount = parseInt(actMatch[1], 10);
+            const actCapacityKgByCount = { 1: 2496, 2: 4992, 3: 7488 };
+            const addKg = actCapacityKgByCount[actCount] || 0;
+            if (addKg > 0) {
+                limits.actFuelKg = (typeof limits.actFuelKg === 'number' ? limits.actFuelKg : 0) + addKg;
+                limits.centerFuelKg = (typeof limits.centerFuelKg === 'number' ? limits.centerFuelKg : 0) + addKg;
+                if (typeof limits.totalFuelKg === 'number') limits.totalFuelKg = limits.totalFuelKg + addKg;
+            }
+        }
 
-        return null;
+        return limits;
     } catch (e) {
         return null;
     }
