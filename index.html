@@ -415,19 +415,67 @@
                                                         if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
                                                     } catch (e) {}
                                                 } else {
-                                                    // No waiting worker — either the new SW activated immediately or message from another client.
+                                                    // No waiting worker — try to detect an installing worker or updatefound event
                                                     try {
-                                                        const active = (r && r.active);
+                                                        const installing = (r && r.installing);
                                                         const controller = navigator.serviceWorker.controller;
-                                                        if (active && controller && active.scriptURL !== controller.scriptURL) {
-                                                            if (!sessionStorage.getItem('__sw_reloaded')) {
-                                                                sessionStorage.setItem('__sw_reloaded','1');
-                                                                window.location.reload();
-                                                            }
-                                                        } else {
-                                                            // Ensure banner is hidden if nothing to act on
-                                                            if (bar) bar.style.display = 'none';
+                                                        let handled = false;
+
+                                                        const showBanner = () => {
+                                                            try {
+                                                                if (bar) bar.style.display = 'flex';
+                                                                if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
+                                                                const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
+                                                                const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
+                                                                if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
+                                                            } catch (e) {}
+                                                        };
+
+                                                        if (installing) {
+                                                            installing.addEventListener('statechange', function sc() {
+                                                                try {
+                                                                    if (installing.state === 'installed') {
+                                                                        handled = true; showBanner();
+                                                                    }
+                                                                } catch (e) {}
+                                                            });
                                                         }
+
+                                                        if (r && typeof r.addEventListener === 'function') {
+                                                            r.addEventListener('updatefound', () => {
+                                                                try {
+                                                                    const nw = r.installing;
+                                                                    if (nw) {
+                                                                        nw.addEventListener('statechange', () => {
+                                                                            try {
+                                                                                if (nw.state === 'installed') { handled = true; showBanner(); }
+                                                                            } catch (e) {}
+                                                                        });
+                                                                    }
+                                                                } catch (e) {}
+                                                            });
+                                                        }
+
+                                                        // If active worker differs from controller, reload once
+                                                        try {
+                                                            const active = (r && r.active);
+                                                            if (active && controller && active.scriptURL !== controller.scriptURL) {
+                                                                if (!sessionStorage.getItem('__sw_reloaded')) {
+                                                                    sessionStorage.setItem('__sw_reloaded','1');
+                                                                    window.location.reload();
+                                                                    return;
+                                                                }
+                                                            }
+                                                        } catch (e) {}
+
+                                                        // After short timeout, if nothing appeared, hide banner
+                                                        setTimeout(() => {
+                                                            try {
+                                                                if (!handled) {
+                                                                    if (bar) bar.style.display = 'none';
+                                                                }
+                                                            } catch (e) {}
+                                                        }, 4000);
                                                     } catch (e) {}
                                                 }
                                             }).catch(()=>{});
@@ -486,7 +534,8 @@
                                             }
                                             const bar = document.getElementById('sw-update');
                                             if (bar) {
-                                                // leave bar visible; could also show a small message
+                                                // no waiting worker found — hide banner to avoid persistent UI
+                                                bar.style.display = 'none';
                                             }
                                         }, 4000);
                                     }
