@@ -452,11 +452,7 @@
             </div>
         </div>
 
-        <!-- Update notification (hidden until SW notifies) -->
-        <div id="sw-update" style="display:none; width:100%; max-width:420px; margin: 8px 0; padding:10px; border-radius:12px; background: linear-gradient(90deg, rgba(56,189,248,0.04), rgba(15,23,42,0.6)); display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <div id="sw-update-text" style="font-weight:800;color:#f59e0b;font-size:13px">Yeni sürüm hazır.</div>
-            <button id="sw-update-btn" class="mini-pill primary" style="padding:6px 10px; min-width:unset;">GÜNCELLE</button>
-        </div>
+        <!-- Update notification removed -->
 
         <!-- Kılavuz erişimi (kapak sayfası) -->
 
@@ -1166,10 +1162,7 @@
             if (guideSteps && dict.guide_steps_html) guideSteps.innerHTML = dict.guide_steps_html;
             if (guideFoot) guideFoot.textContent = dict.guide_foot;
 
-            const swUpdateText = document.getElementById('sw-update-text');
-            const swUpdateBtn = document.getElementById('sw-update-btn');
-            if (swUpdateText) swUpdateText.textContent = dict.sw_update_ready;
-            if (swUpdateBtn) swUpdateBtn.textContent = dict.sw_update_reload;
+            // sw-update banner removed; no DOM elements to update
 
             const btnTr = document.getElementById('lang-tr');
             const btnEn = document.getElementById('lang-en');

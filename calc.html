@@ -474,7 +474,7 @@
                     <li><b>İkmal sonrası:</b> Bonding’i en son sökün. Kapak/panel kapalı ve emniyette olsun. Son miktarları (total + tank) crew ile teyit edin ve kayıtları tamamlayın.</li>
                 </ul>
             </div>
-            <button id="warn-ok" onclick="(function(){var r=document.getElementById('warning-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:var(--error); color:#fff; border:none; padding:15px; margin-top:12px; font-weight:800; border-radius:12px; cursor:pointer; flex-shrink:0;">ANLADIM</button>
+            <button id="warn-ok" type="button" style="width:100%; background:var(--error); color:#fff; border:none; padding:15px; margin-top:12px; font-weight:800; border-radius:12px; cursor:pointer; flex-shrink:0;">ANLADIM</button>
         </div>
     </div>
 
@@ -798,6 +798,21 @@ function applyLang(lang) {
     if (warnDesc) warnDesc.innerHTML = t('warn_desc');
     if (warnOk) warnOk.textContent = t('warn_ok');
 
+    // Ensure the warning modal can be closed reliably (attach via JS rather than inline onclick)
+    try {
+        if (warnOk) {
+            warnOk.addEventListener('click', function () {
+                try {
+                    var r = document.getElementById('warning-modal');
+                    if (r) {
+                        r.style.display = 'none';
+                        r.style.pointerEvents = 'none';
+                    }
+                } catch (e) {}
+            });
+        }
+    } catch (e) {}
+
     const guideTitle = document.getElementById('guide-title');
     const guideSteps = document.getElementById('guide-steps');
     const guideFoot = document.getElementById('guide-foot');
@@ -805,10 +820,7 @@ function applyLang(lang) {
     if (guideSteps) guideSteps.innerHTML = t('guide_steps_html');
     if (guideFoot) guideFoot.textContent = t('guide_foot');
 
-    const swUpdateText = document.getElementById('sw-update-text');
-    const swUpdateBtn = document.getElementById('sw-update-btn');
-    if (swUpdateText) swUpdateText.textContent = t('sw_update_ready');
-    if (swUpdateBtn) swUpdateBtn.textContent = t('sw_update_reload');
+    // sw-update banner removed; no DOM elements to update
 
     const warnList = document.getElementById('warn-list');
     if (warnList) {
@@ -973,7 +985,16 @@ function manualActualEntry() {
     // Otomatik değişen tankların unit pozisyonlarını da güncelle
     ['la', 'ca', 'ra'].forEach(id => updateTankUnitPosition(document.getElementById(id)));
 }
-function showWarnings() { document.getElementById('warning-modal').style.display = 'flex'; }
+function showWarnings() {
+    try {
+        var m = document.getElementById('warning-modal');
+        if (m) {
+            m.style.display = 'flex';
+            m.style.pointerEvents = 'auto';
+            try { var sc = m.querySelector('.warning-scroll'); if (sc) sc.scrollTop = 0; } catch (e) {}
+        }
+    } catch (e) {}
+}
 function forceDensityCaretRight(el) {
     if (!el) return;
     const v = (el.value || '');
@@ -1729,8 +1750,53 @@ function openReceipt(log) {
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-            .then(reg => { try { reg.update(); } catch (e) {} })
+            .then(reg => {
+                try {
+                    if (navigator.onLine) {
+                        try { reg.update(); } catch (e) {}
+                        try {
+                            if (reg.waiting) {
+                                try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                            }
+                            if (reg.installing) {
+                                reg.installing.addEventListener('statechange', () => {
+                                    try {
+                                        if (reg.installing.state === 'installed' && reg.waiting && navigator.onLine) {
+                                            try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                        }
+                                    } catch (e) {}
+                                });
+                            }
+                            reg.addEventListener('updatefound', () => {
+                                try {
+                                    const nw = reg.installing;
+                                    if (nw) {
+                                        nw.addEventListener('statechange', () => {
+                                            try {
+                                                if (nw.state === 'installed' && reg.waiting && navigator.onLine) {
+                                                    try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                                }
+                                            } catch (e) {}
+                                        });
+                                    }
+                                } catch (e) {}
+                            });
+                        } catch (e) {}
+                    }
+                } catch (e) {}
+            })
             .catch(() => {});
+
+        try {
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                try {
+                    if (!window.__swReloading) {
+                        window.__swReloading = true;
+                        window.location.reload();
+                    }
+                } catch (e) {}
+            });
+        } catch (e) {}
     });
 }
 window.addEventListener('load', () => {
