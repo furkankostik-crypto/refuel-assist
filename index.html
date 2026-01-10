@@ -387,6 +387,7 @@
                     <script>
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
+                            try { sessionStorage.removeItem('__sw_reloaded'); } catch(e) {}
                             navigator.serviceWorker.register('./sw.js').then(reg => {
                                 try { reg.update(); } catch (e) {}
                             }).catch(() => {});
@@ -397,19 +398,88 @@
                                     const d = ev && ev.data;
                                     if (!d) return;
                                     if (d.type === 'NEW_VERSION') {
-                                        const bar = document.getElementById('sw-update');
-                                        const txt = document.getElementById('sw-update-text');
-                                        const btn = document.getElementById('sw-update-btn');
-                                        if (bar) bar.style.display = 'flex';
-                                        if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
-                                        // set button label from translations if available
                                         try {
-                                            const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
-                                            const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
-                                            if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
+                                            navigator.serviceWorker.getRegistration().then(r => {
+                                                try { window.__swReg = r; } catch(e) {}
+                                                const bar = document.getElementById('sw-update');
+                                                const txt = document.getElementById('sw-update-text');
+                                                const btn = document.getElementById('sw-update-btn');
+
+                                                const waiting = (r && r.waiting);
+                                                if (waiting) {
+                                                    if (bar) bar.style.display = 'flex';
+                                                    if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
+                                                    try {
+                                                        const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
+                                                        const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
+                                                        if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
+                                                    } catch (e) {}
+                                                } else {
+                                                    // No waiting worker — try to detect an installing worker or updatefound event
+                                                    try {
+                                                        const installing = (r && r.installing);
+                                                        const controller = navigator.serviceWorker.controller;
+                                                        let handled = false;
+
+                                                        const showBanner = () => {
+                                                            try {
+                                                                if (bar) bar.style.display = 'flex';
+                                                                if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
+                                                                const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
+                                                                const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
+                                                                if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
+                                                            } catch (e) {}
+                                                        };
+
+                                                        if (installing) {
+                                                            installing.addEventListener('statechange', function sc() {
+                                                                try {
+                                                                    if (installing.state === 'installed') {
+                                                                        handled = true; showBanner();
+                                                                    }
+                                                                } catch (e) {}
+                                                            });
+                                                        }
+
+                                                        if (r && typeof r.addEventListener === 'function') {
+                                                            r.addEventListener('updatefound', () => {
+                                                                try {
+                                                                    const nw = r.installing;
+                                                                    if (nw) {
+                                                                        nw.addEventListener('statechange', () => {
+                                                                            try {
+                                                                                if (nw.state === 'installed') { handled = true; showBanner(); }
+                                                                            } catch (e) {}
+                                                                        });
+                                                                    }
+                                                                } catch (e) {}
+                                                            });
+                                                        }
+
+                                                        // If active worker differs from controller, reload once
+                                                        try {
+                                                            const active = (r && r.active);
+                                                            if (active && controller && active.scriptURL !== controller.scriptURL) {
+                                                                if (!sessionStorage.getItem('__sw_reloaded')) {
+                                                                    sessionStorage.setItem('__sw_reloaded','1');
+                                                                    window.location.reload();
+                                                                    return;
+                                                                }
+                                                            }
+                                                        } catch (e) {}
+
+                                                        // After short timeout, if nothing appeared, hide banner
+                                                        setTimeout(() => {
+                                                            try {
+                                                                if (!handled) {
+                                                                    if (bar) bar.style.display = 'none';
+                                                                }
+                                                            } catch (e) {}
+                                                        }, 4000);
+                                                    } catch (e) {}
+                                                }
+                                            }).catch(()=>{});
                                         } catch (e) {}
-                                        // store registration reference for click handler
-                                        try { navigator.serviceWorker.getRegistration().then(r => { window.__swReg = r; }).catch(()=>{}); } catch(e) {}
                                     }
                                 } catch (e) {}
                             });
@@ -442,7 +512,7 @@
                                                         const st = waiting.state;
                                                         if (st === 'activated') {
                                                             const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
-                                                            if (!window.__swReloading) { window.__swReloading = true; window.location.reload(); }
+                                                            if (!window.__swReloading) { sessionStorage.setItem('__sw_reloaded','1'); window.__swReloading = true; window.location.reload(); }
                                                         }
                                                     } catch (e) {}
                                                 });
@@ -453,7 +523,7 @@
                                         try {
                                             if (navigator.serviceWorker.controller) {
                                                 const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
-                                                if (!window.__swReloading) { window.__swReloading = true; window.location.reload(); }
+                                                if (!window.__swReloading) { sessionStorage.setItem('__sw_reloaded','1'); window.__swReloading = true; window.location.reload(); }
                                                 return;
                                             }
                                         } catch (e) {}
@@ -464,7 +534,8 @@
                                             }
                                             const bar = document.getElementById('sw-update');
                                             if (bar) {
-                                                // leave bar visible; could also show a small message
+                                                // no waiting worker found — hide banner to avoid persistent UI
+                                                bar.style.display = 'none';
                                             }
                                         }, 4000);
                                     }
@@ -477,6 +548,7 @@
                                         const bar = document.getElementById('sw-update');
                                         if (bar) bar.style.display = 'none';
                                         if (!window.__swReloading) {
+                                            sessionStorage.setItem('__sw_reloaded','1');
                                             window.__swReloading = true;
                                             window.location.reload();
                                         }
