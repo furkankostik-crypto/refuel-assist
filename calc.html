@@ -643,6 +643,7 @@ const I18N = {
         actual_step: 'Mevcut yakıt değerleri 10 kg adımıyla girilmeli. (Toplam ve tanklar 10’un katı olmalı.)',
         actual_gt_block: 'Mevcut yakıt (ikmal öncesi), Block’tan büyük görünüyor. Mevcut ≤ Block olmalı (gerekirse tank değerlerini düşürün).',
         density_range: 'Yoğunluk değeri aralık dışı (0.600–0.900). Yakıt fişindeki density değerini kontrol edip tekrar girin.',
+        density_digits: 'Yoğunluk üç ondalık hane olarak girilmelidir (örn. 0.800).',
         prompt_block: 'Blok Yakıt girin. Sefer öncesi olması gereken toplam yakıtı temsil eder.',
         prompt_actual: 'İkmal öncesi (mevcut) yakıt için toplam değeri yazabilir veya tank değerlerini girebilirsiniz. Tanklardan girerseniz toplam otomatik hesaplanır.',
         prompt_density: 'Yoğunluk girin (örn. 0.800). Litre hesabı için gereklidir ve 0.600–0.900 aralığında olmalı.',
@@ -698,6 +699,7 @@ const I18N = {
         actual_step: 'Fuel On Board values must be entered in 10 kg steps (total and tanks must be multiples of 10).',
         actual_gt_block: 'Fuel On Board (pre-refuel) seems higher than Block. Fuel On Board ≤ Block (reduce tank values if needed).',
         density_range: 'Density is out of range (0.600–0.900). Verify from the fuel slip and re-enter.',
+        density_digits: 'Density must be three decimal places (e.g. 0.800).',
         prompt_block: 'Enter Block Fuel. It represents required total fuel before departure.',
         prompt_actual: 'For Fuel On Board (pre-refuel), enter total or tank values. If you enter tanks, total is calculated automatically.',
         prompt_density: 'Enter Density (e.g., 0.800). Needed for liters and must be within 0.600–0.900.',
@@ -1245,10 +1247,16 @@ function validateAll(auto = false) {
     
     // DENSITY validasyonu
     const densityRaw = document.getElementById('density').value.trim();
-    const isDensityFilled = densityRaw !== '' && densityRaw !== '0.' && dV > 0;
-    if (dV > 0 && (dV < 0.6 || dV > 0.9)) { errD = t('density_range'); setInputState(boxD, 'error'); } 
-    else if (!isDensityFilled) { setInputState(boxD, 'empty'); }
-    else { setInputState(boxD, 'valid'); }
+    const densityPattern = /^0\.\d{3}$/; // exactly three digits after decimal
+    const isDensityFormatOk = densityPattern.test(densityRaw);
+    const isDensityFilled = isDensityFormatOk && dV > 0;
+    if (dV > 0 && (dV < 0.6 || dV > 0.9)) {
+        errD = t('density_range'); setInputState(boxD, 'error');
+    } else if (densityRaw !== '' && densityRaw !== '0.' && !isDensityFormatOk) {
+        errD = t('density_digits'); setInputState(boxD, 'error');
+    } else if (!isDensityFilled) {
+        setInputState(boxD, 'empty');
+    } else { setInputState(boxD, 'valid'); }
     document.getElementById('err_block').innerText = errB; document.getElementById('err_actual').innerText = errA; document.getElementById('err_density').innerText = errD;
 
     let topMessage = '';
@@ -1398,7 +1406,7 @@ function renderLogs() {
     if (!list) return;
     let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]');
     if(logs.length === 0) { list.innerHTML = ''; return; }
-    list.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px"><span style="font-size:11px; font-weight:900; color:#64748b; letter-spacing:1px">${escapeHtml(t('recent_logs'))}</span><button onclick="clearAllLogs()" style="color:var(--error); background:none; border:none; font-size:10px; font-weight:800; cursor:pointer">${escapeHtml(t('clear_all'))}</button></div>`;
+    list.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px"><span style="font-size:11px; font-weight:900; color:#64748b; letter-spacing:1px">${escapeHtml(t('recent_logs'))}</span><button id="btn-clear-logs" type="button" onclick="clearAllLogs()" style="color:var(--error); background:none; border:none; font-size:10px; font-weight:800; cursor:pointer">${escapeHtml(t('clear_all'))}</button></div>`;
     logs.forEach(log => {
         const div = document.createElement('div'); div.className = 'log-item';
         const safeId = Number(log.id) || 0;
@@ -1408,6 +1416,16 @@ function renderLogs() {
         div.innerHTML = `<div onclick="openReceiptById(${safeId})" style="flex-grow:1; display:flex; justify-content:space-between; align-items:center"><span><b>${fleetText}</b></span><span><b style="color:var(--warning)">${kgText} KG</b> <small style="opacity:0.5; margin-left:8px">${timeText}</small></span></div><button class="del-log" onclick="deleteLog(${safeId})">×</button>`;
         list.appendChild(div);
     });
+    // Attach clear-all handler programmatically to avoid relying on inline onclick attributes
+    try {
+        const btn = document.getElementById('btn-clear-logs');
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                clearAllLogs();
+            });
+        }
+    } catch (e) {}
 }
 function deleteLog(id) { let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]'); logs = logs.filter(l => l.id !== id); localStorage.setItem('logs_v6', JSON.stringify(logs)); renderLogs(); }
 function clearAllLogs() { if(confirm(t('confirm_clear_logs'))) { localStorage.removeItem('logs_v6'); renderLogs(); } }
@@ -1425,11 +1443,23 @@ let _lastReceiptBlobUrl = null;
 function loadPdfLib() {
     return new Promise((resolve, reject) => {
         if (window.PDFLib) return resolve(window.PDFLib);
-        const s = document.createElement('script');
-        s.src = 'https://unpkg.com/pdf-lib/dist/pdf-lib.min.js';
-        s.onload = () => resolve(window.PDFLib);
-        s.onerror = () => reject(new Error('pdf-lib yüklenemedi'));
-        document.head.appendChild(s);
+        // Try local copy first (assets/pdf-lib.min.js), then CDN fallback
+        const tryLoad = (src) => new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = () => res(window.PDFLib);
+            s.onerror = () => rej(new Error('load failed'));
+            document.head.appendChild(s);
+        });
+
+        tryLoad('./assets/pdf-lib.min.js')
+            .then(resolve)
+            .catch(() => {
+                // fallback to CDN
+                tryLoad('https://unpkg.com/pdf-lib/dist/pdf-lib.min.js')
+                    .then(resolve)
+                    .catch(() => reject(new Error('pdf-lib yüklenemedi (yerel ve CDN denemesi başarısız)')));
+            });
     });
 }
 
@@ -1440,7 +1470,7 @@ async function openPdfReceipt(log, debugForceMode) {
         try { return String(new URL(window.location.href).searchParams.get('pdf_debug') || '').trim().toLowerCase(); } catch (e) { return ''; }
     })();
     const pdfDebug = (pdfDebugMode === '1' || pdfDebugMode === 'true' || pdfDebugMode === 'grid');
-    const url = './assets/fuel-slip-blank.pdf';
+    const url = './assets/fuel-slip-blank-u.pdf';
     const res = await fetch(url);
     if (!res.ok) throw new Error('PDF şablonu bulunamadı');
     const arrayBuffer = await res.arrayBuffer();
@@ -1530,14 +1560,32 @@ async function openPdfReceipt(log, debugForceMode) {
     // We keep this local-only to avoid noisy network/CSP failures.
     let embeddedFont = helv;
     try {
-        const fResp = await fetch('./assets/DejaVuSans.ttf');
-        if (fResp && fResp.ok) {
-            const fb = await fResp.arrayBuffer();
-            embeddedFont = await pdfDoc.embedFont(fb);
+        // Prefer a handwritten-style font for more realistic look (try IndieFlower CDN),
+        // then fall back to local DejaVuSans.ttf, then to standard Helvetica.
+        try {
+            const url = 'https://github.com/google/fonts/raw/main/ofl/indieflower/IndieFlower.ttf';
+            const rfont = await fetch(url);
+            if (rfont && rfont.ok) {
+                const fb = await rfont.arrayBuffer();
+                embeddedFont = await pdfDoc.embedFont(fb);
+            }
+        } catch (e) {
+            try {
+                const fResp = await fetch('./assets/DejaVuSans.ttf');
+                if (fResp && fResp.ok) {
+                    const fb = await fResp.arrayBuffer();
+                    embeddedFont = await pdfDoc.embedFont(fb);
+                }
+            } catch (e) {
+                // final fallback to helv (already set)
+            }
         }
     } catch (e) {
         // silent fallback to WinAnsi
     }
+
+    // Unified write color (navy)
+    const WRITE_COLOR = PDFLib.rgb(0.06, 0.22, 0.4);
 
     // Tick/box regions (use finalized mapping)
     const tickRegions = FINAL_TICK_REGIONS;
@@ -1551,16 +1599,18 @@ async function openPdfReceipt(log, debugForceMode) {
     function drawDigitsInTicks(val, xStartFrac, yFrac, spacingFrac, count, size, font) {
         const s = String(val ?? '').replace(/[^0-9\-]/g, '');
         const digits = s.split('');
+        const usedFont = font || embeddedFont || helv;
+        const fs = Number(size) || 12;
         for (let i = 0; i < count; i++) {
             const di = digits.length - 1 - i; // right aligned
             const ch = di >= 0 ? digits[di] : '';
             const x = Math.round(width * (xStartFrac - i * spacingFrac));
             const y = Math.round(height * yFrac);
             if (ch) {
-                const dx = -Math.round(size * 0.15);
-                page.drawText(ch, { x: x + dx, y: y, size: size, font });
+                const dx = -Math.round(fs * 0.15);
+                page.drawText(ch, { x: x + dx, y: y, size: fs, font: usedFont, color: WRITE_COLOR });
             }
-            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('.', { x: x-1, y: y-2, size: 6, font, color: PDFLib.rgb(0,0,1) }); } } catch(e){}
+            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('.', { x: x-1, y: y-2, size: 6, font: usedFont, color: PDFLib.rgb(0,0,1) }); } } catch(e){}
         }
     }
 
@@ -1576,14 +1626,16 @@ async function openPdfReceipt(log, debugForceMode) {
     // Draw characters into horizontal boxes (left-to-right), one char per box
     function drawCharsInBoxes(str, xStartFrac, yFrac, spacingFrac, count, size, font) {
         const s = String(str ?? '');
+        const usedFont = font || embeddedFont || helv;
+        const fs = Number(size) || 12;
         for (let i = 0; i < count; i++) {
             const ch = s[i] || '';
             const x = Math.round(width * (xStartFrac + i * spacingFrac));
             const y = Math.round(height * yFrac);
             if (ch) {
-                page.drawText(ch, { x: x, y: y, size: size, font });
+                page.drawText(ch, { x: x, y: y, size: fs, font: usedFont, color: WRITE_COLOR });
             }
-            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('|', { x: x-2, y: y-2, size: 6, font, color: PDFLib.rgb(0,0,0) }); } } catch(e){}
+            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('|', { x: x-2, y: y-2, size: 6, font: usedFont, color: PDFLib.rgb(0,0,0) }); } } catch(e){}
         }
     }
 
@@ -1932,6 +1984,486 @@ document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refreshUIAfterReturn();
 });
 window.addEventListener('resize', updateAllUnits);
+</script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script>
+// Floating export button + PDF fill logic (uses assets/pdf_field_map.json)
+(function(){
+    function normalize(name){ return (name||'').toString().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); }
+
+    async function loadMap(){
+        try{
+            const r = await fetch('assets/pdf_field_map.json');
+            if(!r.ok) return {};
+            const data = await r.json();
+            // build normalized lookup tables for resilient matching
+            const lookup = {};
+            const fixedLookup = {};
+            const maxLenLookup = {};
+            const pad6Set = new Set();
+
+            function addLookup(k, v){
+                if(k === undefined || k === null) return;
+                lookup[k] = v;
+                lookup[String(k).toLowerCase()] = v;
+                lookup[String(k).toUpperCase()] = v;
+                lookup[normalize(String(k))] = v;
+            }
+
+            if(data && data.fields){
+                for(const k of Object.keys(data.fields)) addLookup(k, data.fields[k]);
+            }
+            if(data && data.fixed){
+                for(const k of Object.keys(data.fixed)){
+                    const v = data.fixed[k];
+                    fixedLookup[k] = v;
+                    fixedLookup[String(k).toLowerCase()] = v;
+                    fixedLookup[String(k).toUpperCase()] = v;
+                    fixedLookup[normalize(String(k))] = v;
+                }
+            }
+            if(data && data.maxLen){
+                for(const k of Object.keys(data.maxLen)){
+                    const v = data.maxLen[k];
+                    maxLenLookup[k] = v;
+                    maxLenLookup[String(k).toLowerCase()] = v;
+                    maxLenLookup[String(k).toUpperCase()] = v;
+                    maxLenLookup[normalize(String(k))] = v;
+                }
+            }
+            if(data && Array.isArray(data.pad6)){
+                for(const p of data.pad6){
+                    pad6Set.add(p);
+                    pad6Set.add(String(p).toLowerCase());
+                    pad6Set.add(String(p).toUpperCase());
+                    pad6Set.add(normalize(String(p)));
+                }
+            }
+
+            data._lookup = lookup;
+            data._fixedLookup = fixedLookup;
+            data._maxLenLookup = maxLenLookup;
+            data._pad6Set = pad6Set;
+
+            return data;
+        }catch(e){ return {}; }
+    }
+
+    function resolveSpecial(key){
+        const d = new Date();
+        if(key === '__registration') return (typeof getRegistration === 'function') ? getRegistration() : '';
+        if(key === '__day') return String(d.getDate()).padStart(2,'0');
+        if(key === '__month') return String(d.getMonth()+1).padStart(2,'0');
+        if(key === '__now') return d.toLocaleDateString('tr-TR');
+        return '';
+    }
+
+    async function resolveMappedValue(mapVal){
+        if(!mapVal) return '';
+        if(typeof mapVal === 'string' && mapVal.startsWith('__')){
+            const special = resolveSpecial(mapVal);
+            // special handling for registration: extract 3 chars after 'TC-'
+            if(mapVal === '__registration'){
+                try{
+                    const m = String(special || '').toUpperCase().match(/TC-(\w{3})/i);
+                    if(m && m[1]) return m[1].toString();
+                    // fallback: if value contains characters, return last 3
+                    const raw = String(special || '').replace(/[^A-Z0-9]/ig,'');
+                    if(raw.length >= 3) return raw.slice(-3);
+                    return raw;
+                }catch(e){ return special; }
+            }
+            return special;
+        }
+        // try element by id or name
+        let el = document.getElementById(mapVal) || document.querySelector('[name="'+mapVal+'"]');
+        if(!el){
+            // try normalized id
+            el = document.getElementById(normalize(mapVal)) || document.querySelector('[name="'+normalize(mapVal)+'"]');
+        }
+        if(!el) return '';
+        if(el.value !== undefined) return el.value;
+        return el.textContent || el.innerText || '';
+    }
+
+    function makeFieldBackgroundTransparent(f){
+        try{
+            const acro = f && f.acroField;
+            if(!acro) return;
+            const widgets = acro.getWidgets ? acro.getWidgets() : (acro.dict && acro.dict.get ? acro.dict.get(PDFLib.PDFName.of('Kids')) : null);
+            if(!widgets) return;
+            for(const w of widgets){
+                try{
+                    // widget may be a dict-like object
+                    if(w && typeof w.get === 'function'){
+                        const mk = w.get(PDFLib.PDFName.of('MK')) || w.get('MK');
+                        if(mk && typeof mk.delete === 'function'){
+                            try{ mk.delete(PDFLib.PDFName.of('BG')); }catch(e){}
+                        }
+                        try{ w.delete && w.delete(PDFLib.PDFName.of('BG')); }catch(e){}
+                        try{ w.dict && w.dict.delete && w.dict.delete(PDFLib.PDFName.of('BG')); }catch(e){}
+                    } else if(w && w.dict && typeof w.dict.delete === 'function'){
+                        try{ w.dict.delete(PDFLib.PDFName.of('BG')); }catch(e){}
+                    }
+                }catch(e){}
+            }
+        }catch(e){}
+    }
+
+    // More aggressive cleanup: remove appearance, background, border and default appearance keys
+    function makeFieldBackgroundTransparentAggressive(f){
+        try{
+            const acro = f && f.acroField;
+            if(!acro) return;
+            const widgets = acro.getWidgets ? acro.getWidgets() : (acro.dict && acro.dict.get ? acro.dict.get(PDFLib.PDFName.of('Kids')) : null);
+            if(!widgets) return;
+            for(const w of widgets){
+                try{
+                    const dict = (w && w.dict) ? w.dict : w;
+                    if(!dict) continue;
+                    const toRemove = ['MK','BG','AP','DA','Border','BS'];
+                    for(const k of toRemove){
+                        try{ dict.delete(PDFLib.PDFName.of(k)); }catch(e){}
+                    }
+                    // Also try deleting plain string keys (lib internals may expose them that way)
+                    for(const k of toRemove){
+                        try{ dict.delete && dict.delete(k); }catch(e){}
+                    }
+                    // If there is an appearance dictionary, try to clear its Normal entry
+                    try{
+                        const ap = dict.get && dict.get(PDFLib.PDFName.of('AP'));
+                        if(ap && ap.get && typeof ap.get === 'function'){
+                            try{ ap.delete(PDFLib.PDFName.of('N')); }catch(e){}
+                            try{ ap.delete('N'); }catch(e){}
+                        }
+                    }catch(e){}
+                }catch(e){}
+            }
+        }catch(e){}
+    }
+
+    const btn = document.createElement('button');
+    btn.id = 'export-pdf-btn';
+    btn.textContent = 'Fiş Yazdır';
+    Object.assign(btn.style, {
+        display: 'block', width: '100%', marginTop: '12px',
+        background: '#10b981', color: '#fff', border: 'none', padding: '12px 14px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 20px rgba(16,185,129,0.18)'
+    });
+    const saveBtn = document.getElementById('save-main-btn');
+    if (saveBtn && saveBtn.parentNode) {
+        saveBtn.parentNode.insertBefore(btn, saveBtn.nextSibling);
+    } else {
+        document.body.appendChild(btn);
+    }
+
+    btn.addEventListener('click', async function(){
+        btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+        try{
+            const map = await loadMap();
+            // Try cleaned updated template first (if we produced it), then updated template, then original
+            let res = await fetch('assets/fuel-slip-blank-u-clean.pdf');
+            if(!res.ok){
+                res = await fetch('assets/fuel-slip-blank-u.pdf');
+                if(!res.ok){
+                    res = await fetch('assets/fuel-slip-blank.pdf');
+                }
+            }
+            if(!res.ok) throw new Error('PDF yüklenemedi');
+            const arrayBuffer = await res.arrayBuffer();
+            const { PDFDocument } = PDFLib;
+            const pdfDoc = await PDFDocument.load(arrayBuffer);
+            const form = pdfDoc.getForm();
+            const fields = form.getFields();
+
+                // helper: attempt to draw a text directly into the widget rectangle using embeddedFont
+                async function drawTextIntoWidget(f, text){
+                    try{
+                        const acro = f && f.acroField;
+                        if(!acro) return false;
+                        const widgets = acro.getWidgets ? acro.getWidgets() : (acro.dict && acro.dict.get ? acro.dict.get(PDFLib.PDFName.of('Kids')) : null);
+                        if(!widgets || !widgets.length) return false;
+                        const w = widgets[0];
+                        let rect = null;
+                        try{ rect = (typeof w.getRectangle === 'function') ? w.getRectangle() : (w.get && w.get('Rect')) || (w.dict && w.dict.get && w.dict.get(PDFLib.PDFName.of('Rect'))); }catch(e){}
+                        if(!rect) return false;
+                        const llx = Array.isArray(rect) ? rect[0] : rect.x1 || rect.left || null;
+                        const lly = Array.isArray(rect) ? rect[1] : rect.y1 || rect.bottom || null;
+                        const urx = Array.isArray(rect) ? rect[2] : rect.x2 || rect.right || null;
+                        const ury = Array.isArray(rect) ? rect[3] : rect.y2 || rect.top || null;
+                        if(llx === null || lly === null || urx === null || ury === null) return false;
+                        const pgs = pdfDoc.getPages();
+                        const page = pgs[0];
+                        // Try to read default appearance (DA) to respect font/size/color defined in the PDF
+                        let usedFont = null;
+                        let fontSizeFromDA = null;
+                        let colorFromDA = null;
+                        try{
+                            let da = null;
+                            try{ da = (acro.getDefaultAppearance && typeof acro.getDefaultAppearance === 'function') ? acro.getDefaultAppearance() : null; }catch(e){}
+                            if(!da && acro.dict && acro.dict.get){
+                                try{ const daObj = acro.dict.get(PDFLib.PDFName.of('DA')); da = daObj ? String(daObj) : null; }catch(e){}
+                            }
+                            if(da){
+                                const s = String(da);
+                                const parts = s.trim().split(/\s+/);
+                                // look for font token (starts with /) and size before Tf
+                                for(let i=0;i<parts.length;i++){
+                                    const t = parts[i];
+                                    if(t === 'Tf' && i>=2){
+                                        fontSizeFromDA = parseFloat(parts[i-1]) || null;
+                                        const fn = parts[i-2] || null;
+                                        if(fn && fn.indexOf('/') === 0){
+                                            const fnn = fn.replace('/','');
+                                            // map common resource names to pdf-lib StandardFonts
+                                            const map = { 'Helv':'Helvetica', 'Helvetica':'Helvetica', 'TiRo':'TimesRoman', 'Times':'TimesRoman', 'Cour':'Courier', 'Courier':'Courier' };
+                                            let std = null;
+                                            for(const k of Object.keys(map)) if(fnn.indexOf(k) !== -1){ std = map[k]; break; }
+                                            if(std === 'Helvetica') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                                            else if(std === 'TimesRoman') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
+                                            else if(std === 'Courier') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
+                                        }
+                                    }
+                                    // detect rgb color tokens before 'rg'
+                                    if(t === 'rg' && i>=3){
+                                        const r = parseFloat(parts[i-3]) || 0;
+                                        const g = parseFloat(parts[i-2]) || 0;
+                                        const b = parseFloat(parts[i-1]) || 0;
+                                        colorFromDA = PDFLib.rgb(r,g,b);
+                                    }
+                                }
+                            }
+                        }catch(e){}
+                        if(!usedFont) usedFont = embeddedFont || await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                        const boxW = urx - llx;
+                        const boxH = ury - lly;
+                        // start with a reasonable font size, then shrink until the text fits within boxW (with small padding)
+                        let fontSize = Math.min(boxH * 0.85, 18);
+                        let textWidth = 0;
+                        try{ textWidth = usedFont.widthOfTextAtSize ? usedFont.widthOfTextAtSize(String(text), fontSize) : (String(text).length * fontSize * 0.5); }catch(e){ textWidth = String(text).length * fontSize * 0.5; }
+                        const maxW = Math.max(4, boxW - 4);
+                        while(textWidth > maxW && fontSize > 4){
+                            fontSize = Math.max(4, Math.floor(fontSize - 1));
+                            try{ textWidth = usedFont.widthOfTextAtSize ? usedFont.widthOfTextAtSize(String(text), fontSize) : (String(text).length * fontSize * 0.5); }catch(e){ textWidth = String(text).length * fontSize * 0.5; }
+                        }
+                        // If still too wide, truncate the string to fit (avoid visual overflow)
+                        let finalText = String(text);
+                        try{
+                            while(textWidth > maxW && finalText.length > 0){
+                                finalText = finalText.slice(0, -1);
+                                textWidth = usedFont.widthOfTextAtSize ? usedFont.widthOfTextAtSize(finalText, fontSize) : (finalText.length * fontSize * 0.5);
+                            }
+                        }catch(e){ /* ignore */ }
+                        // center text horizontally and vertically
+                        const drawX = llx + Math.max(2, (boxW - textWidth) / 2);
+                        const drawY = lly + (boxH - fontSize) / 2;
+                        const useColor = colorFromDA || WRITE_COLOR;
+                        page.drawText(finalText, { x: drawX, y: drawY, size: fontSizeFromDA || fontSize, font: usedFont, color: useColor });
+                        return true;
+                    }catch(e){ return false; }
+                }
+
+            for(const f of fields){
+                try{
+                    const name = f.getName();
+                    const mapped = (map && map._lookup) ? (map._lookup[name] || map._lookup[normalize(name)] || null) : (map[name] || map[normalize(name)] || map[name.toUpperCase()] || null);
+                    let value = '';
+                    const fixedVal = (map && map._fixedLookup) ? (map._fixedLookup[name] || map._fixedLookup[normalize(name)] || null) : (map && map.fixed ? (map.fixed[name] || map.fixed[normalize(name)] || map.fixed[name.toUpperCase()] || null) : null);
+                        if(fixedVal !== null && fixedVal !== undefined){
+                        // If field has a fixed mapping (like 'u' or 'LT'), write it directly and skip further formatting
+                        const fixedStr = String(fixedVal);
+                        try{ form.getTextField(name).setText(fixedStr); makeFieldBackgroundTransparent(f); continue; }catch(e){}
+                        try{ if(typeof f.setText === 'function') { f.setText(fixedStr); makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                    } else if(mapped){
+                        value = await resolveMappedValue(mapped);
+                    } else {
+                        // fallback: try element with same name/id
+                        let el = document.getElementById(name) || document.querySelector('[name="'+name+'"]') || document.getElementById(normalize(name));
+                        if(el) value = (el.value !== undefined) ? el.value : (el.textContent || '');
+                    }
+
+                    const pad6Set = (map && map._pad6Set) ? map._pad6Set : (map && Array.isArray(map.pad6) ? new Set(map.pad6) : new Set());
+                    const needsPad6 = pad6Set.has(name) || pad6Set.has(normalize(name)) || pad6Set.has(String(name).toLowerCase()) || pad6Set.has(String(name).toUpperCase());
+
+                    // Debug: log mapping resolution for this field
+                    try{ console.debug('[pdf-fill] field=', name, 'mapped=', mapped, 'fixedVal=', fixedVal, 'valueRaw=', value, 'needsPad6=', needsPad6); }catch(e){}
+
+                    // Ensure every field is set; use '-' as fallback for empty values
+                    let setVal = (value !== undefined && value !== null && String(value).toString().trim() !== '') ? String(value) : '-';
+
+                    // Special formatting for SICAKLIK C: first char is sign (+/-), then two digits (pad with 0 if needed)
+                    try {
+                        if((name && String(name).toUpperCase() === 'SICAKLIK C') || normalize(name) === normalize('SICAKLIK C')){
+                            // Use only temp_c (ignore any temp_f). Format: sign + two digits.
+                            const tempCEl = document.getElementById('temp_c');
+                            let cVal = null;
+                            try{
+                                const cRaw = tempCEl ? (tempCEl.value !== undefined ? String(tempCEl.value).trim() : '') : '';
+                                if(cRaw !== ''){
+                                    const cnum = Number(cRaw.replace(',', '.'));
+                                    if(!Number.isNaN(cnum)) cVal = Math.round(cnum);
+                                }
+                            }catch(e){}
+
+                            if(cVal === null){
+                                setVal = '+00';
+                            } else {
+                                const sign = (cVal < 0) ? '-' : '+';
+                                const absn = Math.abs(Math.round(cVal));
+                                const digits = String(absn).padStart(2, '0').slice(-2);
+                                setVal = sign + digits;
+                            }
+                        }
+                    } catch (e) { /* ignore and continue */ }
+
+                    const maxLenMap = (map && map._maxLenLookup) ? map._maxLenLookup : (map && map.maxLen ? map.maxLen : {});
+                    const fieldMaxLen = maxLenMap[name] || maxLenMap[normalize(name)] || maxLenMap[String(name).toUpperCase()] || null;
+
+                    // Force numeric-only 6-char behavior for known fuel/amount fields (defensive)
+                    const forceNumericFields = [
+                        'res_lit','res_kg','block_fuel','total_actual','lt','la','ca','ra'
+                    ];
+                    const mappedKey = mapped || '';
+                    const forcePad = forceNumericFields.includes(String(mappedKey)) || (String(normalize(name)).includes('ikmal')) || (String(normalize(name)).includes('supply')) || (String(normalize(name)).includes('block'));
+
+                    // If this field requires 6-char numeric formatting: draw each character into separate box
+                    if(needsPad6 || forcePad){
+                        try{
+                            // prepare chars: only digits, right-aligned into fieldLen slots; empty slots become space
+                            let raw = String(value || '');
+                            // remove dots/commas/other punctuation to satisfy "no separators" requirement
+                            raw = raw.replace(/[.,]/g,'');
+                            let digits = raw.replace(/\D/g,'');
+                            const fieldLen = (fieldMaxLen && Number(fieldMaxLen) > 0) ? Number(fieldMaxLen) : 6;
+                            if(digits.length > fieldLen) digits = digits.slice(-fieldLen);
+                            // pad with plain spaces to required width
+                            digits = digits.padStart(fieldLen, ' ');
+
+                            // attempt to get widget rectangle using pdf-lib internals
+                            const acroField = f.acroField;
+                            let rect = null;
+                            try{
+                                const widgets = acroField.getWidgets ? acroField.getWidgets() : (acroField.dict.get ? acroField.dict.get(PDFLib.PDFName.of('Kids')) : null);
+                                if(widgets && widgets.length){
+                                    const w = widgets[0];
+                                    if(typeof w.getRectangle === 'function') rect = w.getRectangle();
+                                    else if(w.get('Rect')) rect = w.get('Rect');
+                                }
+                            }catch(e){}
+
+                            if(rect){
+                                // rect may be array [x1,y1,x2,y2]
+                                const llx = rect[0];
+                                const lly = rect[1];
+                                const urx = rect[2];
+                                const ury = rect[3];
+                                const width = urx - llx;
+                                const height = ury - lly;
+                                const charW = width / fieldLen;
+
+                                const pages = pdfDoc.getPages();
+                                const page = pages[0];
+                                // Try to read DA for font/size/color, fallback to Helvetica
+                                let drawFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                                let drawColor = PDFLib.rgb(0,0.38,0.89);
+                                let drawFontSize = Math.min(height * 0.9, 18);
+                                try{
+                                    let da = null;
+                                    try{ da = (acroField.getDefaultAppearance && typeof acroField.getDefaultAppearance === 'function') ? acroField.getDefaultAppearance() : null; }catch(e){}
+                                    if(!da && acroField.dict && acroField.dict.get){
+                                        try{ const daObj = acroField.dict.get(PDFLib.PDFName.of('DA')); da = daObj ? String(daObj) : null; }catch(e){}
+                                    }
+                                    if(da){
+                                        const parts = String(da).trim().split(/\s+/);
+                                        for(let i=0;i<parts.length;i++){
+                                            const t = parts[i];
+                                            if(t === 'Tf' && i>=2){
+                                                drawFontSize = parseFloat(parts[i-1]) || drawFontSize;
+                                                const fn = parts[i-2] || null;
+                                                if(fn && fn.indexOf('/') === 0){
+                                                    const fnn = fn.replace('/','');
+                                                    const map = { 'Helv':'Helvetica', 'Helvetica':'Helvetica', 'TiRo':'TimesRoman', 'Times':'TimesRoman', 'Cour':'Courier', 'Courier':'Courier' };
+                                                    let std = null;
+                                                    for(const k of Object.keys(map)) if(fnn.indexOf(k) !== -1){ std = map[k]; break; }
+                                                    if(std === 'Helvetica') drawFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                                                    else if(std === 'TimesRoman') drawFont = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
+                                                    else if(std === 'Courier') drawFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
+                                                }
+                                            }
+                                            if(t === 'rg' && i>=3){
+                                                const r = parseFloat(parts[i-3]) || 0;
+                                                const g = parseFloat(parts[i-2]) || 0;
+                                                const b = parseFloat(parts[i-1]) || 0;
+                                                drawColor = PDFLib.rgb(r,g,b);
+                                            }
+                                        }
+                                    }
+                                }catch(e){}
+                                for(let i=0;i<fieldLen;i++){
+                                    const ch = digits[i];
+                                    const cx = llx + (i + 0.5) * charW;
+                                    const drawX = cx - (drawFontSize * 0.25);
+                                    const drawY = lly + (height - drawFontSize) / 2;
+                                    if(ch && ch !== ' '){
+                                        page.drawText(ch, { x: drawX, y: drawY, size: drawFontSize, font: drawFont, color: drawColor });
+                                    }
+                                }
+                                continue;
+                            }
+
+                            // fallback: try to draw into widget rect; if not possible, set the field value
+                            try{ const drawn = await drawTextIntoWidget(f, digits); if(drawn){ makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                            try{ form.getTextField(name).setText(digits); makeFieldBackgroundTransparent(f); continue; }catch(e){}
+                            try{ if(typeof f.setText === 'function') { f.setText(digits); makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                        }catch(e){ /* fallback to simple setText below */ }
+                    }
+
+                    // Apply maxLen padding/trimming for non-pad6 fields (or fallback after pad6 failure)
+                    let finalVal = setVal;
+                    try{
+                        if(fieldMaxLen !== null){
+                            let raw = String(setVal || '');
+                            // Special case: KUYRUK KODU should be exactly the tail characters, no padding
+                            if((name && String(name).toUpperCase() === 'KUYRUK KODU') || normalize(name) === normalize('KUYRUK KODU')){
+                                let cleaned = raw.toString().trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+                                if(cleaned.length > fieldMaxLen) cleaned = cleaned.slice(-fieldMaxLen);
+                                finalVal = cleaned;
+                            } else {
+                                // remove punctuation for numeric/text and then decide
+                                const cleanedRaw = raw.replace(/[.,]/g,'').trim();
+                                const isNumericLike = /^[0-9\s]+$/.test(cleanedRaw);
+                                if(isNumericLike){
+                                    let cleaned = cleanedRaw;
+                                    if(cleaned.length > fieldMaxLen) cleaned = cleaned.slice(-fieldMaxLen);
+                                    finalVal = cleaned.padStart(fieldMaxLen, ' ');
+                                } else {
+                                    let cleaned = cleanedRaw;
+                                    if(cleaned.length > fieldMaxLen) cleaned = cleaned.slice(0, fieldMaxLen);
+                                    finalVal = cleaned.padStart(fieldMaxLen, ' ');
+                                }
+                            }
+                        }
+                    }catch(e){ finalVal = setVal; }
+
+                    try{ const drawn = await drawTextIntoWidget(f, finalVal); if(drawn){ makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                    try{ form.getTextField(name).setText(finalVal); makeFieldBackgroundTransparent(f); continue; }catch(e){}
+                    try{ if(typeof f.setText === 'function') { f.setText(finalVal); makeFieldBackgroundTransparent(f); } }catch(e){}
+                }catch(e){ /* ignore per-field errors */ }
+            }
+
+            try{ form.flatten(); }catch(e){}
+
+            const pdfBytes = await pdfDoc.save();
+            const blob = new Blob([pdfBytes], {type: 'application/pdf'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = 'fuel-slip-filled.pdf'; document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+            btn.textContent = 'Fiş Yazdır';
+        }catch(err){
+            console.error('PDF oluşturulurken hata:', err);
+            btn.textContent = 'Fiş Yazdır';
+        }finally{ btn.disabled = false; }
+    });
+})();
 </script>
 </body>
 </html>
