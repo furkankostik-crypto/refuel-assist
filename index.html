@@ -486,7 +486,10 @@
 
                             document.getElementById('sw-update-btn')?.addEventListener('click', () => {
                                 const btn = document.getElementById('sw-update-btn');
-                                // show immediate feedback
+                                const bar = document.getElementById('sw-update');
+                                // immediately hide banner for better UX; if update fails we'll restore it
+                                try { if (bar) bar.style.display = 'none'; } catch (e) {}
+                                // show immediate feedback on button
                                 try {
                                     const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
                                     const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
@@ -532,11 +535,19 @@
                                             if (btn) {
                                                 try { const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase(); const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {}; btn.disabled = false; btn.textContent = dict.sw_update_reload || 'GÜNCELLE'; btn.style.opacity = ''; } catch (e) {}
                                             }
-                                            const bar = document.getElementById('sw-update');
                                             if (bar) {
-                                                // no waiting worker found — hide banner to avoid persistent UI
+                                                // no waiting worker found — keep banner hidden for now
                                                 bar.style.display = 'none';
                                             }
+                                            // If update didn't complete, restore the banner and button after a short delay
+                                            setTimeout(() => {
+                                                try {
+                                                    if (!window.__swReloading) {
+                                                        if (bar) bar.style.display = 'flex';
+                                                        try { const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase(); const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {}; if (btn) { btn.disabled = false; btn.textContent = dict.sw_update_reload || 'GÜNCELLE'; btn.style.opacity = ''; } } catch (e) {}
+                                                    }
+                                                } catch (e) {}
+                                            }, 6000);
                                         }, 4000);
                                     }
                                 });
