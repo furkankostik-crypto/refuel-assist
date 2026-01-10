@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Refuel Assist v7.3</title>
+    <title>Refuel Assist v7.3.46</title>
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="assets/logo-192.png">
@@ -384,6 +384,108 @@
                     <button id="lang-tr" type="button" aria-pressed="false" aria-label="Türkçe">TR</button>
                     <button id="lang-en" type="button" aria-pressed="false" aria-label="English">EN</button>
                 </div>
+                    <script>
+                    if ('serviceWorker' in navigator) {
+                        window.addEventListener('load', () => {
+                            navigator.serviceWorker.register('./sw.js').then(reg => {
+                                try { reg.update(); } catch (e) {}
+                            }).catch(() => {});
+
+                            // Listen for messages from SW
+                            navigator.serviceWorker.addEventListener('message', (ev) => {
+                                try {
+                                    const d = ev && ev.data;
+                                    if (!d) return;
+                                    if (d.type === 'NEW_VERSION') {
+                                        const bar = document.getElementById('sw-update');
+                                        const txt = document.getElementById('sw-update-text');
+                                        const btn = document.getElementById('sw-update-btn');
+                                        if (bar) bar.style.display = 'flex';
+                                        if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
+                                        // set button label from translations if available
+                                        try {
+                                            const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
+                                            const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
+                                            if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
+                                        } catch (e) {}
+                                        // store registration reference for click handler
+                                        try { navigator.serviceWorker.getRegistration().then(r => { window.__swReg = r; }).catch(()=>{}); } catch(e) {}
+                                    }
+                                } catch (e) {}
+                            });
+
+                            document.getElementById('sw-update-btn')?.addEventListener('click', () => {
+                                const btn = document.getElementById('sw-update-btn');
+                                // show immediate feedback
+                                try {
+                                    const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
+                                    const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
+                                    if (btn) {
+                                        btn.disabled = true;
+                                        btn.textContent = dict.sw_update_progress || 'GÜNCELLENİYOR...';
+                                        btn.style.opacity = '0.7';
+                                    }
+                                } catch (e) {}
+
+                                navigator.serviceWorker.getRegistration().then(reg => {
+                                    const waiting = (reg && reg.waiting) || (window.__swReg && window.__swReg.waiting);
+                                    if (waiting) {
+                                        try {
+                                            waiting.postMessage({ type: 'SKIP_WAITING' });
+                                        } catch (e) {}
+                                        try {
+                                            // listen for the worker to become activated
+                                            if (!waiting.__sw_state_attached) {
+                                                waiting.__sw_state_attached = true;
+                                                waiting.addEventListener('statechange', function () {
+                                                    try {
+                                                        const st = waiting.state;
+                                                        if (st === 'activated') {
+                                                            const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
+                                                            if (!window.__swReloading) { window.__swReloading = true; window.location.reload(); }
+                                                        }
+                                                    } catch (e) {}
+                                                });
+                                            }
+                                        } catch (e) {}
+                                    } else {
+                                        // If no waiting worker, but a controlling worker exists, reload immediately to pick up new SW
+                                        try {
+                                            if (navigator.serviceWorker.controller) {
+                                                const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
+                                                if (!window.__swReloading) { window.__swReloading = true; window.location.reload(); }
+                                                return;
+                                            }
+                                        } catch (e) {}
+                                        // no waiting SW — re-enable button after short timeout and show hint
+                                        setTimeout(() => {
+                                            if (btn) {
+                                                try { const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase(); const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {}; btn.disabled = false; btn.textContent = dict.sw_update_reload || 'GÜNCELLE'; btn.style.opacity = ''; } catch (e) {}
+                                            }
+                                            const bar = document.getElementById('sw-update');
+                                            if (bar) {
+                                                // leave bar visible; could also show a small message
+                                            }
+                                        }, 4000);
+                                    }
+                                });
+                            });
+                            // Reload page when the new Service Worker takes control
+                            try {
+                                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                    try {
+                                        const bar = document.getElementById('sw-update');
+                                        if (bar) bar.style.display = 'none';
+                                        if (!window.__swReloading) {
+                                            window.__swReloading = true;
+                                            window.location.reload();
+                                        }
+                                    } catch (e) {}
+                                });
+                            } catch (e) {}
+                        });
+                    }
+                    </script>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; flex: 1; width:100%;">
                 <img class="app-logo" src="assets/logo-512.png" alt="Refuel Assist" style="width:96px;max-width:96px;margin-top:18px;">
@@ -391,6 +493,12 @@
                 <div id="subtitle" class="logo-subtitle" style="font-size:10px;">Flight Operations Support</div>
                 <div class="logo-line" style="width:120px;margin:12px auto;"></div>
             </div>
+        </div>
+
+        <!-- Update notification (hidden until SW notifies) -->
+        <div id="sw-update" style="display:none; width:100%; max-width:420px; margin: 8px 0; padding:10px; border-radius:12px; background: linear-gradient(90deg, rgba(56,189,248,0.04), rgba(15,23,42,0.6)); display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div id="sw-update-text" style="font-weight:800;color:#f59e0b;font-size:13px">Yeni sürüm hazır.</div>
+            <button id="sw-update-btn" class="mini-pill primary" style="padding:6px 10px; min-width:unset;">GÜNCELLE</button>
         </div>
 
         <!-- Kılavuz erişimi (kapak sayfası) -->
@@ -962,7 +1070,8 @@
                 guide_foot: 'Bu pencere ilk kullanımda bir kez otomatik gösterilir.'
                 ,
                 sw_update_ready: 'Yeni sürüm hazır.',
-                sw_update_reload: 'YENİLE',
+                sw_update_progress: 'GÜNCELLENİYOR...',
+                    sw_update_reload: 'GÜNCELLE',
                 act_none: 'İlave Merkez Tank Yok',
                 act_1: '1 İlave Merkez Tank',
                 act_2: '2 İlave Merkez Tank',
@@ -1005,6 +1114,7 @@
                 guide_foot: 'This dialog is auto-shown once on first use.'
                 ,
                 sw_update_ready: 'A new version is ready.',
+                sw_update_progress: 'UPDATING...',
                 sw_update_reload: 'RELOAD',
                 act_none: 'No Additional Centre Tank',
                 act_1: '1 Additional Centre Tank',

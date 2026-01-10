@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>Refuel Assist v7.3 - Yükleme</title>
+    <title>Refuel Assist v7.3.46 - Yükleme</title>
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="assets/logo-192.png">
@@ -146,6 +146,28 @@
             color: var(--amber);
         }
 
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .p-card {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            min-height: 56px;
+        }
+        .p-icon { font-size: 20px; width:28px; text-align:center }
+        .p-title { font-weight: 900; font-size: 12px; color: #e2e8f0 }
+        .p-desc { font-size: 11px; color: #94a3b8 }
+        @media (max-width:420px) {
+            .platform-grid { grid-template-columns: 1fr; }
+        }
+
         .footer-note {
             margin-top: 12px;
             font-size: 11px;
@@ -170,15 +192,33 @@
         </div>
 
         <div class="panel">
-            <div id="install-title" class="panel-title">UYGULAMAYI YÜKLE</div>
-            <div id="install-desc" class="desc">Uygulamayı telefona/PC'ye yükleyerek daha hızlı ve çevrimdışı kullanabilirsiniz.</div>
+            <div id="install-title" class="panel-title">UYGULAMAYI YÜKLE VEYA DENEME</div>
+            <div id="install-desc" class="desc">Uygulamayı yükleyerek daha hızlı erişim, çevrimdışı çalışma ve uygulama benzeri deneyim elde edersiniz. Aşağıdaki adımları cihazınıza göre izleyin.</div>
+
+            <div class="platform-grid" role="list" aria-label="Platform talimatları">
+                <div class="p-card" id="plat-android" role="listitem">
+                    <div class="p-icon">🤖</div>
+                    <div>
+                        <div class="p-title" id="plat-android-title">Android</div>
+                        <div class="p-desc" id="plat-android-desc">Android/Chrome: Menü (⋮) → "Uygulamayı yükle" veya "Ana ekrana ekle".</div>
+                    </div>
+                </div>
+                <div class="p-card" id="plat-ios" role="listitem">
+                    <div class="p-icon">🍎</div>
+                    <div>
+                        <div class="p-title" id="plat-ios-title">iPhone / iPad</div>
+                        <div class="p-desc" id="plat-ios-desc">Safari: Paylaş (⬆︎) → "Ana Ekrana Ekle".</div>
+                    </div>
+                </div>
+                <!-- Masaüstü kartı gereksiz bulundu, kaldırıldı -->
+            </div>
 
             <button id="install-btn" type="button" class="btn-primary">YÜKLE</button>
-            <div id="install-steps" class="steps"></div>
-            <div id="install-msg" class="msg"></div>
+            <div id="install-steps" class="steps" aria-live="polite"></div>
+            <div id="install-msg" class="msg" role="alert"></div>
 
-            <button id="try-btn" type="button" class="btn-secondary">YÜKLEMEDEN DENEMEK İSTİYORUM</button>
             <div id="try-note" class="footer-note">Not: Yüklemeden de kullanabilirsiniz. Dilerseniz daha sonra yükleyebilirsiniz.</div>
+            <button id="try-btn" type="button" class="btn-secondary">YÜKLEMEDEN DENEMEK İSTİYORUM</button>
         </div>
 
         <div class="footer-note" style="margin-top:14px;max-width:95%;">
@@ -232,12 +272,16 @@
             install_steps_android_ready: 'Tarayıcı destekliyorsa aşağıdaki buton ile kurulum penceresi açılır.',
             install_steps_android_menu: 'Android/Chrome: Menü (⋮) > "Uygulamayı yükle" / "Ana ekrana ekle".',
             install_steps_ios: 'iPhone/iPad (Safari): Paylaş (⬆︎) > "Ana Ekrana Ekle".',
-            install_steps_desktop: 'Bilgisayar: Adres çubuğunda yükleme simgesi varsa tıklayın veya tarayıcı menüsünden "Install" seçin.',
             install_click_no_prompt: 'Bu tarayıcıda otomatik "Yükle" penceresi çıkmıyor. Yukarıdaki adımları takip edin.',
+            platform_android_title: 'Android',
+            platform_android_desc: 'Android/Chrome: Menü (⋮) → "Uygulamayı yükle" veya "Ana ekrana ekle".',
+            platform_ios_title: 'iPhone / iPad',
+            platform_ios_desc: 'Safari: Paylaş (⬆︎) → "Ana Ekrana Ekle".',
             try_btn: 'YÜKLEMEDEN DENEMEK İSTİYORUM',
             try_note: 'Not: Yüklemeden de kullanabilirsiniz. Dilerseniz daha sonra yükleyebilirsiniz.',
             sw_update_ready: 'Yeni sürüm hazır.',
-            sw_update_reload: 'YENİLE'
+            sw_update_progress: 'GÜNCELLENİYOR...',
+            sw_update_reload: 'GÜNCELLE'
         },
         en: {
             subtitle: 'Flight Operations Support',
@@ -247,11 +291,15 @@
             install_steps_android_ready: 'If supported, the install prompt will open via the button below.',
             install_steps_android_menu: 'Android/Chrome: Menu (⋮) > "Install app" / "Add to Home screen".',
             install_steps_ios: 'iPhone/iPad (Safari): Share (⬆︎) > "Add to Home Screen".',
-            install_steps_desktop: 'Desktop: Use the install icon in the address bar or choose "Install" from the browser menu.',
             install_click_no_prompt: 'The automatic install prompt is not available here. Please follow the steps above.',
+                platform_android_title: 'Android',
+                platform_android_desc: 'Android/Chrome: Menu (⋮) → "Install app" or "Add to Home screen".',
+                platform_ios_title: 'iPhone / iPad',
+                platform_ios_desc: 'Safari: Share (⬆︎) → "Add to Home Screen".',
             try_btn: 'TRY WITHOUT INSTALLING',
             try_note: 'Note: You can use it without installing. You can install later if you want.',
             sw_update_ready: 'A new version is ready.',
+            sw_update_progress: 'UPDATING...',
             sw_update_reload: 'RELOAD'
         }
     };
@@ -289,6 +337,15 @@
         if (swUpdateText) swUpdateText.textContent = dict.sw_update_ready;
         if (swUpdateBtn) swUpdateBtn.textContent = dict.sw_update_reload;
 
+        const platAndroidTitle = document.getElementById('plat-android-title');
+        const platAndroidDesc = document.getElementById('plat-android-desc');
+        const platIosTitle = document.getElementById('plat-ios-title');
+        const platIosDesc = document.getElementById('plat-ios-desc');
+        if (platAndroidTitle) platAndroidTitle.textContent = dict.platform_android_title;
+        if (platAndroidDesc) platAndroidDesc.textContent = dict.platform_android_desc;
+        if (platIosTitle) platIosTitle.textContent = dict.platform_ios_title;
+        if (platIosDesc) platIosDesc.textContent = dict.platform_ios_desc;
+
         const btnTr = document.getElementById('lang-tr');
         const btnEn = document.getElementById('lang-en');
         if (btnTr && btnEn) {
@@ -311,25 +368,24 @@
         const installMsg = document.getElementById('install-msg');
         if (!installBtn || !installSteps) return;
         if (installMsg) installMsg.style.display = 'none';
+        // Butonu her zaman etkin bırak: tıklayınca yükleme denenir, başarısızsa yönergeler gösterilir.
+        installBtn.disabled = false;
+        installBtn.style.opacity = '1';
 
         const lines = [];
+        const pushIf = (key) => { const v = dict[key]; if (v) lines.push('• ' + v); };
         if (isIOS()) {
-            installBtn.disabled = false;
-            installBtn.style.opacity = '1';
-            lines.push('• ' + dict.install_steps_ios);
+            pushIf('install_steps_ios');
+        } else if (deferredPrompt) {
+            pushIf('install_steps_android_ready');
+        } else if (isAndroid()) {
+            pushIf('install_steps_android_menu');
         } else {
-            if (deferredPrompt) {
-                installBtn.disabled = false;
-                installBtn.style.opacity = '1';
-                lines.push('• ' + dict.install_steps_android_ready);
-            } else {
-                installBtn.disabled = true;
-                installBtn.style.opacity = '0.45';
-                if (isAndroid()) lines.push('• ' + dict.install_steps_android_menu);
-                else lines.push('• ' + dict.install_steps_desktop);
-            }
+            // non-mobile: show mobile-only hint if present
+            pushIf('install_only_mobile');
         }
-        installSteps.textContent = lines.join('\n');
+
+        installSteps.textContent = lines.length ? lines.join('\n') : '';
     }
 
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -348,20 +404,49 @@
         const lang = getLang();
         const dict = I18N[lang] || I18N.tr;
         const installMsg = document.getElementById('install-msg');
+        const installSteps = document.getElementById('install-steps');
 
-        if (!deferredPrompt) {
-            if (installMsg) {
-                installMsg.textContent = dict.install_click_no_prompt;
-                installMsg.style.display = 'block';
-                setTimeout(() => { try { installMsg.style.display = 'none'; } catch (e) {} }, 4500);
+        const showInstructions = () => {
+            if (installSteps) {
+                // ensure platform steps shown (setInstallUIState already populates them)
+                setInstallUIState();
             }
-            return;
-        }
+            if (installMsg) {
+                installMsg.textContent = dict.install_click_no_prompt || 'Yükleme otomatik olarak başlatılamadı. Lütfen yukarıdaki adımları izleyin.';
+                installMsg.style.display = 'block';
+                setTimeout(() => { try { installMsg.style.display = 'none'; } catch (e) {} }, 6000);
+            }
+        };
 
-        deferredPrompt.prompt();
-        try { await deferredPrompt.userChoice; } catch (e) {}
-        deferredPrompt = null;
-        setInstallUIState();
+        try {
+            if (deferredPrompt) {
+                // Try the native install prompt
+                try {
+                    deferredPrompt.prompt();
+                    const choice = await deferredPrompt.userChoice;
+                    if (choice && choice.outcome === 'accepted') {
+                        if (installMsg) {
+                            installMsg.textContent = dict.sw_update_ready || 'Yükleme kabul edildi.';
+                            installMsg.style.display = 'block';
+                            setTimeout(() => { try { installMsg.style.display = 'none'; } catch (e) {} }, 2500);
+                        }
+                    } else {
+                        // dismissed by user -> show manual instructions
+                        showInstructions();
+                    }
+                } catch (err) {
+                    // prompt failed -> show instructions
+                    showInstructions();
+                }
+                deferredPrompt = null;
+                setInstallUIState();
+            } else {
+                // No deferredPrompt available -> show manual instructions
+                showInstructions();
+            }
+        } catch (e) {
+            showInstructions();
+        }
     });
 
     document.getElementById('try-btn')?.addEventListener('click', () => {

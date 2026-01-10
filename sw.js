@@ -1,4 +1,4 @@
-const CACHE_NAME = 'refuel-assist-v7.3.44';
+const CACHE_NAME = 'refuel-assist-v7.3.47';
 const urlsToCache = [
   './',
   './index.html',
@@ -15,11 +15,19 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
-  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+      .then(() => {
+        // Aktifleştirme beklemeden önce yeni sürüm olduğunu clientlara bildir
+        return self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(clients => {
+          if (clients && clients.length) {
+            clients.forEach(c => {
+              try { c.postMessage({ type: 'NEW_VERSION', version: CACHE_NAME }); } catch (e) {}
+            });
+          }
+        });
+      })
+      .then(() => self.skipWaiting())
   );
 });
 
