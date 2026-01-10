@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Refuel Assist v7.3</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/logo-192.png">
+    <link rel="apple-touch-icon" href="assets/logo-192.png">
+    <style>
+        :root { --primary: #38bdf8; --primary-rgb: 56,189,248; --bg: #0f172a; --amber: #f59e0b; --brand-font: 'Segoe UI', Arial, sans-serif; }
+        body { font-family: var(--brand-font); background-color: var(--bg); color: white; margin: 0; display: flex; justify-content: center; overflow-x: hidden; overflow-y: auto; height: auto; min-height: 100dvh; }
+        .page { width: 100%; max-width: 420px; padding: 12px; box-sizing: border-box; overflow-y: auto; height: auto; min-height: 100dvh; }
+        .hero-section { text-align: center; margin-bottom: 40px; }
+        .app-logo { width: 128px; height: auto; display: block; margin: 0 auto 2px auto; }
+        .logo-text { font-size: 34px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0; }
+        .logo-text .bold { font-weight: 900; letter-spacing: -1px; }
+        .logo-text .light { font-weight: 200; color: var(--primary); letter-spacing: 4px; }
+        .logo-subtitle { font-size: 11px; font-weight: 700; color: #64748b; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px; }
+        .logo-line { height: 1px; width: 180px; background: linear-gradient(90deg, transparent, var(--primary), transparent); margin: 20px auto; opacity: 0.3; }
+        .fleet-container { width: 100%; display: flex; flex-direction: column; gap: 15px; }
+        .fleet-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255,255,255,0.10);
+            width: 100%;
+            min-height: 72px;
+            padding: 28px 18px;
+            border-radius: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.18s cubic-bezier(.4,1.4,.6,1), background 0.18s, border-color 0.18s;
+            box-sizing: border-box;
+            text-decoration: none;
+            color: inherit;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .fleet-card:active, .fleet-card.pressed {
+            transform: scale(0.97);
+            background: rgba(56, 189, 248, 0.13);
+            border-color: var(--primary);
+        }
+        .brand-card-wrap.selected .fleet-card {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.18);
+            background: rgba(56, 189, 248, 0.10);
+        }
+        /* Ensure brand-card elements also get selected styling (fix for manual-selection visuals) */
+        .brand-card-wrap.selected .brand-card {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.12);
+            background: rgba(56, 189, 248, 0.06);
+            transform: none;
+        }
+        /* Expanded state for selected brand card when model selection completes */
+        .brand-card-wrap.expanded {
+            padding: 18px;
+            border-width: 2px;
+            box-shadow: 0 10px 40px rgba(2,6,23,0.6);
+            background: linear-gradient(180deg, rgba(56,189,248,0.04), rgba(15,23,42,0.6));
+            transform: translateY(-4px);
+        }
+        .fleet-logo {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: none;
+        }
+        .fleet-logo img.brand-logo {
+            width: 56px;
+            height: 56px;
+            display: block;
+            object-fit: contain;
+            margin-top: 1px;
+            margin-bottom: 1px;
+            transform-origin: 50% 50%;
+        }
+        /* Algısal eşitlik için daha agresif scale */
+        .fleet-logo img.brand-logo.brand-airbus { transform: scale(1.22); }
+        .fleet-logo img.brand-logo.brand-boeing { transform: scale(0.85); }
+        .brand-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 1000;
+            letter-spacing: 0.5px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(56,189,248,0.12);
+        }
+        .fleet-info { flex-grow: 1; }
+        .fleet-card h2 { margin: 0; font-size: 18px; font-weight: 800; color: #fff; }
+        .fleet-card .limits { margin-top: 4px; font-size: 9px; color: #94a3b8; font-weight: 600; letter-spacing: 0.5px; }
+        .fleet-card .max-val { margin-top: 6px; font-size: 11px; color: var(--primary); font-weight: 800; }
+
+        .selector-panel {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 14px;
+        }
+        .selector-title {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        .selector-row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+        .selector-input, .selector-select {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255,255,255,0.10);
+            color: white;
+            border-radius: 14px;
+            padding: 12px 12px;
+            font-size: 12px;
+            font-weight: 800;
+            outline: none;
+            box-sizing: border-box;
+        }
+        /* Sadece kuyruk kodu input'u dar ve ortalı olsun */
+        #tail-input.selector-input {
+            width: 180px;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 10px 14px 10px 16px;
+            font-size: 28px;
+            text-align: center;
+            display: block;
+            position: relative;
+        }
+        .selector-input::placeholder { color: #64748b; font-weight: 800; }
+        .selector-hint {
+            margin-top: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.35;
+            color: #94a3b8;
+            text-align: center;
+        }
+        .brand-grid { display: flex; flex-direction: column; gap: 10px; }
+        .brand-card-wrap {
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(30, 41, 59, 0.35);
+            border-radius: 20px;
+            padding: 14px;
+            box-sizing: border-box;
+        }
+        .brand-card {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            padding: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: inherit;
+            text-align: left;
+        }
+        .brand-card:active { transform: scale(0.98); }
+        .brand-card-wrap.selected { border-color: var(--primary); background: rgba(56, 189, 248, 0.08); }
+        .brand-card .brand-name { margin: 0; font-size: 14px; font-weight: 900; }
+        .brand-card .brand-sub { margin-top: 2px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; color: #94a3b8; }
+        .brand-card-wrap .reveal { margin-top: 12px; }
+        .btn-primary {
+            width: 100%;
+            margin-top: 14px;
+            background: rgba(56,189,248,0.18);
+            border: 2px solid rgba(56,189,248,0.28);
+            color: white;
+            padding: 10px 0;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            min-height: 36px;
+            user-select: none;
+            touch-action: manipulation;
+            transition: background 0.2s, border 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:active {
+            background: rgba(56,189,248,0.28);
+            border-color: var(--primary);
+        }
+        .btn-primary:disabled { opacity: 0.30; cursor: not-allowed; }
+        .divider-note {
+            margin: 6px 0 0 0;
+            text-align: center;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .lang-toggle {
+            display: flex;
+            position: fixed;
+            top: calc(10px + env(safe-area-inset-top, 8px));
+            left: calc(10px + env(safe-area-inset-left, 8px));
+            gap: 6px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(15, 23, 42, 0.28);
+            backdrop-filter: blur(6px);
+            padding: 4px;
+            overflow: visible;
+            margin: 0;
+            z-index: 9999;
+            transition: background 160ms ease, transform 120ms ease;
+        }
+        .lang-toggle button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: #cbd5e1;
+            padding: 6px 8px;
+            min-width: 44px;
+            min-height: 44px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            line-height: 1;
+            border-radius: 9999px;
+            transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .lang-toggle button:hover { background: rgba(255,255,255,0.02); transform: translateY(-1px); }
+        }
+        /* Touch feedback */
+        .lang-toggle button:active { transform: translateY(0); background: rgba(255,255,255,0.03); }
+        .lang-toggle button.active {
+            color: var(--primary);
+            background: rgba(56,189,248,0.08);
+            border: 1px solid rgba(56,189,248,0.08);
+        }
+        .lang-toggle button:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(56,189,248,0.08); border-radius: 9999px; }
+        .lang-toggle button.active {
+            color: white;
+            background: rgba(56,189,248,0.18);
+        }
+
+        .reveal {
+            overflow: hidden;
+            max-height: 240px;
+            opacity: 1;
+            transform: translateY(0);
+            transition: max-height 260ms ease, opacity 220ms ease, transform 220ms ease;
+        }
+        .reveal.is-hidden {
+            max-height: 0;
+            opacity: 0;
+            transform: translateY(-6px);
+        }
+        .is-hidden {
+            display: none !important;
+        }
+
+        /* Soft hide that allows transitions (fade/slide) without removing from layout via display:none */
+        .fade-hidden {
+            opacity: 0;
+            transform: translateY(8px) scale(0.995);
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .32s ease, transform .32s cubic-bezier(.2,.9,.2,1);
+            will-change: opacity, transform;
+        }
+
+        /* Tail panel transition tweaks */
+        #tail-panel {
+            overflow: hidden;
+            transition: opacity .32s ease, transform .32s cubic-bezier(.2,.9,.2,1), max-height .36s ease;
+            will-change: opacity, transform, max-height;
+        }
+
+        .mini-pill {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,0.10);
+            background: rgba(30, 41, 59, 0.55);
+            color: #94a3b8;
+            padding: 10px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+            cursor: pointer;
+            line-height: 1;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .mini-pill.primary {
+            color: white;
+            background: rgba(56,189,248,0.18);
+            border-color: rgba(56,189,248,0.28);
+        }
+
+        /* Guide FAB */
+        .guide-fab {
+            position: fixed;
+            top: calc(12px + env(safe-area-inset-top, 12px));
+            right: calc(12px + env(safe-area-inset-right, 12px));
+            z-index: 1001;
+            width: 40px;
+            height: 40px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            background: rgba(56,189,248,0.06);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: var(--primary);
+            border-radius: 10px;
+            padding: 0;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+            transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .guide-fab:hover { transform: translateY(-2px); background: rgba(56,189,248,0.08); }
+        }
+        .guide-fab:active { transform: translateY(0); background: rgba(56,189,248,0.06); }
+        .guide-fab:focus-visible { outline: none; box-shadow: 0 0 0 6px rgba(56,189,248,0.06); }
+        .guide-fab svg { width: 18px; height: 18px; display:block; }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); overflow-y: auto; height: 100dvh; min-height: 100dvh;">
+        <div class="hero-section" style="margin-bottom: 18px; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 0; min-height:180px;">
+            <div style="position:fixed;top:calc(12px + env(safe-area-inset-top,12px));left:calc(12px + env(safe-area-inset-left,12px));z-index:9999;margin:0;">
+                <div class="lang-toggle" role="group" aria-label="Language" style="margin:0;">
+                    <button id="lang-tr" type="button" aria-pressed="false" aria-label="Türkçe">TR</button>
+                    <button id="lang-en" type="button" aria-pressed="false" aria-label="English">EN</button>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; width:100%;">
+                <img class="app-logo" src="assets/logo-512.png" alt="Refuel Assist" style="width:96px;max-width:96px;margin-top:18px;">
+                <div class="logo-text" style="font-size:26px;"><span class="bold">REFUEL</span><span class="light">ASSIST</span></div>
+                <div id="subtitle" class="logo-subtitle" style="font-size:10px;">Flight Operations Support</div>
+                <div class="logo-line" style="width:120px;margin:12px auto;"></div>
+            </div>
+        </div>
+
+        <!-- Kılavuz erişimi (kapak sayfası) -->
+
+        <!-- Kullanım Kılavuzu Modalı -->
+        <div id="guide-modal" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100vw;height:100dvh;background:rgba(15,23,42,0.82);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+            <div style="background:rgba(30,41,59,0.98);border-radius:18px;max-width:370px;width:92vw;padding:18px 18px 16px 18px;box-shadow:0 8px 32px 0 rgba(56,189,248,0.13);color:#e0f2fe;position:relative;max-height:78vh;overflow:auto;-webkit-overflow-scrolling:touch;">
+                <button id="guide-close" title="Kapat" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#38bdf8;font-size:22px;font-weight:900;cursor:pointer;">×</button>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#38bdf8" opacity="0.18"/><circle cx="12" cy="12" r="9.5" fill="#38bdf8"/><text x="12" y="17" text-anchor="middle" font-size="13" font-family="Segoe UI,Arial,sans-serif" fill="#fff" font-weight="bold">i</text></svg>
+                    <span id="guide-title" style="color:#38bdf8;font-weight:900;font-size:16px;">Kullanım Kılavuzu</span>
+                </div>
+                <ol id="guide-steps" style="margin:0 0 0 18px;padding:0;list-style:decimal;color:#e0f2fe;font-size:13px;line-height:1.65;">
+                    <li>…</li>
+                </ol>
+                <div id="guide-foot" style="margin-top:12px;font-size:12px;color:#94a3b8;">Bu pencere ilk kullanımda bir kez otomatik gösterilir.</div>
+            </div>
+        </div>
+
+        <div class="fleet-container" style="gap:10px;">
+
+            <!-- Kuyruk kodu alanı bağımsız panel -->
+            <div class="selector-panel" id="tail-panel" style="order:-1;box-shadow:0 2px 12px 0 rgba(56,189,248,0.10);padding:16px 12px 12px 12px;">
+                <div id="tail-title" class="selector-title" style="font-size:12px;letter-spacing:1.5px;margin-bottom:4px;">KUYRUK KODU</div>
+                <div class="selector-row" style="justify-content:center;align-items:center;gap:0; width:100%; min-height:56px;">
+                    <div class="tail-input-wrap" style="width:220px;display:flex;justify-content:space-between;align-items:center;margin:0 auto;box-sizing:border-box;">
+                        <input id="tail-input" class="selector-input" type="text" inputmode="text" maxlength="6" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="TC-___" aria-label="Tail Code" style="height:56px;line-height:normal;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-weight:800;letter-spacing:3px;text-transform:uppercase;box-sizing:border-box; width:180px; text-align:center; display:block;" />
+                        <span id="tail-check" style="display:none; font-size:22px; color:#22c55e; vertical-align:middle; position:static; transform:none; width:auto; height:auto; right:auto; top:auto; z-index:auto; align-items:center; justify-content:center; transition:opacity 0.12s, transform 0.12s; margin-left:8px;">✔</span>
+                    </div>
+                </div>
+                <div id="tail-info-box" style="display:none;margin-top:18px;text-align:center;transition:all 0.3s;">
+                        <div id="tail-hint" class="selector-hint" style="display:none;"></div>
+                        <div id="tail-summary" style="margin-bottom:8px;display:none;"></div>
+                        <div id="tail-limits" class="selector-hint" style="margin-bottom:10px;"></div>
+                    <button id="go-btn" type="button" class="btn-primary" disabled style="transition:background 0.2s, color 0.2s;width:100%;max-width:220px;margin:0 auto;">HESAPLAMAYA GİT</button>
+                </div>
+            </div>
+
+            <!-- Model seçimi bağımsız panel -->
+            <button id="manual-select-btn" class="mini-pill" style="margin:16px auto 0 auto;display:block;font-size:12px;font-weight:900;letter-spacing:1px;border-radius:18px;padding:7px 18px;background:rgba(56,189,248,0.10);color:#38bdf8;border:1.5px solid #38bdf8;transition:background 0.2s;min-width:140px;">Veya Manuel Seçin</button>
+            <div class="selector-panel is-hidden" id="advanced-panel">
+                <div id="adv-title" class="selector-title">MODEL SEÇİMİ</div>
+                <div class="brand-grid" aria-label="Brand">
+                    <div id="brand-airbus-wrap" class="brand-card-wrap">
+                        <button id="brand-airbus" type="button" class="brand-card" data-oem="AIRBUS">
+                            <div class="fleet-logo" aria-hidden="true"><img class="brand-logo brand-airbus" src="assets/airbus.svg" alt=""></div>
+                            <div class="fleet-info">
+                                <h3 class="brand-name">Airbus</h3>
+                                <div class="brand-sub" id="brand-airbus-sub">Select family & model</div>
+                            </div>
+                        </button>
+                    </div>
+                    <div id="brand-boeing-wrap" class="brand-card-wrap">
+                        <button id="brand-boeing" type="button" class="brand-card" data-oem="BOEING">
+                            <div class="fleet-logo" aria-hidden="true"><img class="brand-logo brand-boeing" src="assets/boeing.svg" alt=""></div>
+                            <div class="fleet-info">
+                                <h3 class="brand-name">Boeing</h3>
+                                <div class="brand-sub" id="brand-boeing-sub">Select family & model</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+                <div id="selectors-host">
+                    <div id="model-row" class="reveal is-hidden">
+                        <div class="selector-row">
+                            <select id="model-select" class="selector-select" aria-label="Model" disabled>
+                                <option value="">Model</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="variant-row" class="reveal is-hidden">
+                        <div class="selector-row">
+                            <select id="variant-select" class="selector-select" aria-label="Variant" disabled>
+                                <option value="">Variant</option>
+                            </select>
+                        </div>
+                        <div class="selector-row is-hidden" id="act-row">
+                            <select id="act-select" class="selector-select" aria-label="ACT Option">
+                            </select>
+                        </div>
+                    </div>
+                    <div id="manual-go-wrap" style="margin-top:12px; display:none; text-align:center;">
+                        <button id="go-btn-adv" type="button" class="btn-primary" disabled style="max-width:220px;">HESAPLAMAYA GİT</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Artık buton ve limitler tail-panel içinde, eski bağımsız buton kaldırıldı. -->
+
+        </div>
+    </div>
+
+    <!-- Warning Modal -->
+    <div id="warning-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 style="color: #dc2626; margin: 0 0 10px 0;">⚠️ Uyarı</h3>
+            <p style="margin: 0 0 20px 0; font-size: 16px;">Lütfen önce bir marka ve model seçin.</p>
+            <button id="warning-close" style="background: #dc2626; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Tamam</button>
+        </div>
+    </div>
+
+
+    <style>
+    #tail-panel {
+        transition: box-shadow 0.3s, padding 0.3s, border-width 0.3s, background 0.3s;
+    }
+    #tail-panel.expanded {
+        box-shadow: 0 4px 32px 0 rgba(56,189,248,0.18);
+        border-width: 3px;
+        background: rgba(15,23,42,0.99);
+        padding: 28px 16px 24px 16px !important;
+        transition: box-shadow 0.3s, padding 0.3s, border-width 0.3s, background 0.3s;
+    }
+    /* Tail limits display */
+    .tail-limits-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+        margin: 10px 0 0 0;
+    }
+    .limit-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: rgba(2,6,23,0.55);
+        border: 1px solid rgba(56,189,248,0.06);
+        box-shadow: inset 0 -1px 0 rgba(255,255,255,0.01);
+    }
+    .limit-key { color: #94a3b8; font-weight:700; font-size:14px; }
+    .limit-val { color: #38bdf8; font-weight:900; font-size:15px; }
+
+    /* Compact summary header similar to calc.html */
+    /* Summary: logo + limits side-by-side */
+    #tail-summary {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        margin: 0 auto 10px auto;
+        width: fit-content;
+        min-width: 0;
+        position: relative;
+    }
+    /* Make logo and text area equal height so they read as one element */
+    #tail-summary .summary-icon {
+        width: 72px;
+        height: 72px;
+        min-height: 72px;
+        border-radius: 0;
+        background: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #0284c7;
+        font-weight: 800;
+        font-size: 32px;
+        flex-shrink: 0;
+        box-shadow: none;
+    }
+    #tail-summary .summary-logo {
+        width: auto;
+        height: 72px;
+        display: block;
+        object-fit: contain;
+        border-radius: 0;
+    }
+    #tail-summary .summary-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        text-align: left;
+        gap: 0; /* lines grouped tightly */
+        min-height: 72px;
+        height: 72px;
+    }
+    #tail-summary .summary-title {
+        color: #f8fafc;
+        font-weight: 900;
+        font-size: 20px;
+        line-height: 1.1;
+        text-align: left;
+        margin-bottom: 4px; /* slightly tighter for single-line appearance */
+        display: block;
+    }
+    #tail-summary .summary-sub {
+        color: #7b8ca6;
+        font-size: 12px;
+        line-height: 1.05;
+        margin: 0 0 0 0;
+        text-align: left;
+        font-weight: 500;
+    }
+    /* MAX CAP shown as its own row under tank limits */
+    #tail-summary .summary-max { display: block; color: rgba(56,189,248,0.56); font-size: 13px; font-weight: 700; margin-top: 0px; text-align: left; letter-spacing: 0.4px; }
+    /* remove inline cap styling (no longer used) */
+    #tail-summary .summary-cap { display: none; }
+    #tail-summary .summary-num {
+        color: #38bdf8;
+        font-weight: 900;
+    }
+    .summary-max-row{margin-top:6px;text-align:left;color:#38bdf8;font-weight:900}
+    @media (min-width:360px){ .summary-max-row{ text-align:center } }
+
+    /* Button appearance inside tail panel */
+    #tail-panel .btn-primary { max-width: 240px; padding: 10px 20px; border-radius: 12px; font-size:14px; letter-spacing:1.4px; background: linear-gradient(180deg,#38bdf8,#06b6d4); color:#042028; font-weight:900; border: none; box-shadow: 0 6px 18px rgba(3,105,161,0.14); white-space:nowrap; }
+    #tail-panel .btn-primary:active { transform: translateY(1px); }
+
+    /* Tail hint/title styling to match calc header */
+    .tail-hint-main { display:block; font-size:18px; font-weight:900; color: #38bdf8; text-align:center; letter-spacing:0.6px }
+    .tail-hint-sub { display:block; font-size:12px; color:#94a3b8; margin-top:6px; text-align:center }
+
+    /* Make check icon immediately adjacent to input (inside frame) */
+    #tail-check { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size:20px; color:#22c55e; display:inline-flex; align-items:center; justify-content:center; z-index:3; width:22px; height:22px; transition: opacity 0.12s, transform 0.12s; }
+    /* Header-like styling similar to calc fleet header */
+    #tail-hint { margin-bottom: 6px; }
+    .tail-hint-main { display:block; font-size:15px; font-weight:800; color: #38bdf8; }
+    .tail-hint-sub { display:block; font-size:12px; color:#94a3b8; margin-top:4px; }
+    #tail-input.valid {
+        border-color: #22c55e !important;
+        box-shadow: 0 0 0 2px #22c55e33;
+    }
+    /* tail-check styling unified above */
+    #manual-select-btn {background:rgba(56,189,248,0.10);color:#38bdf8;border:1.5px solid #38bdf8;transition:opacity .22s ease, transform .22s cubic-bezier(.2,.9,.2,1);}
+    #manual-select-btn:active {background:rgba(56,189,248,0.18);}
+    /* Smooth fade/slide when showing/hiding manual button */
+    #manual-select-btn.fade-hidden { opacity: 0; transform: translateY(6px) scale(0.995); pointer-events: none; visibility: hidden; transition: opacity .22s ease, transform .22s cubic-bezier(.2,.9,.2,1); }
+    </style>
+    <script src="assets/tailCapacityLoader.js"></script>
+    <script>
+    // Runtime debug flag: set to true to enable debug logs (or use ?debug in URL later)
+    window.RA_DEBUG = false;
+    // Kullanım Kılavuzu butonunu sağ üste taşı
+    window.addEventListener('DOMContentLoaded',function(){
+        var guideBtn = document.getElementById('guide-fab');
+        if(!guideBtn){
+            guideBtn = document.createElement('button');
+            guideBtn.id = 'guide-fab';
+            guideBtn.className = 'guide-fab';
+            guideBtn.title = 'Kullanım Kılavuzu';
+            guideBtn.setAttribute('aria-label', 'Kullanım Kılavuzu');
+            guideBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.06"/><path d="M12 8h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 12h2v5h-2z" fill="currentColor"/></svg>';
+            guideBtn.onclick = function(){
+                document.getElementById('guide-modal').style.display='block';
+            };
+            document.body.appendChild(guideBtn);
+        }
+        var guideModal = document.getElementById('guide-modal');
+        if(guideModal){
+            var closeBtn = document.getElementById('guide-close');
+            if(closeBtn) closeBtn.onclick = function(){guideModal.style.display='none';};
+        }
+    });
+
+            // Debug: show runtime JS errors and unhandled rejections in a visible overlay
+            document.addEventListener('DOMContentLoaded', function(){
+                try {
+                    const overlay = document.createElement('div');
+                    overlay.id = 'js-error-overlay';
+                    overlay.style.cssText = 'position:fixed;left:12px;right:12px;bottom:12px;z-index:10000;background:rgba(220,38,38,0.94);color:#fff;padding:10px;border-radius:8px;font-size:13px;display:none;max-height:40vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,0.6);';
+                    overlay.setAttribute('role','alert');
+                    overlay.addEventListener('click', () => { overlay.style.display = 'none'; });
+                    document.body.appendChild(overlay);
+
+                    function showErr(msg){ overlay.textContent = String(msg || 'Error'); overlay.style.display = 'block'; }
+
+                    window.addEventListener('error', function(ev){
+                        try {
+                            // ev may be an ErrorEvent; prefer message/filename/lineno
+                            const msg = (ev && ev.message) ? ev.message : String(ev || 'Error');
+                            const loc = (ev && ev.filename) ? (' ' + ev.filename + ':' + (ev.lineno || '')) : '';
+                            const out = msg + loc;
+                            showErr(out);
+                            if (window.RA_DEBUG) console.error('window.error', ev);
+                        } catch(e){}
+                    });
+
+                    window.addEventListener('unhandledrejection', function(ev){
+                        try {
+                            let reason = ev && ev.reason;
+                            let text = 'UnhandledRejection: ';
+                            if (reason instanceof Error) {
+                                text += (reason.message || String(reason));
+                                text += '\n' + (reason.stack || '');
+                            } else if (typeof reason === 'object') {
+                                try { text += JSON.stringify(reason); } catch (e) { text += String(reason); }
+                            } else {
+                                text += String(reason);
+                            }
+                            // If rejection is a primitive (e.g. 2), augment with a generated stack to locate origin
+                            if (!(reason instanceof Error)) {
+                                const gen = new Error('rejection-stack');
+                                text += '\n[generated stack]\n' + (gen.stack || '');
+                            }
+                            showErr(text);
+                            if (window.RA_DEBUG) console.error('unhandledrejection', ev);
+                        } catch(e){}
+                    });
+                } catch (e) {}
+            });
+
+    // Manuel Seç butonu ile model panelini aç/kapat
+    document.addEventListener('DOMContentLoaded',function(){
+        var btn = document.getElementById('manual-select-btn');
+        var panel = document.getElementById('advanced-panel');
+        if(btn && panel){
+            btn.onclick = function(){
+                panel.classList.toggle('is-hidden');
+            };
+        }
+    });
+
+
+
+    // Model seçimi yapılınca butonu aktif et ve uyarı notunu sadece model seçiliyse göster
+    document.addEventListener('DOMContentLoaded',function(){
+        // go-btn artık model seçimine bağlı olarak otomatik aktif/pasif olmayacak.
+        // Butonun aktifliği ve uyarı gösterimi, yeni bağımsız iş akışına göre JS ile ayrıca yönetilmeli.
+        // goHint ilk başta gizli kalsın.
+        var goHint = document.getElementById('go-hint');
+        if(goHint) goHint.style.display = 'none';
+    });
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => { try { reg.update(); } catch (e) {} })
+                .catch(() => {});
+        });
+    }
+
+    // İlk girişte (kurulu değilse) yükleme sayfasına yönlendir
+    (function redirectToInstallIfNeeded(){
+        const SKIP_INSTALL_KEY = 'refuel_assist_skip_install_v1';
+        function isStandaloneMode() {
+            try {
+                if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+                if (typeof navigator.standalone === 'boolean' && navigator.standalone) return true;
+            } catch (e) {}
+            return false;
+        }
+
+        if (isStandaloneMode()) return;
+
+        try {
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('skipInstall') === '1') {
+                try { localStorage.setItem(SKIP_INSTALL_KEY, '1'); } catch (e) {}
+                url.searchParams.delete('skipInstall');
+                window.history.replaceState({}, '', url.toString());
+            }
+        } catch (e) {}
+
+        let skip = false;
+        try { skip = localStorage.getItem(SKIP_INSTALL_KEY) === '1'; } catch (e) {}
+        if (!skip) {
+            // Yeni kullanıcılar önce yükleme/onboarding sayfasını görsün
+            window.location.replace('./install.html');
+        }
+    })();
+
+    // Uyarı kutusunu giriş yapınca gizle
+    function hideBrandHint() {
+        var el = document.getElementById('brand-hint');
+        if(el) el.style.display = 'none';
+    }
+    // Merkezi helper: manuel seçim butonunu göster/gizle (tüm yollar buradan yapılsın)
+    function setManualSelectVisible(visible) {
+        try {
+            const mb = document.getElementById('manual-select-btn');
+            if (!mb) return;
+            // Cancel any pending hide timeout when showing
+            if (mb._manualHideTimeout) {
+                try { clearTimeout(mb._manualHideTimeout); } catch(e){}
+                mb._manualHideTimeout = null;
+            }
+            if (visible) {
+                // ensure visible immediately so transitions can run
+                mb.style.display = 'block';
+                // force reflow so removing the class triggers transition
+                try { void mb.offsetHeight; } catch(e){}
+                mb.classList.remove('fade-hidden');
+                mb.classList.remove('is-hidden');
+                mb.removeAttribute('aria-hidden');
+                try { console.debug('manual-select: show'); } catch(e){}
+            } else {
+                // add fade class for smooth hide, then remove from layout after transition
+                mb.classList.add('fade-hidden');
+                mb.setAttribute('aria-hidden','true');
+                try { console.debug('manual-select: hide (delayed)'); } catch(e){}
+                // Delay removing from layout to allow CSS transition to finish
+                mb._manualHideTimeout = setTimeout(function() {
+                    try { mb.style.display = 'none'; } catch(e){}
+                    mb._manualHideTimeout = null;
+                }, 320);
+            }
+        } catch(e){}
+    }
+    // Kuyruk kodu girilince -> normalize edip lookup uygula
+    document.getElementById('tail-input')?.addEventListener('input', function(e) {
+        if(this.value && this.value.length > 2) hideBrandHint();
+        try {
+            const v = normalizeTail(this.value || '').toUpperCase();
+            const manualBtn = document.getElementById('manual-select-btn');
+            if (/^TC-[A-Z0-9]{3}$/.test(v)) {
+                // valid kuyruk girildiyse manuel seçim butonunu tamamen gizle (animate)
+                try { setManualSelectVisible(false); } catch(e){}
+                applyTailLookup(v);
+            } else {
+                // eksik/yanlış girildiyse butonu geri göster
+                try { setManualSelectVisible(true); } catch(e){}
+                // geçersiz/eksikse gizle diğer UI'ları
+                const tailPanel = document.getElementById('tail-panel');
+                const tailInfoBox = document.getElementById('tail-info-box');
+                const tailHint = document.getElementById('tail-hint');
+                const tailLimits = document.getElementById('tail-limits');
+                const goBtn = document.getElementById('go-btn');
+                if (tailPanel) tailPanel.classList.remove('expanded');
+                if (tailInfoBox) tailInfoBox.style.display = 'none';
+                if (tailHint) { tailHint.style.display = 'none'; tailHint.innerHTML = ''; }
+                if (tailLimits) { tailLimits.style.display = 'none'; tailLimits.innerHTML = ''; }
+                if (goBtn) { goBtn.style.display = 'none'; goBtn.disabled = true; }
+            }
+        } catch (e) {}
+    });
+        // Model seçimi tamamlanınca paneli büyüt, limitleri ve butonu göster
+        document.addEventListener('DOMContentLoaded',function(){
+            var modelSelect = document.getElementById('model-select');
+            var tailPanel = document.getElementById('tail-panel');
+            var tailLimits = document.getElementById('tail-limits');
+            var tailGoWrap = document.getElementById('tail-go-btn-wrap');
+            var goBtn = document.getElementById('go-btn');
+            var manualBtn = document.getElementById('manual-select-btn');
+            var tailPanelEl = document.getElementById('tail-panel');
+            if(modelSelect){
+                modelSelect.addEventListener('change',function(){
+                    if(modelSelect.value){
+                        tailPanel.classList.add('expanded');
+                        if (tailLimits) { tailLimits.style.display = 'block'; tailLimits.innerHTML = '<span style="color:#94a3b8;">Model seçimiyle limitler gösterilecek.</span>'; }
+                        if (tailGoWrap) tailGoWrap.style.display = 'block';
+                        if (goBtn) goBtn.disabled = false;
+                    } else {
+                        tailPanel.classList.remove('expanded');
+                        if (tailLimits) { tailLimits.style.display = 'none'; tailLimits.innerHTML = ''; }
+                        if (tailGoWrap) tailGoWrap.style.display = 'none';
+                        if (goBtn) goBtn.disabled = true;
+                    }
+                });
+            }
+            // Manuel seçim butonuna tıklayınca kuyruk panelini gizle/göster
+            try {
+                if (manualBtn && tailPanelEl) {
+                    manualBtn.addEventListener('click', function(e){
+                        try {
+                            const el = tailPanelEl;
+                            if (!el) return;
+                            // cancel pending hide
+                            if (el._hideTimeout) { try { clearTimeout(el._hideTimeout); } catch(e){} el._hideTimeout = null; }
+                            const currentlyHidden = el.classList.contains('fade-hidden') || (el.style.display === 'none');
+                            if (currentlyHidden) {
+                                // show
+                                el.style.display = 'block';
+                                // force reflow so removing the class triggers transition
+                                try { void el.offsetHeight; } catch(e){}
+                                el.classList.remove('fade-hidden');
+                                el.classList.remove('is-hidden');
+                                try { console.debug('tail-panel: show via manual toggle'); } catch(e){}
+                                try { if (manualBtn) { manualBtn.textContent = 'Veya Manuel Seçin'; manualBtn.removeAttribute('aria-pressed'); } } catch(e){}
+                                // focus input when shown
+                                try { const ti = document.getElementById('tail-input'); if (ti) { ti.focus(); lockTailCaret(ti); } } catch(e){}
+                            } else {
+                                // hide with transition, then remove from layout
+                                el.classList.add('fade-hidden');
+                                try { console.debug('tail-panel: hide via manual toggle (delayed)'); } catch(e){}
+                                try { const ti = document.getElementById('tail-input'); if (ti) { ti.blur(); } } catch(e){}
+                                // reset button text immediately (or after hide if preferred)
+                                try { if (manualBtn) { manualBtn.textContent = 'Kuyruk Seçimine Geri Dön'; manualBtn.setAttribute('aria-pressed','true'); } } catch(e){}
+                                el._hideTimeout = setTimeout(function(){ try { el.style.display = 'none'; el._hideTimeout = null; } catch(e){} }, 320);
+                            }
+                        } catch(e){}
+                    });
+                }
+            } catch(e){}
+            // Sayfa ilk açıldığında buton ve limitler gizli olsun
+            if (tailLimits) { tailLimits.style.display = 'none'; tailLimits.innerHTML = ''; }
+            if (tailGoWrap) tailGoWrap.style.display = 'none';
+            if (goBtn) goBtn.disabled = true;
+        });
+    // Marka/model seçilince (button click)
+    document.getElementById('brand-airbus')?.addEventListener('click', hideBrandHint);
+    document.getElementById('brand-boeing')?.addEventListener('click', hideBrandHint);
+    // Dokunmatik için pressed class toggle
+    document.querySelectorAll('.brand-card').forEach(function(btn){
+        // Touch support
+        btn.addEventListener('touchstart', function(){ btn.classList.add('pressed'); }, { passive: true });
+        btn.addEventListener('touchend', function(){ btn.classList.remove('pressed'); });
+        btn.addEventListener('touchcancel', function(){ btn.classList.remove('pressed'); });
+        // Pointer/mouse support for non-touch devices
+        btn.addEventListener('pointerdown', function(){ btn.classList.add('pressed'); });
+        btn.addEventListener('pointerup', function(){ btn.classList.remove('pressed'); });
+        btn.addEventListener('pointercancel', function(){ btn.classList.remove('pressed'); });
+        btn.addEventListener('mouseleave', function(){ btn.classList.remove('pressed'); });
+    });
+
+    // Seçim yapılmadan butona basılırsa uyarı göster
+    var goBtn = document.getElementById('go-btn');
+    var warningModal = document.getElementById('warning-modal');
+    var warningClose = document.getElementById('warning-close');
+    if(goBtn && warningModal && warningClose){
+        goBtn.addEventListener('click',function(e){
+            if(goBtn.disabled){
+                warningModal.style.display='flex';
+            }
+        });
+        warningClose.addEventListener('click', function(){
+            warningModal.style.display='none';
+        });
+        // Modal dışına tıklayınca kapat
+        warningModal.addEventListener('click', function(e){
+            if(e.target === warningModal){
+                warningModal.style.display='none';
+            }
+        });
+    }
+    (function initI18n() {
+        const STORAGE_KEY = 'refuel_assist_lang';
+        const GUIDE_SEEN_KEY = 'refuel_assist_seen_guide_v1';
+        const I18N = {
+            tr: {
+                subtitle: 'Uçuş Operasyon Destek',
+                fleet_a320_title: 'Airbus A320 Family',
+                fleet_b737_title: 'Boeing 737 NG/MAX',
+
+                tail_title: 'KUYRUK KODU',
+                tail_ph: 'TC-___',
+                tail_hint_idle: 'Kuyruk kodunu TC- sonrası 3 karakter girin.',
+                tail_hint_loading: 'Filo listesi yükleniyor…',
+                tail_hint_notfound: 'Kuyruk kodu bulunamadı. Yazımı kontrol edin.',
+                tail_hint_found: 'Kuyruk bulundu: {model}{variant}',
+
+                adv_title: 'MODEL SEÇİMİ',
+                brand_sub: 'Model ve varyant seç',
+                model_placeholder: 'Model',
+                variant_placeholder: 'Varyant',
+                go_btn: 'HESAPLAMAYA GİT',
+                go_hint_idle: 'Bazı geniş gövde tipleri henüz tanımlı olmayabilir.',
+                go_hint_unsupported: 'Seçilen tip için tank limitleri tanımlı değil.',
+                go_hint_widebody: 'Geniş gövde için limitler zorlanmaz (placard/AMM önceliklidir).',
+                quick_note: 'Hızlı Seçim',
+                guide_btn: 'KULLANIM KILAVUZU',
+                guide_title: 'Kullanım Kılavuzu',
+                guide_steps_html: [
+                    '<li><b>Kurulum:</b> Yükleme ekranında isterseniz uygulamayı kurun; isterseniz <b>"Yüklemeden denemek istiyorum"</b> ile devam edin.</li>',
+                    '<li><b>Uçak seçimi (Kapak):</b> Kuyruk kodunu girin (örn. TC-ABC) veya marka/model/varyant seçin.</li>',
+                    '<li><b>Hesaplamaya geçiş:</b> <b>"HESAPLAMAYA GİT"</b> ile hesaplama ekranını açın.</li>',
+                    '<li><b>Hesaplama girişleri:</b> <b>Blok Yakıt</b>, <b>İkmal Öncesi Yakıt (FOB)</b> (toplam veya tank), <b>Yoğunluk</b> ve <b>Sıcaklık</b> değerlerini girin.</li>',
+                    '<li><b>Sonuçlar:</b> Hedef tank değerleri (LH/CENTER/RH) ve <b>İkmal</b> (KG/LTR) sonucu oluşur. Limit/uyarı mesajlarını kontrol edin.</li>',
+                    '<li><b>Kayıt & fiş:</b> <b>"KAYDET & FİŞİ GÖR"</b> ile kaydedin; fiş (receipt) otomatik açılır.</li>',
+                    '<li><b>Kayıtlar:</b> Hesaplama ekranındaki <b>"KAYITLAR"</b> butonuyla geçmişe gidin. Kayda tıklayınca fiş açılır; <b>×</b> ile silin; <b>"TÜMÜNÜ SİL"</b> ile tüm geçmişi temizleyin.</li>',
+                    '<li><b>Diğer:</b> <b>"SIFIRLA"</b> hesabı temizler. <b>"UYARILAR & ÖNLEMLER"</b> güvenlik hatırlatmalarını gösterir.</li>'
+                ].join(''),
+                guide_foot: 'Bu pencere ilk kullanımda bir kez otomatik gösterilir.'
+                ,
+                sw_update_ready: 'Yeni sürüm hazır.',
+                sw_update_reload: 'YENİLE',
+                act_none: 'İlave Merkez Tank Yok',
+                act_1: '1 İlave Merkez Tank',
+                act_2: '2 İlave Merkez Tank',
+                act_3: '3 İlave Merkez Tank',
+                act_placeholder: 'ACT Seçeneği'
+            },
+            en: {
+                subtitle: 'Flight Operations Support',
+                fleet_a320_title: 'Airbus A320 Family',
+                fleet_b737_title: 'Boeing 737 NG/MAX',
+
+                tail_title: 'TAIL CODE',
+                tail_ph: 'TC-___',
+                tail_hint_idle: 'Enter 3 characters after TC-.',
+                tail_hint_loading: 'Loading fleet list…',
+                tail_hint_notfound: 'Tail code not found. Check spelling.',
+                tail_hint_found: 'Tail found: {model}{variant}',
+
+                adv_title: 'MODEL SELECTION',
+                brand_sub: 'Select model & variant',
+                model_placeholder: 'Model',
+                variant_placeholder: 'Variant',
+                go_btn: 'OPEN CALCULATOR',
+                go_hint_idle: 'Some widebody types may not be configured yet.',
+                go_hint_unsupported: 'Tank limits are not configured for this type.',
+                go_hint_widebody: 'Widebody runs without enforced limits (placard/AMM takes priority).',
+                quick_note: 'Quick Select',
+                guide_btn: 'USER GUIDE',
+                guide_title: 'User Guide',
+                guide_steps_html: [
+                    '<li><b>Install:</b> On the install page you can install the app, or continue with <b>"Try without installing"</b>.</li>',
+                    '<li><b>Aircraft selection (Cover):</b> Enter tail code (e.g., TC-ABC) or select brand/model/variant.</li>',
+                    '<li><b>Open calculator:</b> Tap <b>"OPEN CALCULATOR"</b> to enter the calculation page.</li>',
+                    '<li><b>Calculator inputs:</b> Enter <b>Block Fuel</b>, <b>Fuel On Board</b> (total or tanks), <b>Density</b>, and <b>Temperature</b>.</li>',
+                    '<li><b>Results:</b> Target tank values (LH/CENTER/RH) and <b>Uplift</b> (KG/LTR) are shown. Check limit/warning messages.</li>',
+                    '<li><b>Save & receipt:</b> Use <b>"SAVE & VIEW RECEIPT"</b> to save; the receipt opens automatically.</li>',
+                    '<li><b>Logs:</b> Use <b>"LOGS"</b>. Tap an entry to open the receipt; delete with <b>×</b>; remove all with <b>"CLEAR ALL"</b>.</li>',
+                    '<li><b>Other:</b> <b>"RESET"</b> clears inputs. <b>"WARNINGS & PRECAUTIONS"</b> shows safety reminders.</li>'
+                ].join(''),
+                guide_foot: 'This dialog is auto-shown once on first use.'
+                ,
+                sw_update_ready: 'A new version is ready.',
+                sw_update_reload: 'RELOAD',
+                act_none: 'No Additional Centre Tank',
+                act_1: '1 Additional Centre Tank',
+                act_2: '2 Additional Centre Tank',
+                act_3: '3 Additional Centre Tank',
+                act_placeholder: 'ACT Option'
+            }
+        };
+
+        function t(lang, key, vars) {
+            const dict = I18N[lang] || I18N.tr;
+            let s = String(dict[key] ?? '');
+            if (vars) {
+                for (const k of Object.keys(vars)) {
+                    s = s.replaceAll('{' + k + '}', String(vars[k]));
+                }
+            }
+            return s;
+        }
+
+        function getLang() {
+            const raw = (localStorage.getItem(STORAGE_KEY) || '').toLowerCase();
+            return raw === 'en' ? 'en' : 'tr';
+        }
+
+        function setLang(lang) {
+            const next = lang === 'en' ? 'en' : 'tr';
+            localStorage.setItem(STORAGE_KEY, next);
+            applyLang(next);
+        }
+
+        function applyLang(lang) {
+            document.documentElement.lang = lang;
+
+            const dict = I18N[lang] || I18N.tr;
+            const subtitle = document.getElementById('subtitle');
+            const a320Title = document.getElementById('fleet-a320-title');
+            const b737Title = document.getElementById('fleet-b737-title');
+            if (subtitle) subtitle.textContent = dict.subtitle;
+            if (a320Title) a320Title.textContent = dict.fleet_a320_title;
+            if (b737Title) b737Title.textContent = dict.fleet_b737_title;
+
+            const tailTitle = document.getElementById('tail-title');
+            const tailInput = document.getElementById('tail-input');
+            const tailHint = document.getElementById('tail-hint');
+            const advTitle = document.getElementById('adv-title');
+            const airbusSub = document.getElementById('brand-airbus-sub');
+            const boeingSub = document.getElementById('brand-boeing-sub');
+            const modelSelect = document.getElementById('model-select');
+            const variantSelect = document.getElementById('variant-select');
+            const goBtn = document.getElementById('go-btn');
+            const goHint = document.getElementById('go-hint');
+            const quickNote = document.getElementById('quick-note');
+
+            if (tailTitle) tailTitle.textContent = dict.tail_title;
+            if (tailInput) tailInput.placeholder = dict.tail_ph;
+            if (tailHint && tailHint.dataset.state !== 'found' && tailHint.dataset.state !== 'notfound' && tailHint.dataset.state !== 'loading') {
+                tailHint.textContent = dict.tail_hint_idle;
+            }
+            if (advTitle) advTitle.textContent = dict.adv_title;
+            if (airbusSub) airbusSub.textContent = dict.brand_sub;
+            if (boeingSub) boeingSub.textContent = dict.brand_sub;
+            if (modelSelect && modelSelect.options.length) modelSelect.options[0].textContent = dict.model_placeholder;
+            if (variantSelect && variantSelect.options.length) variantSelect.options[0].textContent = dict.variant_placeholder;
+            if (goBtn) goBtn.textContent = dict.go_btn;
+            if (goHint && goHint.dataset.state !== 'unsupported') goHint.textContent = dict.go_hint_idle;
+            if (quickNote) quickNote.textContent = dict.quick_note;
+            const guideBtn = document.getElementById('guide-open');
+            const guideTitle = document.getElementById('guide-title');
+            const guideSteps = document.getElementById('guide-steps');
+            const guideFoot = document.getElementById('guide-foot');
+            if (guideBtn) guideBtn.textContent = dict.guide_btn;
+            if (guideTitle) guideTitle.textContent = dict.guide_title;
+            if (guideSteps && dict.guide_steps_html) guideSteps.innerHTML = dict.guide_steps_html;
+            if (guideFoot) guideFoot.textContent = dict.guide_foot;
+
+            const swUpdateText = document.getElementById('sw-update-text');
+            const swUpdateBtn = document.getElementById('sw-update-btn');
+            if (swUpdateText) swUpdateText.textContent = dict.sw_update_ready;
+            if (swUpdateBtn) swUpdateBtn.textContent = dict.sw_update_reload;
+
+            const btnTr = document.getElementById('lang-tr');
+            const btnEn = document.getElementById('lang-en');
+            if (btnTr && btnEn) {
+                btnTr.classList.toggle('active', lang === 'tr');
+                btnEn.classList.toggle('active', lang === 'en');
+                try { btnTr.setAttribute('aria-pressed', lang === 'tr'); } catch (e) {}
+                try { btnEn.setAttribute('aria-pressed', lang === 'en'); } catch (e) {}
+            }
+        }
+
+        document.getElementById('lang-tr')?.addEventListener('click', () => setLang('tr'));
+        document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'));
+
+        applyLang(getLang());
+
+        // Remove stray single/double quote text nodes in the hero section (fix: lone "." appearing)
+        (function removeStrayQuote(){
+            try {
+                const hero = document.querySelector('.hero-section');
+                if (!hero) return;
+                for (const node of Array.from(hero.childNodes)) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        const s = (node.textContent || '').trim();
+                        if (s === '"' || s === "'" || s === '“' || s === '”') node.remove();
+                    }
+                }
+            } catch (e) {}
+        })();
+
+        // --- Onboarding: Guide ---
+        const guideModal = document.getElementById('guide-modal');
+        const guideOpen = document.getElementById('guide-open');
+        const guideClose = document.getElementById('guide-close');
+        const guideReset = document.getElementById('guide-reset');
+
+        function openGuide() {
+            if (!guideModal) return;
+            guideModal.style.display = 'flex';
+        }
+
+        function closeGuide(setSeen) {
+            if (!guideModal) return;
+            guideModal.style.display = 'none';
+            if (setSeen) {
+                try { localStorage.setItem(GUIDE_SEEN_KEY, '1'); } catch (e) {}
+            }
+        }
+
+        if (guideOpen) guideOpen.addEventListener('click', () => openGuide());
+        if (guideClose) guideClose.addEventListener('click', () => closeGuide(true));
+        if (guideModal) guideModal.addEventListener('click', (e) => { if (e.target === guideModal) closeGuide(true); });
+
+        if (guideReset) {
+            guideReset.addEventListener('click', () => {
+                try { localStorage.removeItem(GUIDE_SEEN_KEY); } catch (e) {}
+                openGuide();
+            });
+        }
+
+        // İlk kullanımda kılavuz 1 kez otomatik açılsın
+        (function autoGuideOnce(){
+            let seen = false;
+            try { seen = localStorage.getItem(GUIDE_SEEN_KEY) === '1'; } catch (e) {}
+            if (!seen) {
+                setTimeout(() => openGuide(), 700);
+            }
+        })();
+
+        // --- Fleet selection (xlsx-based) ---
+        const state = {
+            dataReady: false,
+            byOem: { AIRBUS: new Map(), BOEING: new Map() },
+            tailMap: new Map(),
+            selectedOem: '',
+            selectedModel: '',
+            selectedVariant: '',
+            selectedAct: '',
+            lockedByTail: false,
+            tailProvidedVariant: ''
+        };
+
+        // (debug helper removed in production)
+
+        function isSelectionComplete() {
+            if (!state.selectedOem) return false;
+            if (!state.selectedModel) return false;
+            if (!state.selectedVariant) return false;
+            // ACT satırı görünüyorsa sub varyant (ACT) seçimi de tamamlanmış olmalı
+            const selectedValue = String(state.selectedVariant || '').trim().toUpperCase();
+            const actShown = (String(state.selectedModel || '').toUpperCase() === 'A320 FAMILY') && selectedValue.startsWith('PW1100G');
+            if (actShown && !state.selectedAct) return false;
+            return true;
+        }
+
+        function selectionTankKey() {
+            const fam = String(state.selectedModel || '').trim();
+            const v = String(state.selectedVariant || '').trim();
+            // If a tail provided a raw variant (e.g. PW1100G-2ACT) and selection
+            // is locked by tail, prefer that raw value for tank key detection.
+            const rawVariant = (state.lockedByTail && String(state.tailProvidedVariant || '').trim()) ? String(state.tailProvidedVariant || '').trim() : v;
+            const famU = fam.toUpperCase();
+            if (!fam) return '';
+
+            // Narrowbody canonical keys
+            if (famU === 'A320 FAMILY' || famU === 'A319' || famU === 'A320' || famU === 'A321') {
+                const vU = rawVariant.toUpperCase();
+                const act = String(state.selectedAct || '').trim().toUpperCase();
+                // Öncelik: kullanıcı tarafından seçilmiş ACT bilgisi
+                if (act === '2ACT') return 'A320neo-2ACT';
+                // Sonra raw variant içindeki -2ACT kontrolü
+                if (vU.includes('2ACT')) return 'A320neo-2ACT';
+                // Basit eşleme: PW1100G -> neo, diğerleri -> ceo
+                if (vU.startsWith('PW1100G')) return 'A320neo';
+                return 'A320-200';
+            }
+            if (famU === 'B737' || famU === 'B737 NG/MAX') {
+                const vU = v.toUpperCase();
+                if (vU.includes('MAX')) return 'B737MAX8/MAX9';
+                return 'B737-700/800/900ER';
+            }
+
+            // Widebody: try combined (e.g. "A350 900" -> loader will normalize/partial match)
+            if (fam && v) return fam + ' ' + v;
+            return fam;
+        }
+
+        function updateBrandTankInfo() {
+            // Schedule work via requestAnimationFrame to avoid repeated synchronous calls
+            if (window._ra_updateBrandTankInfoScheduled) {
+                    if (window.RA_DEBUG) {
+                        try {
+                            console.log('[DEBUG] updateBrandTankInfo: already scheduled');
+                            console.log(new Error('updateBrandTankInfo schedule stack').stack);
+                        } catch (e) { console.log('[DEBUG] updateBrandTankInfo: stack log failed', e); }
+                    }
+                    return;
+                }
+            window._ra_updateBrandTankInfoScheduled = true;
+            window.requestAnimationFrame(() => {
+                window._ra_updateBrandTankInfoScheduled = false;
+                try {
+                    const lang = getLang();
+                    const airbusSub = document.getElementById('brand-airbus-sub');
+                    const boeingSub = document.getElementById('brand-boeing-sub');
+                    const targetEl = (state.selectedOem === 'BOEING') ? boeingSub : airbusSub;
+                    if (!targetEl) return;
+
+                    // Seçim tamamlanmadıysa default metin kalsın
+                    if (!isSelectionComplete()) {
+                        targetEl.textContent = t(lang, 'brand_sub');
+                        return;
+                    }
+
+                    const key = selectionTankKey();
+                    const hasKgLoader = typeof window.fetchTankLimitsKg === 'function';
+
+                    const famU = String(state.selectedModel || '').toUpperCase();
+                    const isNarrow = (famU === 'A320 FAMILY' || famU === 'A319' || famU === 'A320' || famU === 'A321' || famU === 'B737' || famU === 'B737 NG/MAX');
+
+                    const renderKg = (limits) => {
+                        targetEl.textContent = '';
+
+                        const line1 = document.createElement('span');
+                        line1.style.color = 'var(--primary)';
+                        line1.style.fontWeight = '800';
+
+                        // Narrowbody: tankLimitsKg'den göster (10 KG adımına uygun şekilde aşağı yuvarla)
+                        if (isNarrow) {
+                            const wingRaw = (limits && (typeof limits.leftWingFuelKg === 'number' || typeof limits.rightWingFuelKg === 'number'))
+                                ? Math.max(0, Math.max(limits.leftWingFuelKg || 0, limits.rightWingFuelKg || 0))
+                                : null;
+                            const ctrRaw = (limits && typeof limits.centerFuelKg === 'number') ? Math.max(0, limits.centerFuelKg || 0) : null;
+
+                            if (wingRaw == null || ctrRaw == null) {
+                                line1.textContent = 'MAX: - KG';
+                                targetEl.appendChild(line1);
+                                targetEl.appendChild(document.createElement('br'));
+                                const line2 = document.createElement('span');
+                                line2.style.color = '#94a3b8';
+                                line2.style.fontWeight = '800';
+                                line2.textContent = 'WING: 2 x - | CTR: - KG';
+                                targetEl.appendChild(line2);
+                                return;
+                            }
+
+                            const wing = Math.floor(wingRaw / 10) * 10;
+                            const ctr = Math.floor(ctrRaw / 10) * 10;
+                            const max = (wing * 2) + ctr;
+                            line1.textContent = 'MAX: ' + max.toLocaleString() + ' KG';
+                            targetEl.appendChild(line1);
+
+                            targetEl.appendChild(document.createElement('br'));
+                            const line2 = document.createElement('span');
+                            line2.style.color = '#94a3b8';
+                            line2.style.fontWeight = '800';
+                            line2.textContent = 'WING: 2 x ' + wing.toLocaleString() + ' | CTR: ' + ctr.toLocaleString() + ' KG';
+                            targetEl.appendChild(line2);
+                            return;
+                        }
+
+                        // Widebody: tankLimitsKg'den göster
+                        const totalKg = (limits && typeof limits.totalFuelKg === 'number') ? limits.totalFuelKg : null;
+                        line1.textContent = 'MAX: ' + (typeof totalKg === 'number' ? totalKg.toLocaleString() : '-') + ' KG';
+                        targetEl.appendChild(line1);
+
+                        const parts = [];
+                        if (limits && typeof limits.leftWingFuelKg === 'number') parts.push(['Sol', limits.leftWingFuelKg]);
+                        if (limits && typeof limits.rightWingFuelKg === 'number') parts.push(['Sağ', limits.rightWingFuelKg]);
+                        if (limits && typeof limits.centerFuelKg === 'number') parts.push(['Merkez', limits.centerFuelKg]);
+                        if (limits && typeof limits.trimFuelKg === 'number' && limits.trimFuelKg > 0) parts.push(['Trim', limits.trimFuelKg]);
+                        if (limits && typeof limits.actFuelKg === 'number' && limits.actFuelKg > 0) parts.push(['ACT', limits.actFuelKg]);
+
+                        if (parts.length) {
+                            targetEl.appendChild(document.createElement('br'));
+                            const line2 = document.createElement('span');
+                            line2.style.color = '#94a3b8';
+                            line2.style.fontWeight = '800';
+                            line2.textContent = parts.map(([label, val]) => label + ': ' + Number(val).toLocaleString() + ' KG').join(' | ');
+                            targetEl.appendChild(line2);
+                        }
+                    };
+
+                    if (!key) {
+                        targetEl.textContent = t(lang, 'brand_sub');
+                        return;
+                    }
+
+                    if (!hasKgLoader) {
+                        renderKg(null);
+                        return;
+                    }
+
+                    if (window.RA_DEBUG) console.log('[DEBUG] selectionTankKey:', key);
+                    window.fetchTankLimitsKg(key)
+                        .then((limits) => {
+                            if (window.RA_DEBUG) console.log('[DEBUG] limits:', limits);
+                            renderKg(limits);
+                        })
+                        .catch(() => renderKg(null));
+                } catch (e) {
+                    if (window.RA_DEBUG) console.error('updateBrandTankInfo error', e);
+                }
+            });
+        }
+
+            // Safe wrapper to prevent uncaught exceptions (including non-Error throws) from bubbling
+            window.safeUpdateBrandTankInfo = function() {
+                try {
+                    // call the real implementation
+                    updateBrandTankInfo();
+                } catch (err) {
+                    try { if (window.RA_DEBUG) console.error('safeUpdateBrandTankInfo caught', err); } catch(e){}
+                }
+            };
+
+        function normalizeTail(s) {
+            let raw = String(s || '').trim().toUpperCase().replaceAll(' ', '');
+            if (!raw) return '';
+
+            // Accept user input as just 3 letters/digits (e.g. "ABC") and prepend TC-
+            if (/^[A-Z0-9]{3}$/.test(raw)) return 'TC-' + raw;
+
+            // Accept "TCABC" or "TC-ABC"; normalize to "TC-ABC" (3 chars after TC-)
+            if (raw.startsWith('TC-')) {
+                const suf = raw.slice(3);
+                if (/^[A-Z0-9]{3}$/.test(suf)) return 'TC-' + suf;
+                return raw;
+            }
+            if (raw.startsWith('TC')) {
+                const suf = raw.slice(2);
+                const sufNoDash = suf.startsWith('-') ? suf.slice(1) : suf;
+                if (/^[A-Z0-9]{3}$/.test(sufNoDash)) return 'TC-' + sufNoDash;
+                return raw;
+            }
+
+            return raw;
+        }
+
+        function escapeHtml(s) {
+            return String(s || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
+
+        function formatNumberTr(v) {
+            if (v === null || v === undefined) return '-';
+            const n = Number(v);
+            if (!isFinite(n)) return String(v || '-');
+            if (n === 0) return '0';
+            // If integer, show with thousands separator only. If fractional, show 3 decimals.
+            if (Number.isInteger(n)) return n.toLocaleString('tr-TR');
+            return n.toLocaleString('tr-TR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+        }
+
+        function sanitizeTailValue(raw) {
+            // Enforce single input with fixed prefix "TC-" and 3 chars after it.
+            let v = String(raw || '').toUpperCase();
+
+            // Remove invisible/control characters and whitespace
+            v = v.replaceAll(/[\u0000-\u001F\u007F-\u009F\u200B-\u200F\uFEFF\s]/g, '');
+
+            // Remove all but letters/digits and dash
+            v = v.replaceAll(/[^A-Z0-9-]/g, '');
+
+            // If any unexpected characters remain, log for debugging
+            const stray = [...v].filter(ch => !ch.match(/[A-Z0-9-]/));
+            if (stray.length) console.warn('[TAIL] stray chars detected in sanitize:', stray.map(c => c.charCodeAt(0)));
+
+            // Accept "ABC" -> "TC-ABC"
+            if (/^[A-Z0-9]{1,3}$/.test(v)) v = 'TC-' + v;
+
+            // Accept "TCABC" -> "TC-ABC"
+            if (v.startsWith('TC') && !v.startsWith('TC-')) {
+                const suf = v.slice(2).replaceAll('-', '');
+                v = 'TC-' + suf;
+            }
+
+            if (!v.startsWith('TC-')) {
+                // Hard reset to prefix if something weird pasted
+                v = 'TC-';
+            }
+
+            const suf = v.slice(3).replaceAll('-', '').slice(0, 3);
+            v = 'TC-' + suf;
+            return v;
+        }
+
+        function lockTailCaret(inputEl) {
+            if (!inputEl) return;
+            const minPos = 3;
+            try {
+                const s = inputEl.selectionStart ?? minPos;
+                const e = inputEl.selectionEnd ?? minPos;
+                const nextS = Math.max(minPos, s);
+                const nextE = Math.max(minPos, e);
+                if (nextS !== s || nextE !== e) inputEl.setSelectionRange(nextS, nextE);
+            } catch (e) {}
+        }
+
+        function enforceTailInput() {
+            const inputEl = document.getElementById('tail-input');
+            if (!inputEl) return;
+            const next = sanitizeTailValue(inputEl.value);
+            if (inputEl.value !== next) inputEl.value = next;
+            lockTailCaret(inputEl);
+        }
+
+        function isSupportedFamily(fam) {
+            const f = String(fam || '').toUpperCase();
+            return !!f;
+        }
+
+        function calcUrlForSelection(model, variant, oem, act) {
+            const fam = String(model || '').toUpperCase();
+            const mod = String(variant || '').toUpperCase();
+            const brand = (oem === 'BOEING') ? 'BOEING' : 'AIRBUS';
+
+            // tankLimitsKg anahtarını ayrı gönder (calc sayfasında limitler buradan okunur)
+            const tankKey = (() => {
+                if (fam === 'A320 FAMILY' || fam === 'A319' || fam === 'A320' || fam === 'A321') {
+                    // Eğer varyant veya act paramında 2ACT varsa ACT'li anahtar döndür
+                    const actU = String(act || '').toUpperCase();
+                    if (mod.includes('2ACT') || actU === '2ACT') return 'A320neo-2ACT';
+                    if (mod.startsWith('PW1100G')) return 'A320neo';
+                    return 'A320-200';
+                }
+                if (fam === 'B737' || fam === 'B737 NG/MAX') {
+                    if (mod.includes('MAX')) return 'B737MAX8/MAX9';
+                    return 'B737-700/800/900ER';
+                }
+                return '';
+            })();
+
+            // Narrowbody (existing limits)
+            if (fam === 'A320 FAMILY' || fam === 'A319' || fam === 'A320' || fam === 'A321') {
+                return 'calc.html?fleet=' + encodeURIComponent('A320 FAMILY')
+                    + (tankKey ? ('&tankkey=' + encodeURIComponent(tankKey)) : '');
+            }
+            if (fam === 'B737' || fam === 'B737 NG/MAX') {
+                return 'calc.html?fleet=' + encodeURIComponent('B737 NG/MAX')
+                    + (tankKey ? ('&tankkey=' + encodeURIComponent(tankKey)) : '');
+            }
+
+            // Widebody: open calculator without enforcing tank limits
+            const fleetLabel = (mod ? (fam + ' ' + mod) : fam);
+
+            return 'calc.html?fleet=' + encodeURIComponent(brand + ' ' + fleetLabel)
+                + (fleetLabel ? ('&tankkey=' + encodeURIComponent(fleetLabel)) : '');
+        }
+
+        function markBrandSelected(oem) {
+            const wrapA = document.getElementById('brand-airbus-wrap');
+            const wrapB = document.getElementById('brand-boeing-wrap');
+            wrapA?.classList.toggle('selected', oem === 'AIRBUS');
+            wrapB?.classList.toggle('selected', oem === 'BOEING');
+        }
+
+        function attachSelectorsTo(oem) {
+            const host = document.getElementById('selectors-host');
+            const modelRow = document.getElementById('model-row');
+            const variantRow = document.getElementById('variant-row');
+            if (!host || !modelRow || !variantRow) return;
+
+            const wrap = document.getElementById(oem === 'BOEING' ? 'brand-boeing-wrap' : 'brand-airbus-wrap');
+            if (!oem || !wrap) {
+                if (modelRow.parentElement !== host) host.appendChild(modelRow);
+                if (variantRow.parentElement !== host) host.appendChild(variantRow);
+                return;
+            }
+
+            if (modelRow.parentElement !== wrap) wrap.appendChild(modelRow);
+            if (variantRow.parentElement !== wrap) wrap.appendChild(variantRow);
+        }
+
+        function fillSelect(selectEl, placeholderText, values) {
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+            const opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = placeholderText;
+            selectEl.appendChild(opt0);
+            // A319/A320/A321 -> A320 FAMILY birleştirme
+            const merged = [];
+            const seen = new Set();
+            for (const v of values) {
+                if (["A319","A320","A321"].includes(v)) {
+                    if (!seen.has("A320 FAMILY")) {
+                        merged.push("A320 FAMILY");
+                        seen.add("A320 FAMILY");
+                    }
+                } else if (!seen.has(v)) {
+                    merged.push(v);
+                    seen.add(v);
+                }
+            }
+            for (const v of merged) {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                selectEl.appendChild(opt);
+            }
+        }
+
+        function setReveal(id, show) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('is-hidden', !show);
+        }
+
+        function applySelectionLock() {
+            const locked = !!state.lockedByTail;
+            const btnA = document.getElementById('brand-airbus');
+            const btnB = document.getElementById('brand-boeing');
+            const modelSelect = document.getElementById('model-select');
+            const variantSelect = document.getElementById('variant-select');
+            if (btnA) btnA.disabled = locked;
+            if (btnB) btnB.disabled = locked;
+            if (modelSelect && locked) modelSelect.disabled = true;
+            if (variantSelect && locked) variantSelect.disabled = true;
+        }
+
+        function setLockedByTail(locked) {
+            state.lockedByTail = !!locked;
+            // If unlocking selection, clear any tail-provided raw variant so manual selections don't inherit ACT
+            if (!state.lockedByTail) {
+                try { state.tailProvidedVariant = ''; } catch (e) {}
+            }
+            applySelectionLock();
+        }
+
+        function variantDisplayToken(model, variant) {
+            const fam = String(model || '').toUpperCase();
+            const v = String(variant || '').trim().toUpperCase();
+            if (!v) return '';
+
+            // Airbus A320 Family: show CEO/NEO (ACT seçimi ayrı bir alanda yapılır)
+            if (fam === 'A320 FAMILY') {
+                if (v.startsWith('PW1100G')) return 'NEO A319/A320/A321';
+                if (v.startsWith('V2500')) return 'CEO A319/A320/A321';
+                return v;
+            }
+
+            // Boeing 737: show NG / MAX prefixes (label only)
+            if (fam === 'B737' || fam === 'B737 NG/MAX') {
+                if (v.endsWith('MAX') && /^\dMAX$/.test(v)) {
+                    const n = v.replace(/MAX$/, '');
+                    return 'MAX -' + n;
+                }
+                if (/^\d{3}(-AJ)?$/.test(v)) return 'NG -' + v;
+                return v;
+            }
+
+            return v;
+        }
+
+        function groupVariantsByCapacity(model, variants) {
+            const famU = String(model || '').trim().toUpperCase();
+
+            function variantTankKeyForGrouping(fam, variant) {
+                const fU = String(fam || '').trim().toUpperCase();
+                const vU = String(variant || '').trim().toUpperCase();
+                if (!fU || !vU) return '';
+
+                // Narrowbody capacity groups
+                if (fU === 'A320 FAMILY' || fU === 'A319' || fU === 'A320' || fU === 'A321') {
+                    // ACT seçim alanı ayrı: burada tüm PW1100G alt varyantlarını tek grupta topla
+                    if (vU.startsWith('PW1100G')) return 'A320neo';
+                    return 'A320-200';
+                }
+                if (fU === 'B737' || fU === 'B737 NG/MAX') {
+                    if (vU.includes('MAX')) return 'B737MAX8/MAX9';
+                    return 'B737-700/800/900ER';
+                }
+
+                // A330 capacity groups
+                if (fU === 'A330') {
+                    if (vU.startsWith('200') || vU === '243') return 'A330-200';
+                    if (vU.startsWith('300')) return 'A330-300';
+                    return 'A330-' + vU; // fallback
+                }
+
+                // Widebody: default grouping by exact variant (capacity may still be same, but this is deterministic)
+                return fU + ' ' + vU;
+            }
+
+            function pickMainVariant(members) {
+                const uniq = Array.from(new Set(members)).filter(Boolean);
+                // Prefer a representative that is NOT an ACT-specific and NOT -AJ
+                const nonAct = uniq.filter(v => !/\dACT$/i.test(v));
+                const nonAj = nonAct.filter(v => !v.endsWith('-AJ'));
+                const pool = (nonAj.length ? nonAj : (nonAct.length ? nonAct : uniq));
+                pool.sort((a, b) => a.length - b.length || a.localeCompare(b));
+                return pool[0] || '';
+            }
+
+            const groups = new Map();
+            for (const raw of variants) {
+                const v = String(raw || '').trim().toUpperCase();
+                if (!v) continue;
+                const key = variantTankKeyForGrouping(famU, v) || ('NAME:' + v);
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(v);
+            }
+
+            const mergedOptions = [];
+            const memberToMain = new Map();
+
+            for (const [key, members] of groups.entries()) {
+                const sorted = Array.from(new Set(members)).sort();
+                const main = pickMainVariant(sorted);
+                for (const m of sorted) memberToMain.set(m, main);
+
+                let label = '';
+                if (famU === 'A320 FAMILY') {
+                    if (key === 'A320neo') label = 'NEO A319/A320/A321';
+                    else if (key === 'A320-200') label = 'CEO A319/A320/A321';
+                    else label = variantDisplayToken(famU, main);
+                } else if (famU === 'B737' || famU === 'B737 NG/MAX') {
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken('B737', v)).filter(Boolean)));
+                    // Küçük/tekrarlı token'ları sadeleştir
+                    label = tokens.sort().join(' / ');
+                } else if (famU === 'A330') {
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken('A330', v)).filter(Boolean)));
+                    label = tokens.sort().join(' / ');
+                } else {
+                    const tokens = Array.from(new Set(sorted.map(v => variantDisplayToken(famU, v)).filter(Boolean)));
+                    label = tokens.sort().join(' / ');
+                }
+
+                if (main) mergedOptions.push({ value: main, label });
+            }
+
+            mergedOptions.sort((a, b) => a.label.localeCompare(b.label));
+            return { mergedOptions, memberToMain };
+        }
+
+        // getVariantCapacityL removed: capacity merge is based on calculator configuration.
+
+        function refreshSelectors() {
+            const lang = getLang();
+            const modelSelect = document.getElementById('model-select');
+            const variantSelect = document.getElementById('variant-select');
+            const goBtn = document.getElementById('go-btn');
+            const goHint = document.getElementById('go-hint');
+            // go-hint may be optional in some builds; don't require it to proceed
+            if (!modelSelect || !variantSelect || !goBtn) return;
+            const modelPlaceholder = t(lang, 'model_placeholder');
+            const variantPlaceholder = t(lang, 'variant_placeholder');
+            if (!state.selectedOem) {
+                attachSelectorsTo('');
+                setReveal('model-row', false);
+                setReveal('variant-row', false);
+                modelSelect.disabled = true;
+                variantSelect.disabled = true;
+                fillSelect(modelSelect, modelPlaceholder, []);
+                fillSelect(variantSelect, variantPlaceholder, []);
+                goBtn.disabled = true;
+                if (goHint) {
+                    goHint.dataset.state = '';
+                    goHint.textContent = t(lang, 'go_hint_idle');
+                }
+                // Limit bilgisini temizle
+                const airbusSub = document.getElementById('brand-airbus-sub');
+                const boeingSub = document.getElementById('brand-boeing-sub');
+                if (airbusSub) airbusSub.innerHTML = t(lang, 'brand_sub');
+                if (boeingSub) boeingSub.innerHTML = t(lang, 'brand_sub');
+                applySelectionLock();
+                return;
+            }
+
+            attachSelectorsTo(state.selectedOem);
+
+            // Marka seçildi: Model alanını aç
+            setReveal('model-row', true);
+
+            // Model listesi (sadeleştirilmiş)
+            let models = [];
+            try {
+                const m = state.byOem?.[state.selectedOem];
+                if (m && typeof m.keys === 'function') {
+                    models = Array.from(m.keys()).map(x => normalizeFamilyName(x));
+                }
+            } catch (e) {}
+            models = Array.from(new Set(models)).sort();
+
+            // Daha okunur sıralama: dar gövdeleri öne al
+            try {
+                const preferred = ['A320 FAMILY', 'B737 NG/MAX', 'B737', 'A330', 'A350-900', 'B777', 'B787'];
+                models.sort((a, b) => {
+                    const ia = preferred.indexOf(a);
+                    const ib = preferred.indexOf(b);
+                    if (ia !== -1 || ib !== -1) {
+                        if (ia === -1) return 1;
+                        if (ib === -1) return -1;
+                        return ia - ib;
+                    }
+                    return a.localeCompare(b);
+                });
+            } catch (e) {}
+
+            modelSelect.disabled = models.length === 0;
+            fillSelect(modelSelect, modelPlaceholder, models);
+            if (state.selectedModel && models.includes(state.selectedModel)) {
+                modelSelect.value = state.selectedModel;
+            } else {
+                state.selectedModel = '';
+                state.selectedVariant = '';
+                modelSelect.value = '';
+            }
+
+            // Varyant listesi (sadeleştirilmiş)
+            let variants = [];
+            if (state.selectedModel) {
+                try {
+                    const m = state.byOem?.[state.selectedOem];
+                    const set = m?.get?.(state.selectedModel);
+                    if (set) variants = Array.from(set);
+                } catch (e) {}
+            }
+
+            // ACT seçimi A320 için: yalnızca seçim yoksa varsayılan ata.
+            // Eğer kuyruk tarafından -2ACT sağlandıysa onu koru.
+            try {
+                if (String(state.selectedModel || '').toUpperCase() === 'A320 FAMILY') {
+                    if (!state.selectedAct) {
+                        if (state.tailProvidedVariant && String(state.tailProvidedVariant).toUpperCase().includes('2ACT')) {
+                            state.selectedAct = '2ACT';
+                        } else {
+                            state.selectedAct = 'YOK';
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            const { mergedOptions, memberToMain } = groupVariantsByCapacity(state.selectedModel || '', variants);
+            if (!state.selectedModel || mergedOptions.length === 0) {
+                setReveal('variant-row', false);
+                variantSelect.disabled = true;
+                fillSelect(variantSelect, variantPlaceholder, []);
+                state.selectedVariant = '';
+                variantSelect.value = '';
+            } else {
+                // Varyantlar her zaman görünsün; seçenek tekse disabled kalabilir
+                setReveal('variant-row', true);
+                variantSelect.disabled = (mergedOptions.length <= 1);
+                variantSelect.innerHTML = '';
+                const opt0 = document.createElement('option');
+                opt0.value = '';
+                opt0.textContent = variantPlaceholder;
+                variantSelect.appendChild(opt0);
+                for (const opt of mergedOptions) {
+                    const o = document.createElement('option');
+                    o.value = opt.value;
+                    o.textContent = opt.label;
+                    variantSelect.appendChild(o);
+                }
+                let selectedVariant = state.selectedVariant;
+                if (selectedVariant && !mergedOptions.some(o => o.value === selectedVariant)) {
+                    const mapped = memberToMain.get(selectedVariant) || memberToMain.get(selectedVariant.replace(/-AJ$/, ''));
+                    selectedVariant = mapped || '';
+                }
+                if (!selectedVariant && mergedOptions.length === 1) selectedVariant = mergedOptions[0].value;
+                state.selectedVariant = selectedVariant;
+                variantSelect.value = selectedVariant;
+            }
+
+            const supported = state.selectedModel && isSupportedFamily(state.selectedModel);
+            goBtn.disabled = !supported;
+            const fam = String(state.selectedModel || '').toUpperCase();
+            const isNarrow = (fam === 'A319' || fam === 'A320' || fam === 'A321' || fam === 'A320 FAMILY' || fam === 'B737' || fam === 'B737 NG/MAX');
+            if (goHint) {
+                if (!supported && state.selectedModel) {
+                    goHint.dataset.state = 'unsupported';
+                    goHint.textContent = t(lang, 'go_hint_unsupported');
+                } else if (supported && !isNarrow) {
+                    goHint.dataset.state = 'widebody';
+                    goHint.textContent = t(lang, 'go_hint_widebody');
+                } else {
+                    goHint.dataset.state = '';
+                    goHint.textContent = t(lang, 'go_hint_idle');
+                }
+            }
+
+            applySelectionLock();
+
+            // Model/Varyant değişiminden sonra ACT satırını senkron tut
+            try { updateActSelector(); } catch (e) {}
+
+            // Seçim tamamlandıysa marka kartında tank/limit göster
+            try { safeUpdateBrandTankInfo(); } catch (e) {}
+
+            // If manual selection is complete, expand the related brand card and show the calculator button
+            try {
+                const wrapA = document.getElementById('brand-airbus-wrap');
+                const wrapB = document.getElementById('brand-boeing-wrap');
+                const tailInfo = document.getElementById('tail-info-box');
+                const goBtnAdv = document.getElementById('go-btn-adv');
+                const goWrapAdv = document.getElementById('manual-go-wrap');
+                const selectedWrap = (state.selectedOem === 'BOEING') ? wrapB : wrapA;
+                if (isSelectionComplete()) {
+                    // expand selected wrap, collapse the other
+                    if (wrapA) wrapA.classList.toggle('expanded', state.selectedOem === 'AIRBUS');
+                    if (wrapB) wrapB.classList.toggle('expanded', state.selectedOem === 'BOEING');
+                    // show tail info box and go button so user can continue to calculation
+                    if (tailInfo) tailInfo.style.display = 'block';
+                    if (goBtn) { goBtn.style.display = 'block'; goBtn.disabled = false; }
+                    if (goWrapAdv) goWrapAdv.style.display = 'block';
+                    if (goBtnAdv) { goBtnAdv.style.display = 'inline-block'; goBtnAdv.disabled = false; }
+                    // ensure brand card is scrolled into view on small screens
+                    try { selectedWrap?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+                } else {
+                    if (wrapA) wrapA.classList.remove('expanded');
+                    if (wrapB) wrapB.classList.remove('expanded');
+                    if (tailInfo) tailInfo.style.display = 'none';
+                    if (goBtn) { goBtn.style.display = 'none'; goBtn.disabled = true; }
+                    if (goWrapAdv) goWrapAdv.style.display = 'none';
+                    if (goBtnAdv) { goBtnAdv.style.display = 'none'; goBtnAdv.disabled = true; }
+                }
+            } catch (e) {}
+        }
+
+        function setSelection(oem, model, variant, rawVariant) {
+            const m = normalizeFamilyName(model);
+            state.selectedOem = oem || '';
+            state.selectedModel = m || '';
+
+            // remember raw variant if provided (e.g. PW1100G-2ACT)
+            try { state.tailProvidedVariant = rawVariant || variant || ''; } catch (e) { state.tailProvidedVariant = variant || ''; }
+
+            // Varyant: -AJ -> base (kapasite aynıysa)
+            let v = String(variant || '').trim().toUpperCase();
+            if (v && v.endsWith('-AJ')) {
+                v = v.replace(/-AJ$/, '');
+            }
+            state.selectedVariant = v;
+
+            markBrandSelected(state.selectedOem);
+            refreshSelectors();
+        }
+
+        document.getElementById('brand-airbus')?.addEventListener('click', () => setSelection('AIRBUS', '', '', ''));
+        document.getElementById('brand-boeing')?.addEventListener('click', () => setSelection('BOEING', '', '', ''));
+        document.getElementById('model-select')?.addEventListener('change', (e) => {
+            const v = e.target?.value || '';
+            // manual change: clear any tail lock/raw variant
+            try { setLockedByTail(false); } catch (e) {}
+            try { state.tailProvidedVariant = ''; } catch (e) {}
+            state.selectedModel = v;
+            state.selectedVariant = '';
+            state.selectedAct = '';
+            refreshSelectors();
+        });
+        document.getElementById('variant-select')?.addEventListener('change', (e) => {
+            // manual variant change: clear tail-provided raw variant and unlock
+            try { setLockedByTail(false); } catch (e) {}
+            try { state.tailProvidedVariant = ''; } catch (e) {}
+            state.selectedVariant = e.target?.value || '';
+            // Eğer kullanıcı PW1100G dışı bir varyant seçtiyse ACT seçimini temizle
+            try {
+                if (!String(state.selectedVariant || '').toUpperCase().startsWith('PW1100G')) {
+                    state.selectedAct = '';
+                }
+            } catch (e) {}
+            // ACT inputunu güncelle
+                updateActSelector();
+                // Force brand card refresh so limits update immediately
+                try { safeUpdateBrandTankInfo(); } catch (e) {}
+            // Re-evaluate selectors to reflect completed selection (shows go button)
+            try { refreshSelectors(); } catch (e) {}
+        });
+
+        document.getElementById('act-select')?.addEventListener('change', (e) => {
+            try {
+                state.selectedAct = e.target?.value || '';
+                safeUpdateBrandTankInfo();
+                try { refreshSelectors(); } catch (e) {}
+            } catch (err) {
+                try { if (window.RA_DEBUG) console.error('act-select change handler error', err); } catch(e){}
+                try { window.dispatchEvent(new ErrorEvent('error', { message: String(err) })); } catch(e){}
+            }
+        });
+
+        // Seçilen varyanta göre ACT inputunu göster/gizle ve seçenekleri doldur
+        function updateActSelector() {
+            const actRow = document.getElementById('act-row');
+            const actSelect = document.getElementById('act-select');
+            if (!actRow || !actSelect) return;
+
+            const selectedValue = String(state.selectedVariant || '').trim().toUpperCase();
+
+            // ACT yalnızca A320 FAMILY NEO (PW1100G) için
+            const show = (String(state.selectedModel || '').toUpperCase() === 'A320 FAMILY') && selectedValue.startsWith('PW1100G');
+            if (!show) {
+                actRow.classList.add('is-hidden');
+                actSelect.value = '';
+                state.selectedAct = '';
+                // keep disabled (A320 ACT is fixed to YOK)
+                actSelect.disabled = true;
+                updateBrandTankInfo();
+                return;
+            }
+
+            // A320neo için ACT seçenekleri: fleet.json'da ACT'li varyant olmasa bile kullanıcı seçebilsin.
+            const lang = getLang();
+            const actOptions = [
+                { value: 'YOK', label: t(lang, 'act_none') },
+                { value: '2ACT', label: t(lang, 'act_2') }
+            ];
+
+            actSelect.innerHTML = '';
+            const opt0 = document.createElement('option');
+            opt0.value = '';
+            opt0.textContent = t(lang, 'act_placeholder');
+            actSelect.appendChild(opt0);
+            for (const opt of actOptions) {
+                const o = document.createElement('option');
+                o.value = opt.value;
+                o.textContent = opt.label;
+                actSelect.appendChild(o);
+            }
+
+            // Attach change listener here (actSelect is created dynamically)
+            if (!actSelect._listenerAttached) {
+                actSelect.addEventListener('change', function(e){
+                    state.selectedAct = e.target?.value || '';
+                    safeUpdateBrandTankInfo();
+                    // avoid re-calling refreshSelectors here to prevent recursion
+                });
+                actSelect._listenerAttached = true;
+            }
+
+            // Eğer daha önce bir seçim yoksa default 'YOK' kullan
+            if (!state.selectedAct) state.selectedAct = 'YOK';
+
+            actRow.classList.remove('is-hidden');
+
+            // Seçimi UI'a yansıt
+            const prevValue = actSelect.value;
+            actSelect.value = state.selectedAct;
+            // Eğer programatik olarak değiştiyse, change event yerine doğrudan handler'ı çağır
+            if (prevValue !== actSelect.value) {
+                try {
+                    state.selectedAct = actSelect.value;
+                    // Only update brand info here; do not call refreshSelectors to avoid recursion
+                    safeUpdateBrandTankInfo();
+                } catch (err) {
+                    if (window.RA_DEBUG) console.error('programmatic act update error', err);
+                }
+            }
+
+            // Allow user to change ACT selection
+            actSelect.disabled = false;
+            safeUpdateBrandTankInfo();
+            // end of main logic
+        }
+
+        document.getElementById('go-btn')?.addEventListener('click', () => {
+            let url = calcUrlForSelection(state.selectedModel, state.selectedVariant, state.selectedOem, state.selectedAct);
+            try {
+                const tail = String(document.getElementById('tail-input')?.value || '').trim().toUpperCase();
+                if (/^TC-[A-Z0-9]{3}$/.test(tail) && url) {
+                    const u = new URL(url, window.location.href);
+                    u.searchParams.set('reg', tail);
+                    try { localStorage.setItem('refuel_assist_tail', tail); } catch (e) {}
+                    url = u.pathname + u.search;
+                }
+            } catch (e) {}
+            if (url) window.location.href = url;
+        });
+
+        // Advanced-panel go button for manual selection
+        document.getElementById('go-btn-adv')?.addEventListener('click', () => {
+            let url = calcUrlForSelection(state.selectedModel, state.selectedVariant, state.selectedOem, state.selectedAct);
+            try {
+                const tail = String(document.getElementById('tail-input')?.value || '').trim().toUpperCase();
+                if (/^TC-[A-Z0-9]{3}$/.test(tail) && url) {
+                    const u = new URL(url, window.location.href);
+                    u.searchParams.set('reg', tail);
+                    try { localStorage.setItem('refuel_assist_tail', tail); } catch (e) {}
+                    url = u.pathname + u.search;
+                }
+            } catch (e) {}
+            if (url) window.location.href = url;
+        });
+
+        function updateTailHint(kind, payload) {
+            const lang = getLang();
+            const hint = document.getElementById('tail-hint');
+            if (!hint) return;
+            hint.dataset.state = kind;
+            if (kind === 'loading') hint.textContent = t(lang, 'tail_hint_loading');
+            else if (kind === 'notfound') hint.textContent = t(lang, 'tail_hint_notfound');
+            else if (kind === 'found') {
+                const p = payload || {};
+                const model = String(p.model || '').trim();
+                const variant = String(p.variant || '').trim();
+                hint.textContent = t(lang, 'tail_hint_found', {
+                    model,
+                    variant: variant ? (' ' + variant) : ''
+                });
+            }
+            else {
+                hint.dataset.state = '';
+                hint.textContent = t(lang, 'tail_hint_idle');
+            }
+        }
+
+        function applyTailLookup(raw) {
+            const tail = normalizeTail(raw);
+            if (!tail || tail === 'TC-' || tail.length < 6) {
+                setLockedByTail(false);
+                updateTailHint('idle');
+                try { setManualSelectVisible(true); } catch(e){}
+                // hide any tail info UI when input is empty/invalid
+                try { document.getElementById('tail-info-box').style.display = 'none'; } catch(e){}
+                try { const gb = document.getElementById('go-btn'); if (gb) { gb.style.display = 'none'; gb.disabled = true; } } catch(e){}
+                try { const ts = document.getElementById('tail-summary'); if (ts) { ts.style.display='none'; ts.innerHTML=''; } } catch(e){}
+                return;
+            }
+            const hit = state.tailMap.get(tail);
+            if (!hit) {
+                setLockedByTail(false);
+                updateTailHint('notfound');
+                try { setManualSelectVisible(true); } catch(e){}
+                // hide UI when not found
+                try { document.getElementById('tail-info-box').style.display = 'none'; } catch(e){}
+                try { const gb = document.getElementById('go-btn'); if (gb) { gb.style.display = 'none'; gb.disabled = true; } } catch(e){}
+                try { const ts = document.getElementById('tail-summary'); if (ts) { ts.style.display='none'; ts.innerHTML=''; } } catch(e){}
+                return;
+            }
+            setSelection(hit.oem, hit.family, hit.model, hit.model);
+            // remember raw variant provided by tail lookup (so we can detect ACT suffixes)
+            try { state.tailProvidedVariant = hit.model || ''; } catch (e) { state.tailProvidedVariant = ''; }
+            setLockedByTail(true);
+            updateTailHint('found', { model: normalizeFamilyName(hit.family), variant: hit.model });
+
+            // Determine ACT value synchronously from hit.model so subsequent logic
+            // (showTailInfo) sees correct ACT state and avoids race conditions.
+            try {
+                let actValueSync = '';
+                if (typeof hit.model === 'string' && hit.model.toUpperCase().startsWith('PW1100G')) {
+                    if (hit.model.toUpperCase().includes('2ACT')) {
+                        actValueSync = '2ACT';
+                        try { state.tailProvidedVariant = hit.model || ''; } catch (e) {}
+                    } else {
+                        actValueSync = 'YOK';
+                    }
+                }
+                if (actValueSync) state.selectedAct = actValueSync;
+            } catch (e) {}
+
+            // Show limits and go-button inside tail panel
+            try { showTailInfo(tail); } catch (e) {}
+
+            // Update UI act select after a short delay (DOM may not be ready yet)
+            setTimeout(function() {
+                const actSelect = document.getElementById('act-select');
+                if (!actSelect) return;
+                const actRow = document.getElementById('act-row');
+                if (!actRow || actRow.classList.contains('is-hidden')) return;
+                const current = state.selectedAct || '';
+                if (current) {
+                    try { actSelect.value = current; } catch (e) {}
+                    try { safeUpdateBrandTankInfo(); } catch (e) {}
+                }
+            }, 10);
+        }
+
+        // Show tail info: fetch tank limits and update UI (with compact summary)
+        function showTailInfo(tail) {
+            if (!tail) return;
+            const hit = state.tailMap.get(tail);
+            const tailPanel = document.getElementById('tail-panel');
+            const tailInfoBox = document.getElementById('tail-info-box');
+            const tailHint = document.getElementById('tail-hint');
+            const tailSummary = document.getElementById('tail-summary');
+            const tailLimits = document.getElementById('tail-limits');
+            const goBtn = document.getElementById('go-btn');
+            const manualBtn = document.getElementById('manual-select-btn');
+            if (!hit) {
+                if (tailPanel) tailPanel.classList.remove('expanded');
+                if (tailInfoBox) tailInfoBox.style.display = 'none';
+                if (goBtn) { goBtn.style.display = 'none'; goBtn.disabled = true; }
+                if (tailSummary) { tailSummary.style.display = 'none'; }
+                // show manual-select when we don't have a known model
+                try { setManualSelectVisible(true); } catch(e){}
+                return;
+            }
+            // Ensure selection reflects the tail
+            try { setSelection(hit.oem, hit.family, hit.model, hit.model); } catch (e) {}
+            if (tailPanel) tailPanel.classList.add('expanded');
+            if (tailInfoBox) tailInfoBox.style.display = 'block';
+            if (tailHint) tailHint.innerHTML = '';
+            if (goBtn) { goBtn.style.display = 'block'; goBtn.classList.remove('fade-hidden'); goBtn.classList.remove('is-hidden'); goBtn.disabled = false; }
+
+            // hide previous summary while loading (use direct styles to avoid class/display conflicts)
+            if (tailSummary) { tailSummary.style.display = 'none'; tailSummary.classList.remove('fade-hidden'); tailSummary.classList.remove('is-hidden'); tailSummary.innerHTML = ''; }
+            // hide manual-select now that we have a model
+            try { setManualSelectVisible(false); } catch(e){}
+
+            // Fetch tank limits using selection key
+            const key = selectionTankKey();
+            if (typeof window.fetchTankLimitsKg === 'function') {
+                window.fetchTankLimitsKg(key)
+                    .then(limits => {
+                        if (!tailLimits) return;
+                        if (!limits) {
+                            tailLimits.innerHTML = '<span style="color:#94a3b8;">Limit bilgisi bulunamadı.</span>';
+                            tailLimits.style.display = 'block';
+                            if (tailSummary) tailSummary.style.display = 'none';
+                            return;
+                        }
+
+                        // Build compact summary similar to calc header and hide detailed list
+                        try {
+                            const left = Number(limits.leftWingFuelKg || limits.leftTankKg || limits.left || 0) || 0;
+                            const right = Number(limits.rightWingFuelKg || limits.rightTankKg || limits.right || 0) || 0;
+                            let ctr = Number(limits.centerFuelKg || limits.centerTankKg || limits.center || 0) || 0;
+                            let total = Number(limits.totalFuelKg || limits.maxKg || limits.total || 0) || 0;
+
+                            // Eğer tail verisinde ACT bilgisi varsa, bunu maksimum kapasiteye ekle
+                            // Ancak ACT ekleneceği koşul: ya model isiminde "2ACT" bulunmalı ya da
+                            // kullanıcı açıkça `2ACT` seçmiş olmalı. Aksi halde önceki ACT bilgisi
+                            // başka bir kuyruğun kalıntısı olarak kalmaması için ekleme yapma.
+                            try {
+                                let addedAct = 0;
+                                const modelHas2Act = String(hit?.model || '').toUpperCase().includes('2ACT');
+                                const userSelected2Act = String(state.selectedAct || '').toUpperCase() === '2ACT';
+                                if (modelHas2Act || userSelected2Act) {
+                                    if (hit && typeof hit.actCapacityKg === 'number') {
+                                        addedAct = Number(hit.actCapacityKg) || 0;
+                                    } else if (hit && typeof hit.actCount === 'number') {
+                                        const actMap = {1:2496,2:4992,3:7488};
+                                        addedAct = actMap[Number(hit.actCount)] || 0;
+                                    }
+                                }
+                                if (addedAct > 0) {
+                                    // limit nesnesinde actFuelKg alanını güncelle
+                                    limits.actFuelKg = (Number(limits.actFuelKg) || 0) + addedAct;
+                                    ctr = ctr + addedAct;
+                                    total = total + addedAct;
+                                }
+                            } catch (e) {}
+
+                            const wingMax = Math.max(left, right);
+                            const wingUnit = wingMax ? formatNumberTr(wingMax) : '-';
+                            const wingCount = (left>0 && right>0) ? `2 x ${wingUnit}` : (wingMax>0 ? `1 x ${wingUnit}` : '0');
+                            const ctrStr = ctr ? formatNumberTr(ctr) : '-';
+                            const maxStr = total ? formatNumberTr(total) : '-';
+
+                            if (tailSummary) {
+                                const familyTitle = escapeHtml((normalizeFamilyName(hit.family) || '') + (hit.model ? (' ' + String(hit.model).toUpperCase()) : ''));
+                                // choose logo based on OEM
+                                let logoSrc = 'assets/logo-192.png';
+                                try {
+                                    const oem = String(hit.oem || '').toUpperCase();
+                                    if (oem === 'AIRBUS') logoSrc = 'assets/airbus.svg';
+                                    else if (oem === 'BOEING') logoSrc = 'assets/boeing.svg';
+                                } catch (e) {}
+
+                                tailSummary.innerHTML = `<div class="summary-icon"><img class="summary-logo" src="${escapeHtml(logoSrc)}" alt=""></div><div class="summary-text"><div class="summary-title">${familyTitle}</div><div class="summary-sub">WING: ${wingCount} <span class="sep">|</span> CTR: ${ctrStr} KG</div><div class="summary-max">MAX CAP: <span class="summary-num">${maxStr} KG</span></div></div>`;
+                                tailSummary.style.display = 'flex';
+                            }
+                        } catch (e) {
+                            if (tailSummary) tailSummary.style.display = 'none';
+                        }
+
+                        // Hide detailed limits list (we only want calculator-style header)
+                        if (tailLimits) { tailLimits.innerHTML = ''; tailLimits.style.display = 'none'; }
+                    })
+                    .catch(() => {
+                        if (tailLimits) {
+                            tailLimits.innerHTML = '<span style="color:#94a3b8;">Limit bilgisi bulunamadı.</span>';
+                            tailLimits.style.display = 'block';
+                        }
+                        if (tailSummary) tailSummary.style.display = 'none';
+                    });
+            } else {
+                if (tailLimits) { tailLimits.innerHTML = '<span style="color:#94a3b8;">Limit bilgisi bulunamadı.</span>'; tailLimits.style.display = 'block'; }
+                if (tailSummary) tailSummary.style.display = 'none';
+            }
+        }
+
+        let tailDebounce = null;
+        const tailInput = document.getElementById('tail-input');
+        if (tailInput) {
+            // Init fixed prefix
+            tailInput.value = 'TC-';
+            tailInput.style.paddingRight = '44px';
+            try { tailInput.setSelectionRange(3, 3); } catch (e) {}
+        }
+
+        tailInput?.addEventListener('focus', () => {
+            enforceTailInput();
+            // Always keep caret after prefix
+            window.setTimeout(() => lockTailCaret(tailInput), 0);
+        });
+        tailInput?.addEventListener('click', () => window.setTimeout(() => lockTailCaret(tailInput), 0));
+        tailInput?.addEventListener('mouseup', () => window.setTimeout(() => lockTailCaret(tailInput), 0));
+        // Touch support: ensure caret is locked after touchstart on mobile devices
+        tailInput?.addEventListener('touchstart', () => window.setTimeout(() => lockTailCaret(tailInput), 0));
+
+        tailInput?.addEventListener('keydown', (e) => {
+            if (!tailInput) return;
+            const s = tailInput.selectionStart ?? 0;
+            const ePos = tailInput.selectionEnd ?? 0;
+
+            // Prevent deleting the fixed prefix
+            if ((e.key === 'Backspace' && s <= 3 && ePos <= 3) || (e.key === 'Delete' && s < 3)) {
+                e.preventDefault();
+                lockTailCaret(tailInput);
+                return;
+            }
+            if (e.key === 'Home') {
+                e.preventDefault();
+                tailInput.setSelectionRange(3, 3);
+                return;
+            }
+            if (e.key === 'ArrowLeft' && s <= 3) {
+                e.preventDefault();
+                tailInput.setSelectionRange(3, 3);
+                return;
+            }
+
+            // If user selects across prefix, re-lock to after prefix.
+            if (s < 3 || ePos < 3) {
+                window.setTimeout(() => lockTailCaret(tailInput), 0);
+            }
+        });
+
+        tailInput?.addEventListener('beforeinput', (e) => {
+            if (!tailInput) return;
+            const s = tailInput.selectionStart ?? 0;
+            const ePos = tailInput.selectionEnd ?? 0;
+            if (e.inputType === 'deleteContentBackward' && s <= 3 && ePos <= 3) {
+                e.preventDefault();
+                lockTailCaret(tailInput);
+                return;
+            }
+            if (e.inputType === 'deleteContentForward' && s < 3) {
+                e.preventDefault();
+                lockTailCaret(tailInput);
+                return;
+            }
+        });
+
+        tailInput?.addEventListener('paste', (e) => {
+            if (!tailInput) return;
+            e.preventDefault();
+            const text = (e.clipboardData && e.clipboardData.getData) ? (e.clipboardData.getData('text') || '') : '';
+            const clip = String(text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0,3);
+            tailInput.value = 'TC-' + clip;
+            try { tailInput.setSelectionRange(3 + clip.length, 3 + clip.length); } catch (err) {}
+            tailInput.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        tailInput?.addEventListener('cut', (e) => {
+            if (!tailInput) return;
+            const s = tailInput.selectionStart ?? 0; const ePos = tailInput.selectionEnd ?? 0;
+            if (s < 3 || ePos < 3) {
+                e.preventDefault();
+                lockTailCaret(tailInput);
+            }
+        });
+
+        // Create check icon and ensure wrapper is positioned
+        if (tailInput) {
+            const wrapper = tailInput.parentNode;
+            try {
+                if (wrapper && wrapper.style) {
+                    wrapper.style.position = 'relative';
+                    // do not force display/width here, keep normal flow to allow centering
+                }
+            } catch (e) {}
+            let checkIcon = document.getElementById('tail-check');
+            if (!checkIcon && wrapper) {
+                checkIcon = document.createElement('span');
+                checkIcon.id = 'tail-check';
+                checkIcon.innerHTML = '✔';
+                checkIcon.style.opacity = 0;
+                checkIcon.style.position = 'absolute';
+                // place the icon just inside/right of the input (flush with frame)
+                checkIcon.style.left = 'auto';
+                checkIcon.style.right = '8px';
+                checkIcon.style.top = '50%';
+                checkIcon.style.transform = 'translateY(-50%)';
+                checkIcon.style.fontSize = '18px';
+                checkIcon.style.color = '#22c55e';
+                wrapper.appendChild(checkIcon);
+            }
+        }
+
+        // Utility: center the input text visually by measuring text width
+        function updateTailTextIndent() {
+            if (!tailInput) return;
+            try {
+                const style = getComputedStyle(tailInput);
+                const font = style.font || `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+                const canvas = updateTailTextIndent._canvas || (updateTailTextIndent._canvas = document.createElement('canvas'));
+                const ctx = canvas.getContext('2d');
+                ctx.font = font;
+                const text = tailInput.value || '';
+                // do not change wrapper width here; keep natural centering
+                try { const wrap = tailInput.parentNode; if (wrap && wrap.style) { /* no-op to avoid forcing width */ } } catch (e) {}
+
+                // Determine check icon width (if present) and reserve space on right
+                const checkIcon = document.getElementById('tail-check');
+                const checkWidth = (checkIcon && checkIcon.offsetWidth) ? checkIcon.offsetWidth + 12 : 0; // extra gap
+
+                // If there's no value, keep placeholder centered via text-align:center
+                const reserve = checkWidth ? (checkWidth + 6) : 12;
+                if (!text) {
+                    tailInput.style.textAlign = 'center';
+                    tailInput.style.textIndent = '';
+                    tailInput.style.paddingRight = reserve + 'px';
+                    return;
+                }
+
+                // Center actual text by using text-align:center and reserve space for check icon
+                tailInput.style.textIndent = '';
+                tailInput.style.textAlign = 'center';
+                tailInput.style.paddingRight = reserve + 'px';
+                tailInput.style.paddingLeft = '12px';
+                // Remove any transform-based offsets
+                tailInput.style.transform = '';
+            } catch (e) {
+                try { tailInput.style.textIndent = ''; tailInput.style.textAlign = ''; tailInput.style.transform = ''; } catch (ex) {}
+            }
+        }
+
+        tailInput?.addEventListener('input', () => {
+            // Gentle sanitization without force-locking caret on every keystroke.
+            if (!tailInput) return;
+            const prevStart = tailInput.selectionStart ?? 0;
+            const rawVal = tailInput.value || '';
+            let v = String(rawVal).toUpperCase().replaceAll(' ', '');
+            v = v.replaceAll(/[^A-Z0-9-]/g, '');
+            if (/^[A-Z0-9]{1,3}$/.test(v)) v = 'TC-' + v;
+            if (v.startsWith('TC') && !v.startsWith('TC-')) {
+                const suf = v.slice(2).replaceAll('-', '');
+                v = 'TC-' + suf;
+            }
+            if (!v.startsWith('TC-')) v = 'TC-' + v.replaceAll(/^TC-?/, '');
+            const suf = v.slice(3).replaceAll('-', '').slice(0, 3);
+            v = 'TC-' + suf;
+
+            if (v !== rawVal) {
+                // update value but preserve caret as much as possible
+                tailInput.value = v;
+                try { tailInput.setSelectionRange(Math.max(3, Math.min(v.length, prevStart)), Math.max(3, Math.min(v.length, prevStart))); } catch (e) {}
+            }
+
+            const val = tailInput.value;
+
+            // If input is empty or incomplete, hide tail info UI immediately and ensure manual-select is visible
+            if (!val || val === 'TC-' || val.length < 6) {
+                try { setManualSelectVisible(true); } catch(e){}
+                try { document.getElementById('tail-info-box').style.display = 'none'; } catch(e){}
+                try { const gb = document.getElementById('go-btn'); if (gb) { gb.style.display = 'none'; gb.disabled = true; } } catch(e){}
+                try { const ts = document.getElementById('tail-summary'); if (ts) { ts.style.display='none'; ts.innerHTML=''; } } catch(e){}
+            }
+
+            // Update visual valid state only when full pattern matches
+            const checkIcon = document.getElementById('tail-check');
+            const goBtn = document.getElementById('go-btn');
+            const isValid = /^TC-[A-Z0-9]{3}$/.test(val);
+            if (isValid) {
+                tailInput.classList.add('valid');
+                if (checkIcon) checkIcon.style.opacity = 1;
+                if (goBtn) { goBtn.disabled = false; goBtn.style.background = '#38bdf8'; goBtn.style.color = '#0f172a'; }
+                setLockedByTail(true);
+                try { setManualSelectVisible(false); } catch(e){}
+            } else {
+                tailInput.classList.remove('valid');
+                if (checkIcon) checkIcon.style.opacity = 0;
+                if (goBtn) { goBtn.disabled = true; goBtn.style.background = ''; goBtn.style.color = ''; }
+                setLockedByTail(false);
+                setSelection('', '', '', '');
+                try { setManualSelectVisible(true); } catch(e){}
+            }
+
+            if (tailDebounce) window.clearTimeout(tailDebounce);
+            tailDebounce = window.setTimeout(() => applyTailLookup(val), 250);
+
+            // update visual centering after value changes
+            updateTailTextIndent();
+        });
+
+        // ensure centering on paste/cut/resizing and initial state
+        tailInput?.addEventListener('paste', () => setTimeout(updateTailTextIndent, 0));
+        tailInput?.addEventListener('cut', () => setTimeout(updateTailTextIndent, 0));
+        window.addEventListener('resize', () => setTimeout(updateTailTextIndent, 0));
+        setTimeout(updateTailTextIndent, 0);
+        tailInput?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                enforceTailInput();
+                applyTailLookup(tailInput.value);
+            }
+        });
+
+        // Debug helper: call from console to inspect current selection and computed tankKey
+        try {
+            window.RA_debugStatus = function() {
+                try {
+                    const act = document.getElementById('act-select')?.value || '';
+                    const variant = document.getElementById('variant-select')?.value || '';
+                    const model = document.getElementById('model-select')?.value || '';
+                    const tail = document.getElementById('tail-input')?.value || '';
+                    const brandSub = (document.querySelector('#brand-airbus-sub, #brand-boeing-sub')?.textContent || '').trim();
+                    let tankKey = null;
+                    if (typeof selectionTankKey === 'function') {
+                        try { tankKey = selectionTankKey(); } catch(e) { tankKey = null; }
+                    }
+                    // fallback compute for narrowbodies
+                    if (!tankKey) {
+                        const fam = String(model || '').toUpperCase();
+                        const mod = String(variant || '').toUpperCase();
+                        const actU = String(act || '').toUpperCase();
+                        if (fam === 'A320 FAMILY' || fam === 'A319' || fam === 'A320' || fam === 'A321') {
+                            if (actU === '2ACT' || (mod && mod.includes('2ACT'))) tankKey = 'A320neo-2ACT';
+                            else if (mod && mod.startsWith('PW1100G')) tankKey = 'A320neo';
+                            else tankKey = 'A320-200';
+                        } else if (fam === 'B737' || fam === 'B737 NG/MAX') {
+                            if (mod && mod.includes('MAX')) tankKey = 'B737MAX8/MAX9';
+                            else tankKey = 'B737-700/800/900ER';
+                        } else if (model) {
+                            tankKey = (model + (variant ? (' ' + variant) : '')).trim();
+                        }
+                    }
+                    return { model, variant, act, tail, brandSub, tankKey };
+                } catch (err) { return { error: String(err) }; }
+            };
+        } catch (e) {}
+
+        function seedFamiliesIfEmpty() {
+            // Make manual selection usable even if fleet data fails to load.
+            if (state.byOem.AIRBUS.size === 0) {
+                ['A320 FAMILY', 'A330', 'A350-900'].forEach(f => state.byOem.AIRBUS.set(f, new Set()));
+            }
+            if (state.byOem.BOEING.size === 0) {
+                ['B737 NG/MAX', 'B777', 'B787'].forEach(f => state.byOem.BOEING.set(f, new Set()));
+            }
+        }
+
+        function normalizeFamilyName(familyRaw) {
+            const f = String(familyRaw || '').trim().toUpperCase();
+            // Treat explicit mentions like "A320 NEO"/"A320-NEO" as the A320 FAMILY
+            if (f.includes('A320')) return 'A320 FAMILY';
+            if (f === 'A319' || f === 'A320' || f === 'A321') return 'A320 FAMILY';
+            if (f === 'A350') return 'A350-900';
+            if (f.startsWith('A350')) return 'A350-900';
+
+            // Keep widebody families merged under a single model name
+            if (f === 'A330' || f.startsWith('A330')) return 'A330';
+
+            // Boeing families
+            if (f === 'B737' || f.startsWith('B737')) return 'B737 NG/MAX';
+            if (f === 'B777' || f.startsWith('B777')) return 'B777';
+            if (f === 'B787' || f.startsWith('B787')) return 'B787';
+            // Already-canonical values pass through
+            return f;
+        }
+
+        function ingestFleetRow(tailRaw, familyRaw, modelRaw) {
+            const tail = normalizeTail(tailRaw);
+            const family = normalizeFamilyName(familyRaw);
+            const model = String(modelRaw || '').trim().toUpperCase();
+            if (!tail || !family) return;
+            const oem = family.startsWith('A') ? 'AIRBUS' : 'BOEING';
+            if (!state.byOem[oem].has(family)) state.byOem[oem].set(family, new Set());
+            if (model) state.byOem[oem].get(family).add(model);
+            state.tailMap.set(tail, { oem, family, model });
+        }
+
+        async function loadFleetJson() {
+            updateTailHint('loading');
+            const res = await fetch('assets/fleet.json', { cache: 'no-cache' });
+            if (!res.ok) throw new Error('fleet.json fetch failed');
+            const data = await res.json();
+
+            // tailMap
+            if (data && data.tailMap) {
+                for (const [tail, v] of Object.entries(data.tailMap)) {
+                    ingestFleetRow(tail, v.family, v.model);
+                }
+            }
+
+            // Optional per-tail capacity overrides (generated). Non-fatal if missing.
+            // tailCapacity.json artık sadece tankLimitsKg (KG) içerir.
+            // byOem (optional, used mainly to include families even if tailMap is partial)
+            if (data && data.byOem) {
+                for (const [oem, fams] of Object.entries(data.byOem)) {
+                    const key = (String(oem).toUpperCase() === 'BOEING') ? 'BOEING' : 'AIRBUS';
+                    if (!fams) continue;
+                    for (const [family, models] of Object.entries(fams)) {
+                        if (!state.byOem[key].has(family)) state.byOem[key].set(family, new Set());
+                        if (Array.isArray(models)) {
+                            for (const m of models) if (m) state.byOem[key].get(family).add(String(m).trim().toUpperCase());
+                        }
+                    }
+                }
+            }
+
+            seedFamiliesIfEmpty();
+            state.dataReady = true;
+            updateTailHint('idle');
+        }
+
+        seedFamiliesIfEmpty();
+        loadFleetJson()
+            .then(() => {
+                refreshSelectors();
+                // Eğer kullanıcı fleet yüklenmeden kuyruk girdiyse, yükleme sonrası tekrar dene
+                try {
+                    const v = document.getElementById('tail-input')?.value || '';
+                    if (/^TC-[A-Z0-9]{3}$/.test(String(v).toUpperCase())) applyTailLookup(v);
+                } catch (e) {}
+            })
+            .catch(() => {
+                updateTailHint('idle');
+                seedFamiliesIfEmpty();
+                refreshSelectors();
+                // Offline/timeout vb. durumda cache'den gelen tailMap yine de dolu olabilir; bir kez daha dene
+                try {
+                    const v = document.getElementById('tail-input')?.value || '';
+                    if (/^TC-[A-Z0-9]{3}$/.test(String(v).toUpperCase())) applyTailLookup(v);
+                } catch (e) {}
+            });
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Refuel Assist v7.3 - Hesaplama</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="manifest.json">
+    <script src="assets/tailCapacityLoader.js"></script>
+    <link rel="icon" type="image/png" href="assets/logo-192.png">
+    <link rel="apple-touch-icon" href="assets/logo-192.png">
+    <style>
+        :root { --primary: #38bdf8; --success: #22c55e; --warning: #fbbf24; --error: #ef4444; --bg: #0f172a; --card-bg: #1e293b; --density-clr: #a855f7; --temp-clr: #10b981; --amber: #f59e0b; --header-h: 58px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: white; margin: 0; display: flex; justify-content: center; overflow-x: hidden; }
+        .page { width: 100%; max-width: 420px; padding: 12px; box-sizing: border-box; }
+        .card { background: var(--card-bg); padding: 12px; border-radius: 26px; border: 1px solid #334155; }
+        .input-group { background: #111827; padding: 12px; border-radius: 22px; border: 1.5px solid var(--amber); margin-bottom: 10px; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 0 0 1px rgba(100,116,139,0.08); }
+        .input-group.state-empty { border-color: var(--amber); }
+        .input-group.state-empty { box-shadow: 0 0 12px rgba(245,158,11,0.10); }
+        .input-group.state-empty .group-label { color: var(--amber) !important; }
+        .input-group.state-empty .btn-step { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.35); color: var(--amber); }
+        .input-group.state-empty .main-input { color: white; }
+        .input-group.state-error { border-color: var(--error); box-shadow: 0 0 12px rgba(239,68,68,0.18); }
+        .input-group.state-error .group-label { color: var(--error) !important; }
+        .input-group.state-error .btn-step { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); color: var(--error); }
+        .input-group.state-error .main-input { color: white; }
+        .input-group.state-valid { border-color: #64748b; box-shadow: 0 0 12px rgba(148,163,184,0.08); }
+        .input-group.state-valid .group-label { color: #64748b !important; }
+        .input-group.state-valid .btn-step { background: rgba(100,116,139,0.18); border-color: rgba(100,116,139,0.35); color: #94a3b8; }
+        .input-group.state-valid .main-input { color: white; }
+
+        .group-label { font-size: 10px; font-weight: 800; color: var(--amber); text-transform: uppercase; margin-bottom: 6px; display: block; text-align: center; transition: color 0.3s; }
+            .main-input { background: #0f172a; border: 1px solid #334155; color: white; text-align: center; border-radius: 14px; font-size: 22px; width: 100%; height: 46px; font-weight: 700; outline: none; -webkit-appearance: none; -moz-appearance: textfield; box-sizing: border-box; transition: border-color 0.25s, box-shadow 0.25s; }
+            /* Input'un kendi çerçevesi focus vurgusu */
+            .main-input:focus { border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(148,163,184,0.16); }
+            .input-group.state-empty .main-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 10px rgba(245,158,11,0.08); }
+            .input-group.state-error .main-input:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(239,68,68,0.18), 0 0 10px rgba(239,68,68,0.08); }
+            .input-group.state-valid .main-input:focus { border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(148,163,184,0.16); }
+        .main-input::-webkit-outer-spin-button,
+        .main-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .input-with-unit { position: relative; flex: 1; min-width: 0; }
+        .input-with-unit .main-input { padding-left: 18px; padding-right: 18px; }
+        .input-with-unit .unit-suffix { display: none; }
+        .input-with-unit .unit-corner {
+            position: absolute;
+            right: 10px;
+            bottom: 8px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            color: #64748b;
+            pointer-events: none;
+            text-transform: uppercase;
+            line-height: 1;
+            opacity: 0.55;
+            transition: color 0.2s, transform 0.18s;
+            transform: translateY(2px);
+        }
+        /* Make temp inputs fit up to 3 digits comfortably */
+        #box_temp .input-with-unit .main-input {
+            font-size: clamp(14px, 2.2vw, 18px) !important;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+            height: 48px !important;
+        }
+        .input-group.state-empty .unit-corner { color: var(--amber); }
+        .input-group.state-error .unit-corner { color: var(--error); }
+        .input-group.state-valid .unit-corner { color: #64748b; }
+        .btn-step { background: rgba(245,158,11,0.15); border: 1.5px solid rgba(245,158,11,0.35); color: var(--amber); width: 46px; height: 46px; border-radius: 14px; font-size: 22px; flex-shrink: 0; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+        .btn-step:active { opacity: 0.7; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+        .shake { animation: shake 0.3s ease-in-out; }
+        .btn-step-warning { background: rgba(251,191,36,0.15); border: 1.5px solid rgba(251,191,36,0.35); color: #fbbf24; }
+        .btn-step-warning:active { opacity: 0.7; }
+        /* Tank group: rely on parent .input-group border, keep internal separators */
+        .tank-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0;
+            margin-top: 10px;
+            background: transparent;
+        }
+        .tank-box {
+            background: transparent;
+            padding: 6px 6px; /* reduced horizontal padding to maximize input width */
+            border-radius: 0;
+            border: none;
+            text-align: center;
+            transition: none;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            min-height: 94px;
+        }
+        /* vertical separator between boxes */
+        .tank-box + .tank-box { border-left: 1px solid rgba(255,255,255,0.06); }
+        /* restore rounded corners on the outer boxes */
+        .tank-box:first-child { border-top-left-radius: 20px; border-bottom-left-radius: 20px; }
+        .tank-box:last-child { border-top-right-radius: 20px; border-bottom-right-radius: 20px; }
+
+        /* Modal içi kaydırma çubuğu: çerçevesiz, ince ve kibar */
+        .warning-scroll { scrollbar-width: thin; scrollbar-color: rgba(148,163,184,0.45) transparent; }
+        .warning-scroll::-webkit-scrollbar { width: 8px; }
+        .warning-scroll::-webkit-scrollbar-track { background: transparent; }
+        .warning-scroll::-webkit-scrollbar-thumb {
+            background-color: rgba(148,163,184,0.35);
+            border-radius: 999px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        .warning-scroll::-webkit-scrollbar-thumb:hover { background-color: rgba(148,163,184,0.50); }
+        .tank-box span { font-size: 11px; font-weight: 900; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; transition: color 0.3s; display:block; margin-top: 0; margin-bottom: 4px; }
+
+        .tank-mid { flex: 1; display:flex; align-items:center; justify-content:center; padding: 0; }
+
+        /* Tank input alanının kendi çerçevesi focus vurgusu */
+            .tank-input-wrap {
+                position: relative;
+                width: 100%;
+                align-self: stretch;
+                border-radius: 12px;
+                background: rgba(15,23,42,0.95);
+                border: 1px solid #334155;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+                transition: box-shadow 0.25s, border-color 0.25s;
+                padding: 0 4px; /* tighten inner gutter */
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                max-width: 100%;
+                overflow: visible;
+                min-width: 0;
+                margin: 0;
+                box-sizing: border-box;
+            }
+            .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(148,163,184,0.35), 0 0 10px rgba(148,163,184,0.08); }
+            .input-group.state-empty .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(245,158,11,0.45), 0 0 10px rgba(245,158,11,0.08); }
+            .input-group.state-error .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(239,68,68,0.45), 0 0 10px rgba(239,68,68,0.08); }
+            .input-group.state-valid .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(148,163,184,0.35), 0 0 10px rgba(148,163,184,0.08); }
+        /* Input group içindeki ACT tank kutuları */
+        .input-group.state-empty .tank-box { border-color: rgba(245,158,11,0.4); }
+        .input-group.state-empty .tank-box span { color: var(--amber); }
+        .input-group.state-error .tank-box { border-color: rgba(239,68,68,0.4); }
+        .input-group.state-error .tank-box span { color: var(--error); }
+        .input-group.state-valid .tank-box { border-color: #475569; }
+        .input-group.state-valid .tank-box span { color: #64748b; }
+        /* Dashboard içindeki TGT tank kutuları */
+        .dashboard.result-disabled .tank-box { border-color: #475569; }
+        .dashboard.result-disabled .tank-box span { color: #64748b; }
+        .dashboard.result-ready .tank-box { border-color: var(--success); box-shadow: 0 0 8px rgba(34,197,94,0.15); }
+        .dashboard.result-ready .tank-box span { color: white; }
+        .tank-input { width: 100%; background: transparent; border: none; color: white; text-align: center; font-size: clamp(14px, 2.8vw, 18px); font-weight: 700; outline: none; appearance: none; -webkit-appearance: none; -moz-appearance: textfield; transition: color 0.3s; padding-left: 6px; padding-right: 6px; box-sizing: border-box; }
+        .tank-input::-webkit-outer-spin-button,
+        .tank-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .tank-input::placeholder { color: #64748b; }
+        .tank-input-wrap .tank-unit { display: none; }
+        .tank-unit-corner {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            color: #64748b;
+            text-transform: uppercase;
+            pointer-events: none;
+            transition: color 0.2s, transform 0.18s;
+            opacity: 0.5;
+            line-height: 1;
+            transform: translateY(2px);
+        }
+        .tank-unit-corner.tank-unit-tgt {
+            font-size: 9px;
+            bottom: 6px;
+        }
+        /* Hide KG labels for tank inputs/targets as requested */
+        .tank-input-wrap .tank-unit-corner,
+        .tank-unit-corner.tank-unit-tgt { display: none !important; }
+        .input-group.state-empty .tank-input { color: var(--amber); }
+        .input-group.state-empty .tank-unit-corner { color: var(--amber); }
+        .input-group.state-error .tank-input { color: var(--error); }
+        .input-group.state-error .tank-unit-corner { color: var(--error); }
+        .input-group.state-valid .tank-input { color: white; }
+        .input-group.state-valid .tank-unit-corner { color: #64748b; }
+        .btn-mini { background: rgba(100,116,139,0.18); border: 1px solid rgba(100,116,139,0.30); color: #94a3b8; width: 28px; height: 28px; border-radius: 14px; font-size: 17px; cursor: pointer; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+        .btn-mini:active { opacity: 0.7; }
+        .btn-mini:disabled { opacity: 0.15; cursor: not-allowed; }
+
+        .tank-step-row { display:flex; justify-content:center; gap:14px; padding-top: 6px; }
+
+        /* Allow action row buttons to wrap on narrow screens */
+        .action-row > div { display: flex; gap: 14px; width: 100%; flex-wrap: wrap; }
+
+        /* Ensure tank boxes can shrink below content width when needed */
+        .tank-box { min-width: 0; }
+
+        /* Responsive tweaks for small screens */
+        @media (max-width: 420px) {
+            .tank-input-wrap { max-width: 100%; }
+            .btn-step { width: 40px; height: 40px; font-size: 18px; }
+            .btn-mini { width: 32px; height: 32px; font-size: 15px; }
+            .input-with-unit .main-input { font-size: 20px; }
+            .tank-input { font-size: 16px; }
+            .tgt-val { font-size: 16px; }
+            .save-btn { padding: 12px; font-size: 14px; }
+            .input-capsule { padding-left: 10px; padding-right: 10px; }
+        }
+        /* Input group içindeki ACT butonları */
+        .input-group.state-empty .btn-mini { background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+        .input-group.state-error .btn-mini { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: var(--error); }
+        .input-group.state-valid .btn-mini { background: rgba(100,116,139,0.18); border-color: rgba(100,116,139,0.3); color: #94a3b8; }
+        /* Dashboard içindeki TGT butonları */
+        .dashboard.result-ready .btn-mini { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.35); color: var(--success); }
+        .dashboard.result-ready .btn-mini:disabled { opacity: 0.25; }
+        .dashboard { background: #0f172a; border-radius: 24px; border: 2px solid #64748b; padding: 12px; margin-top: 10px; transition: border-color 0.3s, box-shadow 0.3s, opacity 0.3s; box-shadow: 0 0 12px rgba(148,163,184,0.06); }
+        .dashboard.result-disabled { opacity: 0.4; filter: grayscale(0.8); border-color: #475569; }
+        .dashboard.result-ready { border-color: var(--success); box-shadow: 0 0 18px rgba(34,197,94,0.18); }
+        .tgt-val { display: inline-flex; align-items: center; justify-content: center; width: 100%; font-size: clamp(12px, 3.6vw, 20px); font-weight: 800; color: #64748b; margin: 0; transition: color 0.3s; text-align: center; padding: 0 8px; box-sizing: border-box; white-space: nowrap; overflow: visible; position: relative; z-index: 3; }
+        .dashboard.result-disabled .tgt-val { color: #64748b; }
+        .dashboard.result-disabled .tank-unit-corner { color: #475569; }
+        .dashboard.result-ready .tgt-val { color: white; }
+        .dashboard.result-ready .tank-unit-corner { color: var(--success); }
+        .uplift-container { background: #181e29; border-radius: 20px; border-top: 2px solid #475569; margin-top: 10px; padding: 15px 0; text-align: center; transition: border-color 0.3s; }
+        .dashboard.result-disabled .uplift-container { border-top-color: #475569; }
+        .dashboard.result-ready .uplift-container { border-top-color: var(--success); }
+        .uplift-title { font-size:10px; color:#64748b; font-weight:900; letter-spacing:0.12em; margin-bottom:8px; }
+        .uplift-split { display:grid; grid-template-columns: 1fr 1fr; }
+        .uplift-unit { font-size:10px; color:#64748b; font-weight:800; }
+        .uplift-cell-right { border-left: 1px solid rgba(255,255,255,0.1); }
+        .val-num { font-size: 28px; font-weight: 900; color: #64748b; }
+        .save-btn { width: 100%; background: var(--success); border: none; color: white; padding: 20px; border-radius: 22px; font-weight: 800; margin: 15px 0; font-size: 16px; transition: opacity 0.3s, box-shadow 0.3s, transform 0.2s; }
+        .save-btn:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); box-shadow: none; }
+        .save-btn:not(:disabled) { box-shadow: 0 0 18px rgba(34,197,94,0.4); }
+        .save-btn:not(:disabled):active { transform: scale(0.98); }
+        .field-error { display: none; }
+
+        .notice-area {
+            position: sticky;
+            top: 10px;
+            z-index: 20;
+            margin: 0 -12px 12px -12px;
+        }
+        .notice {
+            --notice-accent: var(--error);
+            background: rgba(15,23,42,0.88);
+            border: none;
+            border-radius: 0;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.15px;
+            text-transform: none;
+            line-height: 1.35;
+            color: white;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 0 12px rgba(239,68,68,0.10);
+        }
+        .notice-text { position: relative; display: inline-block; max-width: 100%; }
+        .notice-text::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -8px;
+            height: 3px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, transparent 0%, var(--notice-accent) 50%, transparent 100%);
+            opacity: 0.35;
+            pointer-events: none;
+            box-shadow: 0 0 14px var(--notice-accent);
+            filter: drop-shadow(0 0 10px var(--notice-accent));
+        }
+        .notice:not(.hidden) .notice-text::after { animation: notice-bar-loop 1600ms ease-in-out infinite; }
+        @keyframes notice-bar-loop {
+            0%, 100% { opacity: 0.30; }
+            50% { opacity: 0.85; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .notice:not(.hidden) .notice-text::after { animation: none; }
+        }
+        .notice.hidden { display: none; }
+        #log-list { margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; }
+        .log-item { background: rgba(255,255,255,0.05); padding: 14px; border-radius: 18px; margin-bottom: 8px; border-left: 5px solid var(--primary); cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .del-log { color: var(--error); background: rgba(239, 68, 68, 0.1); border: none; width: 26px; height: 26px; border-radius: 8px; font-weight: 900; }
+
+        .lang-toggle-inline button.active {
+            color: #ffffff !important;
+            background: rgba(56,189,248,0.18) !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="logs-page" class="page" style="display:none; padding-top: 24px; padding-bottom: 24px;">
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom: 10px;">
+                <button onclick="setView('')" aria-label="Back" style="width:44px; height:44px; padding:0; border-radius:14px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.22); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <div style="flex:1; font-size:11px; font-weight:900; color:#64748b; letter-spacing:1px; text-transform:uppercase; text-align:center;">
+                    <span id="logs-title">LOGS</span>
+                </div>
+                <div style="width:44px; height:44px;"></div>
+            </div>
+
+            <div id="log-list"></div>
+        </div>
+    </div>
+    <div id="calc-page" class="page" style="display: block; padding-top: 24px; padding-bottom: 24px;">
+        <div class="card" style="margin-bottom: 24px;">
+            <!-- Fleet Card Header (Kapak sayfası tarzında) -->
+            <div class="fleet-card-header" onclick="window.location.href='index.html'" style="background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); width: 100%; padding: 14px 16px; border-radius: 18px; cursor: pointer; display: flex; align-items: center; gap: 18px; transition: transform 0.2s, background 0.2s; box-sizing: border-box; margin-bottom: 18px;">
+                <div class="fleet-header-icon" style="display:flex; align-items:center; justify-content:center; width:46px; height:46px; border-radius:14px; background:rgba(56,189,248,0.12); flex-shrink:0;">
+                    <svg class="animated-arrow" width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="fleet-header-info" style="flex-grow: 1; padding-left: 4px;">
+                    <h2 style="margin: 0; font-size: 17px; font-weight: 800; color: #38bdf8; letter-spacing: 0.5px;" class="fleet-title-row">
+                        <span class="fleet-mini-logo" aria-hidden="true"><img id="fleet-brand-logo" class="brand-mini-logo" alt="" src="" loading="lazy"></span>
+                        <span id="active-fleet">A320 FAMILY</span>
+                    </h2>
+                    <div id="fleet-limits" style="margin-top: 3px; font-size: 10px; color: #64748b; font-weight: 600; letter-spacing: 0.3px;">WING: 2 x 6,230 | CTR: 6,470 KG</div>
+                    <div id="fleet-max" style="margin-top: 2px; font-size: 11px; color: #94a3b8; font-weight: 700;">MAX: 18,910 KG</div>
+                </div>
+            </div>
+            <style>
+            .fleet-card-header:active { transform: scale(0.98); background: rgba(56, 189, 248, 0.1); border-color: var(--primary); }
+            .fleet-title-row { display: flex; align-items: center; gap: 8px; }
+            .fleet-mini-logo { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+            .fleet-mini-logo img.brand-mini-logo { width: 18px; height: 18px; object-fit: contain; display: none; transform-origin: 50% 50%; }
+            .fleet-mini-logo img.brand-mini-logo[data-brand="airbus"] { transform: scale(1.18); }
+            .fleet-mini-logo img.brand-mini-logo[data-brand="boeing"] { transform: scale(0.92); }
+            .animated-arrow { animation: arrow-hint 2600ms ease-in-out infinite; transform-origin: 50% 50%; }
+            .animated-arrow path { stroke-width: 2; }
+            @keyframes arrow-hint {
+                0%, 100% { transform: scale(1); opacity: 0.85; }
+                50% { transform: scale(1.08); opacity: 1; }
+            }
+            @keyframes arrow-stroke {
+                0%, 100% { stroke-width: 2; }
+                50% { stroke-width: 2.6; }
+            }
+            .animated-arrow path { animation: arrow-stroke 2600ms ease-in-out infinite; }
+            @media (prefers-reduced-motion: reduce) {
+                .animated-arrow, .animated-arrow path { animation: none !important; }
+            }
+            </style>
+            <div class="action-row">
+                <div style="display: flex; gap: 14px; width: 100%; margin-bottom: 18px;">
+                    <button id="btn-logs" onclick="setView('logs')" class="reset-btn-amber" aria-label="Logs" title="Logs" style="background: rgba(56,189,248,0.12); border: 1.5px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: none; letter-spacing: 0.2px; line-height: 1.1; flex-shrink: 0; transition: background 0.2s, border 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;">
+                            <path d="M3 5h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H3V5z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M7 5v14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                    <button id="btn-warn" onclick="showWarnings()" class="warning-btn" style="background: rgba(239,68,68,0.12); border: 1.5px solid var(--error); color: var(--error); padding: 8px 14px; border-radius: 12px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 0.4px; line-height: 1.1; display: flex; align-items: center; gap: 6px; flex-grow: 1; transition: background 0.2s, border 0.2s;">⚠️ WARNINGS & PRECAUTIONS</button>
+                    <button id="btn-reset" onclick="clearCalculator()" class="reset-btn-amber" aria-label="Reset calculator" title="Reset calculator" style="background: rgba(245,158,11,0.12); border: 1.5px solid var(--amber); color: var(--amber); padding: 8px 12px; border-radius: 12px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: none; letter-spacing: 0.2px; line-height: 1.1; flex-shrink: 0; transition: background 0.2s, border 0.2s;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="display:block;">
+                            <path d="M20 12a8 8 0 1 0-2.34 5.66" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                            <path d="M20 4v6h-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div id="notice-area" class="notice-area">
+                <div id="notice" class="notice hidden" role="status" aria-live="polite"><span class="notice-text"></span></div>
+            </div>
+
+            <div class="input-capsule" style="background: rgba(30,41,59,0.55); border-radius: 28px; border: 1.5px solid rgba(100,116,139,0.18); box-shadow: 0 2px 16px 0 rgba(100,116,139,0.08); backdrop-filter: blur(8px); padding: 18px 10px 10px 10px; margin-bottom: 22px;">
+            <!-- INPUTS BAŞLIĞI KALDIRILDI -->
+            <div id="sec_block" class="input-group state-empty">
+                <span id="lbl-block" class="group-label">Block Fuel</span>
+                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('block_fuel', -10)">-</button><div class="input-with-unit"><input type="number" id="block_fuel" class="main-input" inputmode="numeric" pattern="[0-9]*" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('block_fuel', 10)">+</button></div>
+                <div id="err_block" class="field-error"></div>
+            </div>
+            <div id="sec_actual" class="input-group state-empty">
+                <span id="lbl-actual" class="group-label">Actual FOB</span>
+                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('total_actual', -10)">-</button><div class="input-with-unit"><input type="number" id="total_actual" class="main-input" inputmode="numeric" pattern="[0-9]*" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('total_actual', 10)">+</button></div>
+                <div id="err_actual" class="field-error"></div>
+                <div class="tank-grid">
+                    <div class="tank-box"><span>LH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="la" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('la',-10)">-</button><button class="btn-mini" onclick="stepTank('la',10)">+</button></div></div>
+                    <div class="tank-box"><span>CENTER</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="ca" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ca',-10)">-</button><button class="btn-mini" onclick="stepTank('ca',10)">+</button></div></div>
+                    <div class="tank-box"><span>RH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="ra" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ra',-10)">-</button><button class="btn-mini" onclick="stepTank('ra',10)">+</button></div></div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
+                <div class="input-group state-empty" id="box_density" style="margin-bottom: 0; display:flex; flex-direction:column;">
+                    <span id="lbl-density" class="group-label">Density</span>
+                    <div style="display:flex; justify-content:center;">
+                        <div class="input-with-unit" style="width:100%;">
+                            <input type="text" id="density" inputmode="decimal" oninput="handleDensityInput(this); updateUnitPosition(this)" onfocus="initDensity(this)" class="main-input" style="font-size:18px; height:42px; text-align:center;">
+                            <span class="unit-corner">u</span>
+                        </div>
+                    </div>
+                    <div id="err_density" class="field-error"></div>
+                </div>
+                <div id="box_temp" class="input-group state-empty" style="margin-bottom: 0;">
+                    <span id="lbl-temp" class="group-label">Temp</span>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                        <div class="input-with-unit">
+                            <input type="number" id="temp_c" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" oninput="calcTemp('c'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
+                            <span class="unit-corner">°C</span>
+                        </div>
+                        <div class="input-with-unit">
+                            <input type="number" id="temp_f" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" oninput="calcTemp('f'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
+                            <span class="unit-corner">°F</span>
+                        </div>
+                    </div>
+                    <div id="err_temp" class="field-error"></div>
+                </div>
+            </div>
+            </div>
+            <!-- OUTPUTS BAŞLIĞI KALDIRILDI -->
+            <div id="sec_result" class="dashboard result-disabled" aria-disabled="true">
+                <div class="tank-grid" style="margin-top:0;">
+                    <div class="tank-box"><span>LH</span><div class="tank-mid"><div class="tank-input-wrap"><div id="lt" class="tgt-val">0</div><span class="tank-unit-corner tank-unit-tgt">KG</span></div></div><div class="tank-step-row"><button id="btn-lt-minus" class="btn-mini" onclick="smartAdjust('lt',-10)">-</button><button id="btn-lt-plus" class="btn-mini" onclick="smartAdjust('lt',10)">+</button></div></div>
+                    <div class="tank-box"><span>CENTER</span><div class="tank-mid"><div class="tank-input-wrap"><div id="ct" class="tgt-val">0</div><span class="tank-unit-corner tank-unit-tgt">KG</span></div></div><div class="tank-step-row"><button id="btn-ct-minus" class="btn-mini" onclick="smartAdjust('ct',-20)">-</button><button id="btn-ct-plus" class="btn-mini" onclick="smartAdjust('ct',20)">+</button></div></div>
+                    <div class="tank-box"><span>RH</span><div class="tank-mid"><div class="tank-input-wrap"><div id="rt" class="tgt-val">0</div><span class="tank-unit-corner tank-unit-tgt">KG</span></div></div><div class="tank-step-row"><button id="btn-rt-minus" class="btn-mini" onclick="smartAdjust('rt',-10)">-</button><button id="btn-rt-plus" class="btn-mini" onclick="smartAdjust('rt',10)">+</button></div></div>
+                </div>
+                <div class="uplift-container">
+                    <div id="uplift-title" class="uplift-title">UPLIFT</div>
+                    <div class="uplift-split">
+                        <div>
+                            <div class="uplift-unit">KG</div>
+                            <div id="res_kg" class="val-num" style="color:var(--warning)">0</div>
+                        </div>
+                        <div class="uplift-cell-right">
+                            <div class="uplift-unit">LTR</div>
+                            <div id="res_lit" class="val-num" style="color:var(--primary)">0</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="save-main-btn" class="save-btn" onclick="saveRecord()" disabled style="margin-top:12px; margin-bottom:0;">SAVE & VIEW RECEIPT</button>
+                
+            </div>
+        </div>
+    </div>
+    <div id="receipt-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:100; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(10px);">
+        <div class="receipt-content" style="background:white; color:black; width:100%; max-width:340px; border-radius:8px; padding:25px; font-family:'Courier New', monospace;">
+            <h3 id="receipt-title" style="text-align:center; border-bottom:2px dashed #000; padding-bottom:12px; margin-top:0">REFUEL RECEIPT</h3>
+            <div id="r-details" style="font-size:13px; line-height:1.6; display:block;"></div>
+            <iframe id="receipt-iframe" style="display:none; width:100%; height:520px; border:none; background:#fff"></iframe>
+            <button id="receipt-close" onclick="(function(){var r=document.getElementById('receipt-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:#000; color:#fff; border:none; padding:18px; margin-top:20px; font-weight:800; border-radius:6px; cursor:pointer">CLOSE</button>
+        </div>
+    </div>
+    <div id="warning-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:100; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(10px);">
+        <div class="warning-content" style="background:#1e293b; color:white; width:100%; max-width:340px; border-radius:20px; padding:25px; border:2px solid var(--error); max-height:78vh; display:flex; flex-direction:column; overflow:hidden;">
+            <h3 id="warn-title" style="color:var(--error); margin-top:0; text-align:center">YAKIT İKMALİ UYARILAR & ÖNLEMLER</h3>
+            <div id="warn-desc" style="font-size:11px; color:#94a3b8; line-height:1.5; margin:-6px 0 10px; text-align:center;">
+                Bu liste genel bir hatırlatmadır. Uçak tipiniz için <b>AMM/FCOM/Operatör prosedürleri</b> ve panel/placard limitleri daima önceliklidir.
+            </div>
+            <div class="warning-scroll" style="overflow:auto; -webkit-overflow-scrolling:touch; padding-right:4px; margin:0;">
+                <ul id="warn-list" style="font-size:12px; padding-left:20px; line-height:1.55; margin:0;">
+                    <li><b>Yetkilendirme:</b> Doğru uçak, doğru sefer ve doğru yakıt tipini (grade) teyit edin. Şüphede işlemi durdurup amire/crew’a danışın.</li>
+                    <li><b>Alan emniyeti:</b> No smoking/açık alev yok. Uçak çevresi emniyete alın, koniler/chock’lar yerinde olsun. Uygun yangın söndürücü hazır bulunsun.</li>
+                    <li><b>Grounding/Bonding:</b> Yakıt ikmali başlamadan <b>bonding/ground</b> bağlantılarını kurun; bağlantılar sökülmeden önce ikmali bitirin. Kapak/panel açmadan önce statik riski kontrol edin.</li>
+                    <li><b>İletişim:</b> Ground–cockpit iletişimi net olsun. “STOP/ABORT” komutu ve acil durdurma prosedürü herkesçe bilinsin.</li>
+                    <li><b>Hava koşulları:</b> Yakında yıldırım/şimşek, yoğun statik, yakıt buharı birikimi veya güvenli olmayan rüzgâr şartlarında ikmali durdurun.</li>
+                    <li><b>APU/Engine/GPU:</b> Operatör prosedürlerine uygun konfigürasyonu sağlayın. “Hot refuel” gerekiyorsa ek önlemleri uygulayın (ekipman/yangın nöbeti/alan kontrolü).</li>
+                    <li><b>Yakıt kalitesi:</b> Yakıt fişi/sertifika, filtre, numune ve kontaminasyon (su/partikül) kontrolü yapın. <b>Density</b> değerini fişten doğrulayın; uygulamaya gerçek değer girin.</li>
+                    <li><b>Basınçlı ikmal:</b> Nozzle/adapter tam kilitli olsun. Basınç/flow limitleri için <b>panel placard/AMM</b> referans alın. Anormal titreşim/ses/kaçak varsa derhal durdurun.</li>
+                    <li><b>Sızıntı & havalandırma:</b> Kanat altı/vent bölgelerini gözleyin. Vent/overfill belirtisinde ikmali kesin; sebep giderilmeden devam etmeyin.</li>
+                    <li><b>Denge & sıra:</b> <b>WING FIRST</b> prensibini izleyin: kanatlar dengeli doldurulmalı, center genelde kanatlardan sonra. Sol/sağ tanklar arasında asimetri yaratmayın.</li>
+                    <li><b>Limitler:</b> Seçili model için tank limitleri (wing/center) ve toplam kapasiteyi aşmayın. Şüphede sistem hesaplarına değil, <b>AMM/placard</b> değerlerine dönün.</li>
+                    <li><b>Spill/Acil durum:</b> Dökülmede ikmali durdurun, acil stop’u kullanın, alanı izole edin ve raporlayın. Yakıt buharı/yangın riskine karşı prosedürü uygulayın.</li>
+                    <li><b>İkmal sonrası:</b> Bonding’i en son sökün. Kapak/panel kapalı ve emniyette olsun. Son miktarları (total + tank) crew ile teyit edin ve kayıtları tamamlayın.</li>
+                </ul>
+            </div>
+            <button id="warn-ok" onclick="(function(){var r=document.getElementById('warning-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:var(--error); color:#fff; border:none; padding:15px; margin-top:12px; font-weight:800; border-radius:12px; cursor:pointer; flex-shrink:0;">ANLADIM</button>
+        </div>
+    </div>
+
+<script>
+// Parametreleri URL'den al
+function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+}
+
+function setView(view) {
+    const url = new URL(window.location.href);
+    const v = String(view || '').trim();
+    if (v) url.searchParams.set('view', v);
+    else url.searchParams.delete('view');
+    try {
+        history.replaceState(null, '', url.toString());
+    } catch (e) {
+        // Fallback: if history manipulation fails, keep working without URL update.
+    }
+    applyViewMode();
+}
+
+function applyViewMode() {
+    const view = String(getParam('view') || '').trim().toLowerCase();
+    const logsPage = document.getElementById('logs-page');
+    const calcPage = document.getElementById('calc-page');
+    if (!logsPage || !calcPage) return;
+
+    const isLogs = (view === 'logs');
+    logsPage.style.display = isLogs ? 'block' : 'none';
+    calcPage.style.display = isLogs ? 'none' : 'block';
+    if (isLogs) {
+        try { renderLogs(); } catch (e) {}
+    }
+}
+
+
+// UYARI: Uygulama arayüzündeki limitler KG cinsinden çalışır.
+// Tank ve total limitler tek kaynaktan (tankLimitsKg) çekilir.
+const LW_PARAM = parseInt(getParam('wing')) || 0;
+const LC_PARAM = parseInt(getParam('ctr')) || 0;
+let LW = LW_PARAM;
+let LC = LC_PARAM;
+let fleet = getParam('fleet') || '';
+const TANK_KEY = (getParam('tankkey') || '').trim() || fleet;
+let NO_LIMITS = (String(getParam('nolimits') || '').trim() === '1');
+const REG_PARAM_RAW = (getParam('reg') || '').trim();
+const MAX_LIMIT_PLACEHOLDER = 900000;
+let TANK_LIMITS_KG = null;
+
+function normalizeReg(value) {
+    const v = String(value || '').trim().toUpperCase();
+    // accept strict TC-ABC style
+    if (/^TC-[A-Z0-9]{3}$/.test(v)) return v;
+    return '';
+}
+
+function getRegistration() {
+    const fromUrl = normalizeReg(REG_PARAM_RAW);
+    if (fromUrl) {
+        try { localStorage.setItem('refuel_assist_tail', fromUrl); } catch (e) {}
+        return fromUrl;
+    }
+    try {
+        const fromLs = normalizeReg(localStorage.getItem('refuel_assist_tail') || '');
+        return fromLs;
+    } catch (e) {
+        return '';
+    }
+}
+
+function isDensityOk(dV) { return (typeof dV === 'number' && dV >= 0.6 && dV <= 0.9); }
+
+function renderFleetLimitsHeader() {
+    document.getElementById('active-fleet').innerText = (fleet || '').toUpperCase();
+    if (NO_LIMITS) {
+        document.getElementById('fleet-limits').innerText = 'WING: 2 x — | CTR: — KG';
+        return;
+    }
+    document.getElementById('fleet-limits').innerText = 'WING: 2 x ' + (LW || 0).toLocaleString() + ' | CTR: ' + (LC || 0).toLocaleString() + ' KG';
+}
+
+function refreshLimitsFromDensity() {
+    // Öncelik: JSON içindeki KG placard limitleri (en güncel ve en doğru kaynak).
+    if (TANK_LIMITS_KG) {
+        const wingKgRaw = Math.max(
+            0,
+            Math.max(TANK_LIMITS_KG.leftWingFuelKg || 0, TANK_LIMITS_KG.rightWingFuelKg || 0)
+        );
+        const ctrKgRaw = Math.max(0, TANK_LIMITS_KG.centerFuelKg || 0);
+
+        // Uygulama 10 KG adım kullandığı için limitleri 10'luk aşağı yuvarla.
+        const wingKg = Math.floor(wingKgRaw / 10) * 10;
+        const ctrKg = Math.floor(ctrKgRaw / 10) * 10;
+
+        // Güvenlik: URL paramı verilmişse ve daha kısıtlayıcıysa onu uygula.
+        LW = (LW_PARAM > 0) ? Math.min(LW_PARAM, wingKg) : wingKg;
+        LC = (LC_PARAM > 0) ? Math.min(LC_PARAM, ctrKg) : ctrKg;
+        return;
+    }
+
+    // Limit bulunamazsa: URL paramları ile devam et (geri uyumluluk)
+    LW = LW_PARAM;
+    LC = LC_PARAM;
+}
+
+async function initTankCaps() {
+    // tankLimitsKg: kapak sayfasıyla aynı limit kaynağı
+    try {
+        if (typeof window.fetchTankLimitsKg === 'function' && TANK_KEY) {
+            const limits = await window.fetchTankLimitsKg(TANK_KEY);
+            if (limits) TANK_LIMITS_KG = limits;
+        }
+    } catch (e) {}
+
+    // Eğer KG limit bulunduysa NO_LIMITS paramını geçersiz kıl (tek ortak kaynaktan limit uygula)
+    if (TANK_LIMITS_KG) NO_LIMITS = false;
+
+    refreshLimitsFromDensity();
+    renderFleetLimitsHeader();
+    renderCapacityRef();
+    try { validateAll(false); } catch (e) {}
+}
+
+window.addEventListener('DOMContentLoaded', initTankCaps);
+
+// --- i18n (TR/EN) ---
+const LANG_STORAGE_KEY = 'refuel_assist_lang';
+let currentLang = 'tr';
+let lastReceiptLog = null;
+let warnListTrHtml = '';
+
+const I18N = {
+    tr: {
+        title: 'Refuel Assist v7.3 - Hesaplama',
+        logs_title: 'KAYITLAR',
+        btn_logs: 'KAYITLAR',
+        btn_warn: '⚠️ UYARILAR & ÖNLEMLER',
+        btn_reset: 'SIFIRLA',
+        lbl_block: 'Blok Yakıt',
+        lbl_actual: 'İkmal Öncesi Yakıt (Fuel On Board)',
+        lbl_density: 'Yoğunluk',
+        lbl_temp: 'Sıcaklık',
+        uplift: 'İKMAL',
+        save: 'KAYDET & FİŞİ GÖR',
+        receipt_title: 'YAKIT FİŞİ',
+        close: 'KAPAT',
+        recent_logs: 'SON KAYITLAR',
+        clear_all: 'TÜMÜNÜ SİL',
+        confirm_clear_logs: 'Tüm geçmiş silinsin mi?',
+        label_date: 'TARİH',
+        label_fleet: 'FİLO',
+        label_density: 'YOĞUNLUK',
+        label_temp: 'SICAKLIK',
+        label_block: 'BLOK YAKIT',
+        label_actual: 'İKMAL ÖNCESİ YAKIT (FUEL ON BOARD)',
+        label_target: 'HEDEF DEĞERLER',
+        label_uplift_kg: 'İKMAL KG',
+        label_uplift_ltr: 'İKMAL LTR',
+        warn_title: 'YAKIT İKMALİ UYARILAR & ÖNLEMLER',
+        warn_desc: 'Bu liste genel bir hatırlatmadır. Uçak tipiniz için <b>AMM/FCOM/Operatör prosedürleri</b> ve panel/placard limitleri daima önceliklidir.',
+        warn_ok: 'ANLADIM',
+        temp_invalid: 'Sıcaklık değeri gerçekçi aralıkta değil (-60°C ile +60°C). °C değerini düzeltin; °F otomatik hesaplanır.',
+        block_step: 'Blok Yakıt 10 kg adımıyla girilmeli. 10’un katı bir değer yazın (örn. 3500).',
+        actual_step: 'Mevcut yakıt değerleri 10 kg adımıyla girilmeli. (Toplam ve tanklar 10’un katı olmalı.)',
+        actual_gt_block: 'Mevcut yakıt (ikmal öncesi), Block’tan büyük görünüyor. Mevcut ≤ Block olmalı (gerekirse tank değerlerini düşürün).',
+        density_range: 'Yoğunluk değeri aralık dışı (0.600–0.900). Yakıt fişindeki density değerini kontrol edip tekrar girin.',
+        prompt_block: 'Blok Yakıt girin. Sefer öncesi olması gereken toplam yakıtı temsil eder.',
+        prompt_actual: 'İkmal öncesi (mevcut) yakıt için toplam değeri yazabilir veya tank değerlerini girebilirsiniz. Tanklardan girerseniz toplam otomatik hesaplanır.',
+        prompt_density: 'Yoğunluk girin (örn. 0.800). Litre hesabı için gereklidir ve 0.600–0.900 aralığında olmalı.',
+        prompt_temp: 'Sıcaklık için °C veya °F değerini girin. Diğer değer otomatik hesaplanır.',
+
+        guide_btn: 'KILAVUZ',
+        guide_title: 'Hesaplama Kılavuzu',
+        guide_steps_html: [
+            '<li><b>Blok Yakıt:</b> Sefer öncesi olması gereken toplam yakıt (KG).</li>',
+            '<li><b>İkmal Öncesi (FOB):</b> Toplam yazabilir veya LH/CENTER/RH tanklarını girerek otomatik toplatabilirsiniz.</li>',
+            '<li><b>Yoğunluk & Sıcaklık:</b> Litre hesabı ve fiş bilgisi için girilir (density 0.600–0.900).</li>',
+            '<li><b>Sonuç:</b> Hedef tank değerleri (LH/CENTER/RH) ve <b>İKMAL</b> (KG/LTR) oluşur.</li>',
+            '<li><b>Kaydet & Fiş:</b> <b>"KAYDET & FİŞİ GÖR"</b> ile kaydedin; fiş otomatik açılır.</li>',
+            '<li><b>Kayıtlar:</b> <b>"KAYITLAR"</b> ile geçmişe gidin; kayda tıklayınca fiş açılır; <b>×</b> ile silin; <b>"TÜMÜNÜ SİL"</b> ile temizleyin.</li>'
+        ].join(''),
+        guide_foot: 'İpucu: LOGS sayfası cihazda (localStorage) saklanır.'
+        ,
+        sw_update_ready: 'Yeni sürüm hazır.',
+        sw_update_reload: 'YENİLE'
+    },
+    en: {
+        title: 'Refuel Assist v7.3 - Calculator',
+        logs_title: 'LOGS',
+        btn_logs: 'LOGS',
+        btn_warn: '⚠️ WARNINGS & PRECAUTIONS',
+        btn_reset: 'RESET',
+        lbl_block: 'Block Fuel',
+        lbl_actual: 'Fuel On Board',
+        lbl_density: 'Density',
+        lbl_temp: 'Temp',
+        uplift: 'UPLIFT',
+        save: 'SAVE & VIEW RECEIPT',
+        receipt_title: 'REFUEL RECEIPT',
+        close: 'CLOSE',
+        recent_logs: 'RECENT LOGS',
+        clear_all: 'CLEAR ALL',
+        confirm_clear_logs: 'Delete all history?',
+        label_date: 'DATE',
+        label_fleet: 'FLEET',
+        label_density: 'DENSITY',
+        label_temp: 'TEMP',
+        label_block: 'BLOCK FUEL',
+        label_actual: 'FUEL ON BOARD',
+        label_target: 'TARGET VALUES',
+        label_uplift_kg: 'UPLIFT KG',
+        label_uplift_ltr: 'UPLIFT LTR',
+        warn_title: 'REFUELING WARNINGS & PRECAUTIONS',
+        warn_desc: 'This is a general reminder. For your aircraft type, <b>AMM/FCOM/operator procedures</b> and panel/placard limits always take priority.',
+        warn_ok: 'GOT IT',
+        temp_invalid: 'Temperature is outside realistic range (-60°C to +60°C). Fix °C; °F is auto-calculated.',
+        block_step: 'Block Fuel must be entered in 10 kg steps. Use a multiple of 10 (e.g., 3500).',
+        actual_step: 'Fuel On Board values must be entered in 10 kg steps (total and tanks must be multiples of 10).',
+        actual_gt_block: 'Fuel On Board (pre-refuel) seems higher than Block. Fuel On Board ≤ Block (reduce tank values if needed).',
+        density_range: 'Density is out of range (0.600–0.900). Verify from the fuel slip and re-enter.',
+        prompt_block: 'Enter Block Fuel. It represents required total fuel before departure.',
+        prompt_actual: 'For Fuel On Board (pre-refuel), enter total or tank values. If you enter tanks, total is calculated automatically.',
+        prompt_density: 'Enter Density (e.g., 0.800). Needed for liters and must be within 0.600–0.900.',
+        prompt_temp: 'Enter temperature in °C or °F. The other value is calculated automatically.',
+
+        guide_btn: 'GUIDE',
+        guide_title: 'Calculator Guide',
+        guide_steps_html: [
+            '<li><b>Block Fuel:</b> Required total fuel before departure (KG).</li>',
+            '<li><b>Fuel On Board:</b> Enter total or LH/CENTER/RH tanks to auto-calculate the total.</li>',
+            '<li><b>Density & Temp:</b> Used for liters and receipt details (density 0.600–0.900).</li>',
+            '<li><b>Result:</b> Target tank values (LH/CENTER/RH) and <b>UPLIFT</b> (KG/LTR) are shown.</li>',
+            '<li><b>Save & receipt:</b> Use <b>"SAVE & VIEW RECEIPT"</b>; receipt opens automatically.</li>',
+            '<li><b>Logs:</b> Go to <b>"LOGS"</b>; tap an entry to open receipt; delete with <b>×</b>; clear all with <b>"CLEAR ALL"</b>.</li>'
+        ].join(''),
+        guide_foot: 'Tip: Logs are stored locally on the device (localStorage).'
+        ,
+        sw_update_ready: 'A new version is ready.',
+        sw_update_reload: 'RELOAD'
+    }
+};
+
+function getLang() {
+    const raw = (localStorage.getItem(LANG_STORAGE_KEY) || '').toLowerCase();
+    return raw === 'en' ? 'en' : 'tr';
+}
+
+function setLang(lang) {
+    const next = (lang === 'en') ? 'en' : 'tr';
+    localStorage.setItem(LANG_STORAGE_KEY, next);
+    applyLang(next);
+}
+
+function t(key) {
+    const dict = I18N[currentLang] || I18N.tr;
+    return dict[key] ?? (I18N.tr[key] ?? key);
+}
+
+function applyLang(lang) {
+    currentLang = (lang === 'en') ? 'en' : 'tr';
+    document.documentElement.lang = currentLang;
+    document.title = t('title');
+
+    const btnTr = document.getElementById('lang-tr');
+    const btnEn = document.getElementById('lang-en');
+    if (btnTr && btnEn) {
+        btnTr.classList.toggle('active', currentLang === 'tr');
+        btnEn.classList.toggle('active', currentLang === 'en');
+    }
+
+    const btnLogs = document.getElementById('btn-logs');
+    const btnGuide = document.getElementById('btn-guide');
+    const btnWarn = document.getElementById('btn-warn');
+    const btnReset = document.getElementById('btn-reset');
+    if (btnLogs) {
+        btnLogs.setAttribute('title', t('btn_logs'));
+        btnLogs.setAttribute('aria-label', t('btn_logs'));
+        if (!btnLogs.querySelector('svg')) btnLogs.textContent = t('btn_logs');
+    }
+    if (btnGuide) btnGuide.textContent = t('guide_btn');
+    if (btnWarn) btnWarn.textContent = t('btn_warn');
+    if (btnReset) {
+        // keep icon if present; update accessible label/title
+        btnReset.setAttribute('title', t('btn_reset'));
+        btnReset.setAttribute('aria-label', t('btn_reset'));
+        // only set visible text if there is no SVG icon inside
+        if (!btnReset.querySelector('svg')) btnReset.textContent = t('btn_reset');
+    }
+
+    const logsTitle = document.getElementById('logs-title');
+    if (logsTitle) logsTitle.textContent = t('logs_title');
+
+    const lblBlock = document.getElementById('lbl-block');
+    const lblActual = document.getElementById('lbl-actual');
+    const lblDensity = document.getElementById('lbl-density');
+    const lblTemp = document.getElementById('lbl-temp');
+    if (lblBlock) lblBlock.textContent = t('lbl_block');
+    if (lblActual) lblActual.textContent = t('lbl_actual');
+    if (lblDensity) lblDensity.textContent = t('lbl_density');
+    if (lblTemp) lblTemp.textContent = t('lbl_temp');
+
+    const upliftTitle = document.getElementById('uplift-title');
+    if (upliftTitle) upliftTitle.textContent = t('uplift');
+
+    const saveBtn = document.getElementById('save-main-btn');
+    if (saveBtn) saveBtn.textContent = t('save');
+
+    const receiptTitle = document.getElementById('receipt-title');
+    const receiptClose = document.getElementById('receipt-close');
+    if (receiptTitle) receiptTitle.textContent = t('receipt_title');
+    if (receiptClose) receiptClose.textContent = t('close');
+
+    const warnTitle = document.getElementById('warn-title');
+    const warnDesc = document.getElementById('warn-desc');
+    const warnOk = document.getElementById('warn-ok');
+    if (warnTitle) warnTitle.textContent = t('warn_title');
+    if (warnDesc) warnDesc.innerHTML = t('warn_desc');
+    if (warnOk) warnOk.textContent = t('warn_ok');
+
+    const guideTitle = document.getElementById('guide-title');
+    const guideSteps = document.getElementById('guide-steps');
+    const guideFoot = document.getElementById('guide-foot');
+    if (guideTitle) guideTitle.textContent = t('guide_title');
+    if (guideSteps) guideSteps.innerHTML = t('guide_steps_html');
+    if (guideFoot) guideFoot.textContent = t('guide_foot');
+
+    const swUpdateText = document.getElementById('sw-update-text');
+    const swUpdateBtn = document.getElementById('sw-update-btn');
+    if (swUpdateText) swUpdateText.textContent = t('sw_update_ready');
+    if (swUpdateBtn) swUpdateBtn.textContent = t('sw_update_reload');
+
+    const warnList = document.getElementById('warn-list');
+    if (warnList) {
+        if (currentLang === 'en') {
+            warnList.innerHTML = [
+                '<li><b>Authorization:</b> Confirm correct aircraft, flight and fuel grade. If in doubt, stop and ask supervisor/crew.</li>',
+                '<li><b>Area safety:</b> No smoking/open flames. Secure the aircraft area; cones/chocks in place. Suitable fire extinguisher ready.</li>',
+                '<li><b>Grounding/Bonding:</b> Connect bonding/ground before refueling and keep connected until refueling is complete. Manage static risk before opening panels.</li>',
+                '<li><b>Communication:</b> Keep clear ground–cockpit communication. Ensure everyone knows STOP/ABORT and emergency stop procedures.</li>',
+                '<li><b>Weather:</b> Stop refueling if lightning risk, heavy static, vapor accumulation, or unsafe wind conditions exist.</li>',
+                '<li><b>APU/Engine/GPU:</b> Configure per operator procedure. If hot refuel is required, apply additional precautions (equipment/fire watch/area control).</li>',
+                '<li><b>Fuel quality:</b> Check documentation, filtration, sampling and contamination (water/particles). Verify <b>density</b> from the fuel slip and enter the real value.</li>',
+                '<li><b>Pressure refuel:</b> Ensure nozzle/adapter is fully locked. Respect placard/AMM pressure and flow limits. Stop immediately for abnormal vibration/noise/leaks.</li>',
+                '<li><b>Leak/venting:</b> Monitor wing/vent areas. Stop for venting/overfill indications; do not continue until resolved.</li>',
+                '<li><b>Balance & sequence:</b> Follow <b>WING FIRST</b>: keep wings balanced; center typically after wings. Avoid left/right asymmetry.</li>',
+                '<li><b>Limits:</b> Do not exceed tank limits (wing/center) and total capacity. When in doubt, follow <b>AMM/placard</b> values over app calculations.</li>',
+                '<li><b>Spill/Emergency:</b> Stop refueling, use emergency stop, isolate area and report. Follow procedures for vapor/fire risk.</li>',
+                '<li><b>After refuel:</b> Disconnect bonding last. Ensure caps/panels closed and secured. Confirm final quantities with crew and complete records.</li>'
+            ].join('');
+        } else {
+            if (warnListTrHtml) warnList.innerHTML = warnListTrHtml;
+        }
+    }
+
+    try {
+        const isReceiptOpen = document.getElementById('receipt-modal')?.style?.display === 'flex';
+        if (isReceiptOpen && lastReceiptLog) openReceipt(lastReceiptLog);
+    } catch (e) {}
+
+    try { renderLogs(); } catch (e) {}
+    try { validateAll(false); } catch (e) {}
+    try { renderCapacityRef(); } catch (e) {}
+}
+
+function openGuide() {
+    const modal = document.getElementById('guide-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+}
+
+function closeGuide() {
+    const modal = document.getElementById('guide-modal');
+    if (!modal) return;
+    modal.style.display = 'none';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const guideModal = document.getElementById('guide-modal');
+    if (guideModal) {
+        guideModal.addEventListener('click', (e) => {
+            if (e.target === guideModal) closeGuide();
+        });
+    }
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeGuide();
+    });
+});
+
+document.getElementById('lang-tr')?.addEventListener('click', () => setLang('tr'));
+document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'));
+try { warnListTrHtml = document.getElementById('warn-list')?.innerHTML || ''; } catch (e) { warnListTrHtml = ''; }
+applyLang(getLang());
+
+// Kapak sayfasında dil değişince (diğer sekmelerde) anında güncelle
+window.addEventListener('storage', (e) => {
+    try {
+        if (e && e.key === LANG_STORAGE_KEY) applyLang(getLang());
+    } catch (err) {}
+});
+
+// BFCache/back-forward dönüşlerinde güncel dili tekrar uygula
+window.addEventListener('pageshow', () => {
+    try { applyLang(getLang()); } catch (err) {}
+    try { applyViewMode(); } catch (err) {}
+});
+
+// Marka logosunu fleet'e göre ayarla
+(function setFleetLogo() {
+    const img = document.getElementById('fleet-brand-logo');
+    if (!img) return;
+
+    const f = (fleet || '').toUpperCase();
+    let src = '';
+    let brand = '';
+    if (f.includes('AIRBUS') || f.includes('A319') || f.includes('A320') || f.includes('A321') || f.includes('A330') || f.includes('A350')) { src = 'assets/airbus.svg'; brand = 'airbus'; }
+    else if (f.includes('BOEING') || f.includes('B737') || f.includes('B777') || f.includes('B787')) { src = 'assets/boeing.svg'; brand = 'boeing'; }
+
+    if (!src) {
+        img.style.display = 'none';
+        img.src = '';
+        img.removeAttribute('data-brand');
+        return;
+    }
+
+    img.src = src;
+    img.setAttribute('data-brand', brand);
+    img.style.display = 'block';
+})();
+
+function renderCapacityRef() {
+    const maxEl = document.getElementById('fleet-max');
+    if (!maxEl) return;
+
+    // Tek kaynak: tankLimitsKg. totalFuelKg varsa onu, yoksa LW/LC toplamını göster.
+    const totalKg = (TANK_LIMITS_KG && typeof TANK_LIMITS_KG.totalFuelKg === 'number') ? TANK_LIMITS_KG.totalFuelKg : null;
+    const maxCapKg = (typeof totalKg === 'number' && totalKg > 0) ? totalKg : ((LW * 2) + LC);
+
+    if (NO_LIMITS && (!Number.isFinite(maxCapKg) || maxCapKg <= 0)) {
+        maxEl.innerText = 'MAX CAP: —';
+        return;
+    }
+    maxEl.innerText = 'MAX CAP: ' + Math.max(0, Math.round(maxCapKg)).toLocaleString() + ' KG';
+}
+
+// Fleet bilgilerini güncelle
+if (NO_LIMITS) {
+    document.getElementById('fleet-limits').innerText = 'WING: 2 x — | CTR: — KG';
+    // NO_LIMITS modunda limit zorlanmaz (limit tablosu yoksa).
+    renderCapacityRef();
+} else {
+    document.getElementById('fleet-limits').innerText = 'WING: 2 x ' + LW.toLocaleString() + ' | CTR: ' + LC.toLocaleString() + ' KG';
+    renderCapacityRef();
+}
+// Orijinal index.html'den alınan hesaplama ve event fonksiyonları
+function stepValue(id, v) { let el=document.getElementById(id); el.value=Math.max(0, (parseFloat(el.value)||0)+v); validateAll(true); updateUnitPosition(el); }
+function stepTank(id, v) {
+    let el = document.getElementById(id);
+    let limit = (id === 'ca') ? LC : LW;
+    const maxCap = getEffectiveMaxCapKg();
+    if (Number.isFinite(maxCap)) limit = Math.min(limit, maxCap);
+    el.value = Math.max(0, Math.min(limit, (parseFloat(el.value) || 0) + v));
+    manualActualEntry();
+}
+function manualActualEntry() {
+    let bV = Math.max(0, parseFloat(document.getElementById('block_fuel').value) || 0);
+    let l = parseFloat(document.getElementById('la').value) || 0;
+    let c = parseFloat(document.getElementById('ca').value) || 0;
+    let r = parseFloat(document.getElementById('ra').value) || 0;
+    const maxCap = getEffectiveMaxCapKg();
+    if (Number.isFinite(maxCap) && maxCap > 0) {
+        l = Math.min(maxCap, l);
+        c = Math.min(maxCap, c);
+        r = Math.min(maxCap, r);
+    }
+    if (!NO_LIMITS) {
+        l = Math.min(LW, l); r = Math.min(LW, r); c = Math.min(LC, c);
+    }
+    let currentTotal = l + c + r;
+    const capLimit = (Number.isFinite(maxCap) && maxCap > 0) ? maxCap : Number.POSITIVE_INFINITY;
+    const effectiveLimit = (bV > 0) ? Math.min(bV, capLimit) : capLimit;
+    if (currentTotal > effectiveLimit && effectiveLimit > 0 && Number.isFinite(effectiveLimit)) {
+        let overflow = currentTotal - effectiveLimit;
+        if (c >= overflow) { c -= overflow; } 
+        else { overflow -= c; c = 0; let half = overflow / 2; l -= half; r -= half; }
+    }
+    document.getElementById('la').value = Math.max(0, l);
+    document.getElementById('ra').value = Math.max(0, r);
+    document.getElementById('ca').value = Math.max(0, c);
+    document.getElementById('total_actual').value = Math.max(0, l + c + r);
+    validateAll(false);
+
+    // Otomatik değişen tankların unit pozisyonlarını da güncelle
+    ['la', 'ca', 'ra'].forEach(id => updateTankUnitPosition(document.getElementById(id)));
+}
+function showWarnings() { document.getElementById('warning-modal').style.display = 'flex'; }
+function forceDensityCaretRight(el) {
+    if (!el) return;
+    const v = (el.value || '');
+    const pos = Math.max(2, v.length);
+    try { el.setSelectionRange(pos, pos); } catch (e) {}
+}
+function initDensity(el) {
+    if (!el.value || el.value === '') el.value = '0.';
+    setTimeout(() => {
+        forceDensityCaretRight(el);
+        updateUnitPosition(el);
+    }, 0);
+}
+function shakeDensity() {
+    const el = document.getElementById('density');
+    el.classList.remove('shake');
+    void el.offsetWidth; // Reflow trigger
+    el.classList.add('shake');
+}
+function handleDensityInput(el) {
+    let val = el.value;
+    let cursorPos = (typeof el.selectionStart === 'number') ? el.selectionStart : val.length;
+    let prevLen = val.length;
+    
+    // Tamamen boş veya sadece 0 ise
+    if (val === '' || val === '0') {
+        el.value = '0.';
+        el.setSelectionRange(2, 2);
+        shakeDensity();
+        validateAll(false);
+        return;
+    }
+    
+    // 0. silinmeye çalışıldıysa
+    if (val.length < 2 || !val.startsWith('0.')) {
+        let nums = val.replace(/[^0-9]/g, '').slice(0, 3);
+        el.value = '0.' + nums;
+        el.setSelectionRange(2, 2);
+        shakeDensity();
+        validateAll(false);
+        return;
+    }
+    
+    // 0. sonrasını kontrol et - sadece rakam ve max 3 hane
+    let afterDot = val.slice(2).replace(/[^0-9]/g, '').slice(0, 3);
+    el.value = '0.' + afterDot;
+    
+    // Cursor pozisyonunu ayarla
+    let newCursor = Math.max(2, Math.min(cursorPos, el.value.length));
+    el.setSelectionRange(newCursor, newCursor);
+    
+    validateAll(false);
+}
+
+// Density input'ta (özellikle mobilde) sol tarafa tıklayınca caret 0.'ın soluna düşebiliyor.
+// Değer değişmediği için `input` event tetiklenmediğinden handleDensityInput çalışmıyor.
+// Bu yüzden pointer/click ile caret'i her zaman 0.'ın sağına zorluyoruz.
+(function bindDensityCaretLock() {
+    const el = document.getElementById('density');
+    if (!el) return;
+
+    const apply = () => {
+        if (!el.value || el.value === '') el.value = '0.';
+        forceDensityCaretRight(el);
+    };
+
+    const scheduleApply = () => {
+        // Tarayıcının kendi caret yerleştirmesinden sonra tekrar uygula
+        setTimeout(apply, 0);
+        requestAnimationFrame(apply);
+    };
+
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(evt => {
+        el.addEventListener(evt, scheduleApply, { passive: true });
+    });
+    el.addEventListener('focus', scheduleApply);
+})();
+function getDensityValue() {
+    const raw = document.getElementById('density').value;
+    if (!raw || raw === '0.' || raw === '') return 0;
+    return parseFloat(raw) || 0;
+}
+
+function getEffectiveMaxCapKg() {
+    if (NO_LIMITS) {
+        return Number.POSITIVE_INFINITY;
+    }
+    if (TANK_LIMITS_KG && typeof TANK_LIMITS_KG.totalFuelKg === 'number' && TANK_LIMITS_KG.totalFuelKg > 0) {
+        // 10 KG adımına uyum için aşağı yuvarla
+        return Math.floor(TANK_LIMITS_KG.totalFuelKg / 10) * 10;
+    }
+    return (LW * 2) + LC;
+}
+function updateUnitPosition(input) {
+    const wrapper = input.closest('.input-with-unit');
+    if (!wrapper) return;
+    const suffix = wrapper.querySelector('.unit-corner');
+    if (!suffix) return;
+    const text = input.value || '';
+    const inputWidth = input.offsetWidth;
+    const isFocused = document.activeElement === input;
+    
+    if (text === '' && !isFocused) {
+        // Always anchor to right-bottom even when empty
+        suffix.style.left = 'auto';
+        suffix.style.right = '10px';
+        suffix.style.transform = 'translateY(2px)';
+        return;
+}
+}
+function updateAllUnits() {
+    document.querySelectorAll('.input-with-unit input').forEach(input => updateUnitPosition(input));
+    document.querySelectorAll('.tank-input').forEach(input => updateTankUnitPosition(input));
+    updateTgtUnitPositions();
+}
+function updateTankUnitPosition(input) {
+    const wrapper = input.closest('.tank-input-wrap');
+    if (!wrapper) return;
+    const suffix = wrapper.querySelector('.tank-unit-corner');
+    if (!suffix) return;
+    const text = input.value || '';
+    const inputWidth = wrapper.offsetWidth;
+    const isFocused = document.activeElement === input;
+    
+    if (text === '' && !isFocused) {
+        // Always anchor to right-bottom even when empty
+        suffix.style.left = 'auto';
+        suffix.style.right = '8px';
+        suffix.style.transform = 'translateY(2px)';
+        return;
+}
+
+}
+
+function clearZeroOnFocus(input) {
+    if (!input) return;
+    const v = (input.value || '').trim();
+    if (v === '0') input.value = '';
+}
+
+function restoreZeroOnBlur(input) {
+    if (!input) return;
+    const v = (input.value || '').trim();
+    if (v === '') input.value = '0';
+}
+
+function updateTgtUnitPositions() {
+    ['lt', 'ct', 'rt'].forEach(id => {
+        const el = document.getElementById(id);
+        const wrapper = el ? el.closest('.tank-input-wrap') : null;
+        const unit = wrapper ? wrapper.querySelector('.tank-unit-corner') : null;
+        if (!el || !unit) return;
+        
+        const text = el.innerText || '0';
+        const wrapperWidth = wrapper.offsetWidth;
+        
+        // anchor target unit to right-bottom inside wrapper (always)
+        unit.style.transform = 'translateY(2px)';
+        unit.style.left = 'auto';
+        unit.style.right = '8px';
+    });
+}
+function calcTemp(s) { const c = document.getElementById('temp_c'), f = document.getElementById('temp_f'); let v; if(s==='c'){ v = parseFloat(c.value); f.value = c.value!==''?Math.round((v*9/5)+32):''; updateUnitPosition(f); } else { v = Math.round((parseFloat(f.value)-32)*5/9); c.value = f.value!==''? v : ''; updateUnitPosition(c); } validateAll(false); }
+function clearCalculator() {
+    ['block_fuel','total_actual','la','ca','ra','density','temp_c','temp_f'].forEach(id => {
+        if (document.getElementById(id)) document.getElementById(id).value = '';
+    });
+    try { sessionStorage.removeItem('calc_state_v1'); } catch (e) {}
+    validateAll(true);
+    updateAllUnits();
+}
+
+function setNotice(messages, tone = 'error') {
+    const el = document.getElementById('notice');
+    if (!el) return;
+    const textEl = el.querySelector('.notice-text');
+    if (!messages || messages.length === 0) {
+        el.classList.add('hidden');
+        el.style.removeProperty('--notice-accent');
+        if (textEl) textEl.textContent = '';
+        else el.textContent = '';
+        return;
+    }
+
+    el.style.setProperty('--notice-accent', tone === 'warn' ? 'var(--amber)' : 'var(--error)');
+    el.classList.remove('hidden');
+    const text = messages.join(' • ');
+    if (textEl) textEl.textContent = text;
+    else el.textContent = text;
+}
+
+function validateAll(auto = false) {
+    let bV = Math.max(0, parseFloat(document.getElementById('block_fuel').value) || 0);
+    let aV = Math.max(0, parseFloat(document.getElementById('total_actual').value) || 0);
+    let dV = getDensityValue();
+    let tV = parseFloat(document.getElementById('temp_c').value);
+    const bRaw = (document.getElementById('block_fuel').value || '').trim();
+    const aRaw = (document.getElementById('total_actual').value || '').trim();
+    const laV = parseFloat(document.getElementById('la').value) || 0;
+    const caV = parseFloat(document.getElementById('ca').value) || 0;
+    const raV = parseFloat(document.getElementById('ra').value) || 0;
+    // Yoğunluk değiştikçe (veya geçerli oldukça) limitleri L->KG çevrilmiş şekilde tazele
+    refreshLimitsFromDensity();
+    renderFleetLimitsHeader();
+    const maxCap = getEffectiveMaxCapKg();
+    const secB = document.getElementById('sec_block'), secA = document.getElementById('sec_actual'), boxD = document.getElementById('box_density'), boxT = document.getElementById('box_temp');
+    const secR = document.getElementById('sec_result');
+    let errB = "", errA = "", errD = "", errT = "";
+    
+    // Yardımcı fonksiyon: input state güncelle
+    function setInputState(el, state) {
+        el.classList.remove('state-empty', 'state-error', 'state-valid');
+        el.classList.add('state-' + state);
+    }
+    
+    // TEMP validasyonu
+    const tempCRaw = document.getElementById('temp_c').value.trim();
+    const tempFRaw = document.getElementById('temp_f').value.trim();
+    const isTempFilled = tempCRaw !== '';
+    const isTempInvalid = !isNaN(tV) && (tV < -60 || tV > 60);
+    if (isTempInvalid) { errT = t('temp_invalid'); setInputState(boxT, 'error'); }
+    else if (!isTempFilled) { setInputState(boxT, 'empty'); }
+    else { setInputState(boxT, 'valid'); }
+    document.getElementById('err_temp').innerText = errT;
+    
+    if (Number.isFinite(maxCap) && bV > maxCap) {
+        bV = Math.floor(maxCap / 10) * 10;
+        document.getElementById('block_fuel').value = bV;
+    }
+
+    if (Number.isFinite(maxCap) && aV > maxCap) {
+        aV = Math.floor(maxCap / 10) * 10;
+        document.getElementById('total_actual').value = aV;
+    }
+    
+    // BLOCK FUEL validasyonu
+    const isBlockFilled = (bRaw !== "") && bV > 0;
+    if (bV % 10 !== 0 && bV > 0) { errB = t('block_step'); setInputState(secB, 'error'); }
+    else if (!isBlockFilled) { setInputState(secB, 'empty'); }
+    else { setInputState(secB, 'valid'); }
+    
+    // ACTUAL FOB validasyonu
+    const isActualFilled = (aRaw !== "") && aV > 0;
+    if ((aV % 10 !== 0 && aV > 0) || (laV % 10 !== 0) || (caV % 10 !== 0) || (raV % 10 !== 0)) { errA = t('actual_step'); setInputState(secA, 'error'); } 
+    else if (aV > bV && bV > 0) { errA = t('actual_gt_block'); setInputState(secA, 'error'); } 
+    else if (!isActualFilled) { setInputState(secA, 'empty'); }
+    else { setInputState(secA, 'valid'); }
+    
+    // DENSITY validasyonu
+    const densityRaw = document.getElementById('density').value.trim();
+    const isDensityFilled = densityRaw !== '' && densityRaw !== '0.' && dV > 0;
+    if (dV > 0 && (dV < 0.6 || dV > 0.9)) { errD = t('density_range'); setInputState(boxD, 'error'); } 
+    else if (!isDensityFilled) { setInputState(boxD, 'empty'); }
+    else { setInputState(boxD, 'valid'); }
+    document.getElementById('err_block').innerText = errB; document.getElementById('err_actual').innerText = errA; document.getElementById('err_density').innerText = errD;
+
+    let topMessage = '';
+    let topTone = 'warn';
+    // Öncelik sırası: Block -> Actual -> Density -> Temp
+    if (errB) { topMessage = errB; topTone = 'error'; }
+    else if (!isBlockFilled) topMessage = t('prompt_block');
+    else if (errA) { topMessage = errA; topTone = 'error'; }
+    else if (!isActualFilled) topMessage = t('prompt_actual');
+    else if (errD) { topMessage = errD; topTone = 'error'; }
+    else if (!isDensityFilled) topMessage = t('prompt_density');
+    else if (errT) { topMessage = errT; topTone = 'error'; }
+    else {
+        if (!topMessage && !isTempFilled) topMessage = t('prompt_temp');
+    }
+
+    setNotice(topMessage ? [topMessage] : [], topTone);
+
+    if(auto && !errB && !errA) {
+        const distribute = (val) => {
+            // When NO_LIMITS, default to wing split (center 0) and let user adjust.
+            if (NO_LIMITS) {
+                let half = Math.round((val / 2) / 10) * 10;
+                return {l: half, r: Math.max(0, val - half), c: 0};
+            }
+            if (val <= LW * 2) { let half = Math.round((val / 2) / 10) * 10; return {l: half, r: val - half, c: 0}; } 
+            else { return {l: LW, r: LW, c: val - (LW * 2)}; }
+        };
+        let act = distribute(aV), tgt = distribute(bV);
+        document.getElementById('la').value = act.l; document.getElementById('ra').value = act.r; document.getElementById('ca').value = act.c;
+        document.getElementById('lt').innerText = tgt.l; document.getElementById('rt').innerText = tgt.r; document.getElementById('ct').innerText = tgt.c;
+        // Tank unit pozisyonlarını güncelle
+        ['la', 'ca', 'ra'].forEach(id => updateTankUnitPosition(document.getElementById(id)));
+    }
+    let currentTgtTotal = parseInt(document.getElementById('lt').innerText) + parseInt(document.getElementById('rt').innerText) + parseInt(document.getElementById('ct').innerText);
+    let resK = Math.max(0, currentTgtTotal - aV);
+    document.getElementById('res_kg').innerText = resK.toLocaleString();
+    let litVal = (dV >= 0.6 && dV <= 0.9 && resK > 0) ? Math.round(resK / dV) : 0;
+    document.getElementById('res_lit').innerText = litVal.toLocaleString();
+    document.getElementById('save-main-btn').disabled = (resK <= 0 || dV < 0.6 || dV > 0.9 || errB !== "" || errA !== "" || isTempInvalid || !isTempFilled);
+    const isDensityOk = (dV >= 0.6 && dV <= 0.9);
+    const isTempOk = isTempFilled && !isTempInvalid;
+    const isCalcReady = isBlockFilled && isActualFilled && isDensityOk && isTempOk && errB === "" && errA === "";
+    if (secR) {
+        secR.classList.toggle('result-disabled', !isCalcReady);
+        secR.classList.toggle('result-ready', isCalcReady);
+        secR.setAttribute('aria-disabled', (!isCalcReady).toString());
+    }
+    updateButtons();
+    updateTgtUnitPositions();
+    renderCapacityRef();
+
+    // Input state'ini hafif throttled şekilde sakla (geri dönüşlerde stabilite için)
+    scheduleSaveCalcState();
+}
+function updateButtons() {
+    let lt = parseInt(document.getElementById('lt').innerText);
+    let ct = parseInt(document.getElementById('ct').innerText);
+    let rt = parseInt(document.getElementById('rt').innerText);
+    document.getElementById('btn-lt-plus').disabled = (lt >= LW || (ct <= 0 && rt <= 0));
+    document.getElementById('btn-lt-minus').disabled = (lt <= 0 || (ct >= LC && rt >= LW));
+    document.getElementById('btn-ct-plus').disabled = (ct >= LC || (lt <= 0 && rt <= 0));
+    document.getElementById('btn-ct-minus').disabled = (ct <= 0 || (lt >= LW && rt >= LW));
+    document.getElementById('btn-rt-plus').disabled = (rt >= LW || (lt <= 0 && ct <= 0));
+    document.getElementById('btn-rt-minus').disabled = (rt <= 0 || (lt >= LW && ct >= LC));
+}
+function smartAdjust(tank, delta) {
+    let lt = parseInt(document.getElementById('lt').innerText);
+    let ct = parseInt(document.getElementById('ct').innerText);
+    let rt = parseInt(document.getElementById('rt').innerText);
+    let effectiveDelta = delta; 
+    if (tank === 'lt') {
+        let move = effectiveDelta > 0 ? Math.min(effectiveDelta, LW - lt) : Math.max(effectiveDelta, -lt);
+        if (move > 0) { if (ct >= move) { ct -= move; lt += move; } else { let rem = move - ct; if (rt >= rem) { lt += move; ct = 0; rt -= rem; } } } 
+        else { let sC = LC - ct; if (sC >= Math.abs(move)) { ct += Math.abs(move); lt += move; } else { let rem = Math.abs(move) - sC; if (LW - rt >= rem) { lt += move; ct = LC; rt += rem; } } }
+    } else if (tank === 'ct') {
+        let move = effectiveDelta > 0 ? Math.min(effectiveDelta, LC - ct) : Math.max(effectiveDelta, -ct);
+        if (move > 0) { let h = move / 2; if (lt >= h && rt >= h) { lt -= h; rt -= h; ct += move; } } 
+        else { let h = Math.abs(move) / 2; if (LW - lt >= h && LW - rt >= h) { lt += h; rt += h; ct += move; } }
+    } else if (tank === 'rt') {
+        let move = effectiveDelta > 0 ? Math.min(effectiveDelta, LW - rt) : Math.max(effectiveDelta, -rt);
+        if (move > 0) { if (ct >= move) { ct -= move; rt += move; } else { let rem = move - ct; if (lt >= rem) { rt += move; ct = 0; lt -= rem; } } } 
+        else { let sC = LC - ct; if (sC >= Math.abs(move)) { ct += Math.abs(move); rt += move; } else { let rem = Math.abs(move) - sC; if (LW - lt >= rem) { rt += move; ct = LC; lt += rem; } } }
+    }
+    document.getElementById('lt').innerText = lt; document.getElementById('ct').innerText = ct; document.getElementById('rt').innerText = rt;
+    validateAll(false);
+}
+function saveRecord() {
+    const densVal = getDensityValue();
+    const locale = (getLang() === 'en') ? 'en-GB' : 'tr-TR';
+    const rec = {
+        id: Date.now(),
+        fleet: fleet,
+        reg: getRegistration(),
+        time: new Date().toLocaleTimeString(locale, {hour:'2-digit', minute:'2-digit'}),
+        date: new Date().toLocaleDateString(locale),
+        block: document.getElementById('block_fuel').value,
+        dens: densVal.toFixed(3),
+        tempC: document.getElementById('temp_c').value,
+        act_total: document.getElementById('total_actual').value,
+        act_l: document.getElementById('la').value,
+        act_c: document.getElementById('ca').value,
+        act_r: document.getElementById('ra').value,
+        tgt_l: document.getElementById('lt').innerText,
+        tgt_c: document.getElementById('ct').innerText,
+        tgt_r: document.getElementById('rt').innerText,
+        kg: document.getElementById('res_kg').innerText,
+        lt: document.getElementById('res_lit').innerText
+    };
+    let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]');
+    logs.unshift(rec);
+    localStorage.setItem('logs_v6', JSON.stringify(logs));
+    renderLogs(); openReceipt(rec);
+}
+
+// Generate a debug PDF (overlays + grid) without requiring URL params
+function generateDebugReceipt() {
+    const densVal = getDensityValue();
+    const locale = (getLang() === 'en') ? 'en-GB' : 'tr-TR';
+    const rec = {
+        id: Date.now(),
+        fleet: fleet,
+        reg: getRegistration(),
+        time: new Date().toLocaleTimeString(locale, {hour:'2-digit', minute:'2-digit'}),
+        date: new Date().toLocaleDateString(locale),
+        block: document.getElementById('block_fuel').value,
+        dens: densVal.toFixed(3),
+        tempC: document.getElementById('temp_c').value,
+        act_total: document.getElementById('total_actual').value,
+        act_l: document.getElementById('la').value,
+        act_c: document.getElementById('ca').value,
+        act_r: document.getElementById('ra').value,
+        tgt_l: document.getElementById('lt').innerText,
+        tgt_c: document.getElementById('ct').innerText,
+        tgt_r: document.getElementById('rt').innerText,
+        kg: document.getElementById('res_kg').innerText,
+        lt: document.getElementById('res_lit').innerText
+    };
+    // Use HTML fallback receipt (same as save & view)
+    openReceipt(rec);
+}
+
+// Generate a debug PDF (overlays + grid) without requiring URL params
+// debug helper removed in final build
+function renderLogs() {
+    const list = document.getElementById('log-list');
+    if (!list) return;
+    let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]');
+    if(logs.length === 0) { list.innerHTML = ''; return; }
+    list.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0 10px"><span style="font-size:11px; font-weight:900; color:#64748b; letter-spacing:1px">${escapeHtml(t('recent_logs'))}</span><button onclick="clearAllLogs()" style="color:var(--error); background:none; border:none; font-size:10px; font-weight:800; cursor:pointer">${escapeHtml(t('clear_all'))}</button></div>`;
+    logs.forEach(log => {
+        const div = document.createElement('div'); div.className = 'log-item';
+        const safeId = Number(log.id) || 0;
+        const fleetText = escapeHtml(log.fleet);
+        const kgText = escapeHtml(log.kg);
+        const timeText = escapeHtml(log.time);
+        div.innerHTML = `<div onclick="openReceiptById(${safeId})" style="flex-grow:1; display:flex; justify-content:space-between; align-items:center"><span><b>${fleetText}</b></span><span><b style="color:var(--warning)">${kgText} KG</b> <small style="opacity:0.5; margin-left:8px">${timeText}</small></span></div><button class="del-log" onclick="deleteLog(${safeId})">×</button>`;
+        list.appendChild(div);
+    });
+}
+function deleteLog(id) { let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]'); logs = logs.filter(l => l.id !== id); localStorage.setItem('logs_v6', JSON.stringify(logs)); renderLogs(); }
+function clearAllLogs() { if(confirm(t('confirm_clear_logs'))) { localStorage.removeItem('logs_v6'); renderLogs(); } }
+function openReceiptById(id) { let logs = JSON.parse(localStorage.getItem('logs_v6') || '[]'); let log = logs.find(l => l.id === id); if(log) openReceipt(log); }
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+let _lastReceiptBlobUrl = null;
+
+function loadPdfLib() {
+    return new Promise((resolve, reject) => {
+        if (window.PDFLib) return resolve(window.PDFLib);
+        const s = document.createElement('script');
+        s.src = 'https://unpkg.com/pdf-lib/dist/pdf-lib.min.js';
+        s.onload = () => resolve(window.PDFLib);
+        s.onerror = () => reject(new Error('pdf-lib yüklenemedi'));
+        document.head.appendChild(s);
+    });
+}
+
+async function openPdfReceipt(log, debugForceMode) {
+    await loadPdfLib();
+    const pdfDebugMode = (function(){
+        if (debugForceMode) return String(debugForceMode).trim().toLowerCase();
+        try { return String(new URL(window.location.href).searchParams.get('pdf_debug') || '').trim().toLowerCase(); } catch (e) { return ''; }
+    })();
+    const pdfDebug = (pdfDebugMode === '1' || pdfDebugMode === 'true' || pdfDebugMode === 'grid');
+    const url = './assets/fuel-slip-blank.pdf';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('PDF şablonu bulunamadı');
+    const arrayBuffer = await res.arrayBuffer();
+    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    const pages = pdfDoc.getPages();
+    const page = pages[0];
+    const { width, height } = page.getSize();
+    const helv = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+
+    // Debug helpers
+    function drawCornerMarkers() {
+        if (!pdfDebugMode) return;
+        const f = helv;
+        const c = PDFLib.rgb(1, 0, 0);
+        const s = 9;
+        page.drawText(`(0,0)`, { x: 4, y: 4, size: s, font: f, color: c });
+        page.drawText(`(W,0)`, { x: Math.max(4, width - 46), y: 4, size: s, font: f, color: c });
+        page.drawText(`(0,H)`, { x: 4, y: Math.max(4, height - 14), size: s, font: f, color: c });
+        page.drawText(`(W,H)`, { x: Math.max(4, width - 46), y: Math.max(4, height - 14), size: s, font: f, color: c });
+        page.drawText(`W=${Math.round(width)} H=${Math.round(height)}`, { x: 60, y: 4, size: s, font: f, color: c });
+    }
+
+    function drawGridOverlay() {
+        if (pdfDebugMode !== 'grid') return;
+        const step = 0.05; // 5% grid
+        const lineColor = PDFLib.rgb(0.85, 0.2, 0.2);
+        for (let t = 0; t <= 1.0001; t += step) {
+            const x = Math.round(width * t);
+            const y = Math.round(height * t);
+            // vertical
+            page.drawLine({ start: { x, y: 0 }, end: { x, y: height }, thickness: 0.5, color: lineColor });
+            // horizontal
+            page.drawLine({ start: { x: 0, y }, end: { x: width, y }, thickness: 0.5, color: lineColor });
+            // labels
+            const lbl = String(Math.round(t * 100)).padStart(2, '0');
+            page.drawText(lbl, { x: Math.min(width - 18, x + 2), y: 6, size: 7, font: helv, color: lineColor });
+            page.drawText(lbl, { x: 6, y: Math.min(height - 10, y + 2), size: 7, font: helv, color: lineColor });
+        }
+    }
+
+    // Draw labeled boxes around configured tickRegions to aid visual tuning
+    function drawRegionBoxes() {
+        if (pdfDebugMode !== 'grid') return;
+        try {
+            const boxColor = PDFLib.rgb(0, 0.6, 0);
+            const labelFont = embeddedFont || helv;
+            Object.keys(tickRegions).forEach((key, idx) => {
+                const r = tickRegions[key];
+                if (!r) return;
+                // approximate bounding box: left depends on whether region draws right-to-left or left-to-right
+                const span = (r.spacing || 0.02) * (r.count || 1);
+                const leftFrac = (r.xStart && r.xStart > 0.5 && key.includes('actual')) ? (r.xStart - span - 0.005) : Math.max(0, (r.xStart || 0) - 0.005);
+                const rightFrac = Math.min(0.999, (r.xStart || 0) + 0.01 + span);
+                const topFrac = Math.max(0, (r.y || 0) - 0.02);
+                const bottomFrac = Math.min(0.999, (r.y || 0) + 0.02);
+                const lx = Math.round(width * leftFrac);
+                const rx = Math.round(width * rightFrac);
+                const ty = Math.round(height * topFrac);
+                const by = Math.round(height * bottomFrac);
+                const wbox = Math.max(6, rx - lx);
+                const hbox = Math.max(6, by - ty);
+                page.drawRectangle({ x: lx, y: ty, width: wbox, height: hbox, borderColor: boxColor, borderWidth: 0.8 });
+                // label
+                const lbl = String(key + ' (' + (r.count || '') + ')');
+                page.drawText(lbl, { x: lx + 2, y: Math.max(2, ty + hbox - 10), size: 8, font: labelFont, color: boxColor });
+            });
+        } catch (e) {
+            // ignore debug overlay errors
+        }
+    }
+
+    function normalizeWinAnsi(str) {
+        if (!str) return '';
+        const map = {
+            '\u0130': 'I', // İ
+            '\u0131': 'i', // ı
+            'ç': 'c', 'Ç': 'C',
+            'ğ': 'g', 'Ğ': 'G',
+            'ş': 's', 'Ş': 'S',
+            'ö': 'o', 'Ö': 'O',
+            'ü': 'u', 'Ü': 'U'
+        };
+        return String(str).split('').map(ch => map[ch] || ch).join('');
+    }
+
+    // Optional: embed a Unicode-capable TTF from local assets if available.
+    // We keep this local-only to avoid noisy network/CSP failures.
+    let embeddedFont = helv;
+    try {
+        const fResp = await fetch('./assets/DejaVuSans.ttf');
+        if (fResp && fResp.ok) {
+            const fb = await fResp.arrayBuffer();
+            embeddedFont = await pdfDoc.embedFont(fb);
+        }
+    } catch (e) {
+        // silent fallback to WinAnsi
+    }
+
+    // Tick/box regions (use finalized mapping)
+    const tickRegions = FINAL_TICK_REGIONS;
+
+    // Debug overlays (drawn on top of the blank template)
+    try { drawGridOverlay(); } catch (e) {}
+    try { drawCornerMarkers(); } catch (e) {}
+    try { drawRegionBoxes(); } catch (e) {}
+
+    // Draw digits into vertical tick columns (right-aligned)
+    function drawDigitsInTicks(val, xStartFrac, yFrac, spacingFrac, count, size, font) {
+        const s = String(val ?? '').replace(/[^0-9\-]/g, '');
+        const digits = s.split('');
+        for (let i = 0; i < count; i++) {
+            const di = digits.length - 1 - i; // right aligned
+            const ch = di >= 0 ? digits[di] : '';
+            const x = Math.round(width * (xStartFrac - i * spacingFrac));
+            const y = Math.round(height * yFrac);
+            if (ch) {
+                const dx = -Math.round(size * 0.15);
+                page.drawText(ch, { x: x + dx, y: y, size: size, font });
+            }
+            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('.', { x: x-1, y: y-2, size: 6, font, color: PDFLib.rgb(0,0,1) }); } } catch(e){}
+        }
+    }
+
+    function digitsOnly(val) {
+        return String(val ?? '').replace(/[^0-9\-]/g, '');
+    }
+
+    function toIntSafe(val) {
+        const n = Number(String(val ?? '').replace(/[^0-9\-]/g, ''));
+        return Number.isFinite(n) ? Math.trunc(n) : 0;
+    }
+
+    // Draw characters into horizontal boxes (left-to-right), one char per box
+    function drawCharsInBoxes(str, xStartFrac, yFrac, spacingFrac, count, size, font) {
+        const s = String(str ?? '');
+        for (let i = 0; i < count; i++) {
+            const ch = s[i] || '';
+            const x = Math.round(width * (xStartFrac + i * spacingFrac));
+            const y = Math.round(height * yFrac);
+            if (ch) {
+                page.drawText(ch, { x: x, y: y, size: size, font });
+            }
+            try { if (new URL(window.location.href).searchParams.get('pdf_debug') === '1') { page.drawText('|', { x: x-2, y: y-2, size: 6, font, color: PDFLib.rgb(0,0,0) }); } } catch(e){}
+        }
+    }
+
+    // Render temperature in °C into three small boxes as sign+2digits (e.g. +25, -05)
+    (function(){
+        const raw = String(log.tempC ?? '').trim();
+        let tnum = null;
+        if (raw !== '') {
+            const parsed = Number(raw);
+            if (!Number.isNaN(parsed)) tnum = Math.round(parsed);
+        }
+        const tempStr = (tnum === null) ? '   ' : ((tnum >= 0 ? '+' : '-') + String(Math.abs(tnum)).padStart(2,'0'));
+        try {
+            drawCharsInBoxes(tempStr, tickRegions.fuel_temp.xStart, tickRegions.fuel_temp.y, tickRegions.fuel_temp.spacing, tickRegions.fuel_temp.count, tickRegions.fuel_temp.size, embeddedFont);
+        } catch (e) {
+            // no fallback drawText (avoid writing into header/red zones)
+        }
+    })();
+
+    // ACTUAL SUPPLY (LT) in bottom-right table ticks
+    try {
+        let ltVal = '';
+        if (log.lt !== undefined && log.lt !== null && String(log.lt).trim() !== '') {
+            const n = Number(String(log.lt).replace(/[^0-9\.-]/g,''));
+            if (!Number.isNaN(n)) ltVal = String(Math.round(n));
+        }
+        if (ltVal) drawDigitsInTicks(ltVal, tickRegions.actual_supply_lt.xStart, tickRegions.actual_supply_lt.y, tickRegions.actual_supply_lt.spacing, tickRegions.actual_supply_lt.count, tickRegions.actual_supply_lt.size, embeddedFont);
+    } catch (e) {}
+
+    // Compute main values
+    const remainingKg = toIntSafe(log.act_total);
+    const upliftKg = toIntSafe(log.kg);
+    const blockKg = toIntSafe(log.block);
+    const tgtTotalKg = Math.max(0, toIntSafe(log.tgt_l) + toIntSafe(log.tgt_c) + toIntSafe(log.tgt_r));
+
+    // density small boxes (bottom section) — show three digits after decimal (e.g. 0.789 -> 789)
+    try {
+        const raw = String(log.dens ?? '').trim();
+        let densDigits = '';
+        const n = Number(raw);
+        if (!Number.isNaN(n)) {
+            const frac = Math.abs(n - Math.floor(n));
+            const three = String(Math.round(frac * 1000)).padStart(3,'0');
+            densDigits = three;
+        }
+        if (densDigits) {
+            // Density is displayed in 3 horizontal boxes
+            drawCharsInBoxes(densDigits, tickRegions.density_boxes.xStart, tickRegions.density_boxes.y, tickRegions.density_boxes.spacing, tickRegions.density_boxes.count, tickRegions.density_boxes.size, embeddedFont);
+        }
+    } catch (e) {}
+
+    // Remaining (before fueling) in bottom-left long field
+    try {
+        if (remainingKg > 0) {
+            drawDigitsInTicks(digitsOnly(remainingKg), tickRegions.remaining_left.xStart, tickRegions.remaining_left.y, tickRegions.remaining_left.spacing, tickRegions.remaining_left.count, tickRegions.remaining_left.size, embeddedFont);
+        }
+    } catch (e) {}
+
+    // Actual supply fuel in bottom middle long field (use uplift KG)
+    try {
+        if (upliftKg > 0) {
+            drawDigitsInTicks(digitsOnly(upliftKg), tickRegions.actual_supply_long.xStart, tickRegions.actual_supply_long.y, tickRegions.actual_supply_long.spacing, tickRegions.actual_supply_long.count, tickRegions.actual_supply_long.size, embeddedFont);
+        }
+    } catch (e) {}
+
+    // Actual indicated block fuel in bottom right long field (use target total)
+    try {
+        if (tgtTotalKg > 0) {
+            drawDigitsInTicks(digitsOnly(tgtTotalKg), tickRegions.actual_indic_block_long.xStart, tickRegions.actual_indic_block_long.y, tickRegions.actual_indic_block_long.spacing, tickRegions.actual_indic_block_long.count, tickRegions.actual_indic_block_long.size, embeddedFont);
+        }
+    } catch (e) {}
+
+    // Registration (TC-ABC) in 6 boxes
+    try {
+        const reg = normalizeReg(log.reg || '') || getRegistration();
+        if (reg) {
+            drawCharsInBoxes(reg, tickRegions.registration_boxes.xStart, tickRegions.registration_boxes.y, tickRegions.registration_boxes.spacing, tickRegions.registration_boxes.count, tickRegions.registration_boxes.size, embeddedFont);
+        }
+    } catch (e) {}
+
+    // Mid-table Requested / Actual columns (BLOCK / REMAINING / SUPPLY)
+    try {
+        // Requested
+        if (blockKg > 0) drawDigitsInTicks(digitsOnly(blockKg), tickRegions.requested_block.xStart, tickRegions.requested_block.y, tickRegions.requested_block.spacing, tickRegions.requested_block.count, tickRegions.requested_block.size, embeddedFont);
+        if (remainingKg > 0) drawDigitsInTicks(digitsOnly(remainingKg), tickRegions.requested_remain.xStart, tickRegions.requested_remain.y, tickRegions.requested_remain.spacing, tickRegions.requested_remain.count, tickRegions.requested_remain.size, embeddedFont);
+        if (upliftKg > 0) drawDigitsInTicks(digitsOnly(upliftKg), tickRegions.requested_supply.xStart, tickRegions.requested_supply.y, tickRegions.requested_supply.spacing, tickRegions.requested_supply.count, tickRegions.requested_supply.size, embeddedFont);
+
+        // Actual indicated
+        if (tgtTotalKg > 0) drawDigitsInTicks(digitsOnly(tgtTotalKg), tickRegions.actual_block.xStart, tickRegions.actual_block.y, tickRegions.actual_block.spacing, tickRegions.actual_block.count, tickRegions.actual_block.size, embeddedFont);
+        if (remainingKg > 0) drawDigitsInTicks(digitsOnly(remainingKg), tickRegions.actual_remain.xStart, tickRegions.actual_remain.y, tickRegions.actual_remain.spacing, tickRegions.actual_remain.count, tickRegions.actual_remain.size, embeddedFont);
+        if (upliftKg > 0) drawDigitsInTicks(digitsOnly(upliftKg), tickRegions.actual_supply.xStart, tickRegions.actual_supply.y, tickRegions.actual_supply.spacing, tickRegions.actual_supply.count, tickRegions.actual_supply.size, embeddedFont);
+    } catch (e) {}
+    // If debug enabled via URL param ?pdf_debug=1 show markers for target regions only
+    try {
+        if (pdfDebug) {
+            const markerFont = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+            const mark = (name, xFrac, yFrac) => {
+                const x = Math.round(width * xFrac);
+                const y = Math.round(height * yFrac);
+                page.drawText('•', { x: x - 3, y: y - 3, size: 12, font: markerFont, color: PDFLib.rgb(1,0,0) });
+                page.drawText(name, { x: x + 6, y: y - 3, size: 8, font: markerFont, color: PDFLib.rgb(1,0,0) });
+            };
+            mark('actual_supply_lt', tickRegions.actual_supply_lt.xStart, tickRegions.actual_supply_lt.y);
+            mark('density_boxes', tickRegions.density_boxes.xStart, tickRegions.density_boxes.y);
+            mark('remaining_left', tickRegions.remaining_left.xStart, tickRegions.remaining_left.y);
+            mark('actual_supply_long', tickRegions.actual_supply_long.xStart, tickRegions.actual_supply_long.y);
+            mark('actual_indic_block_long', tickRegions.actual_indic_block_long.xStart, tickRegions.actual_indic_block_long.y);
+            mark('registration_boxes', tickRegions.registration_boxes.xStart, tickRegions.registration_boxes.y);
+            mark('fuel_temp', tickRegions.fuel_temp.xStart, tickRegions.fuel_temp.y);
+            mark('requested_block', tickRegions.requested_block.xStart, tickRegions.requested_block.y);
+            mark('requested_remain', tickRegions.requested_remain.xStart, tickRegions.requested_remain.y);
+            mark('requested_supply', tickRegions.requested_supply.xStart, tickRegions.requested_supply.y);
+            mark('actual_block', tickRegions.actual_block.xStart, tickRegions.actual_block.y);
+            mark('actual_remain', tickRegions.actual_remain.xStart, tickRegions.actual_remain.y);
+            mark('actual_supply', tickRegions.actual_supply.xStart, tickRegions.actual_supply.y);
+        }
+    } catch (e) {}
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    if (_lastReceiptBlobUrl) { try { URL.revokeObjectURL(_lastReceiptBlobUrl); } catch(e){} }
+    _lastReceiptBlobUrl = URL.createObjectURL(blob);
+    const iframe = document.getElementById('receipt-iframe');
+    const details = document.getElementById('r-details');
+    if (iframe) { iframe.src = _lastReceiptBlobUrl; iframe.style.display = 'block'; }
+    if (details) details.style.display = 'none';
+    const receiptModalEl = document.getElementById('receipt-modal');
+    if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
+    return true;
+}
+
+// Debug tools removed: nudger and live tick-region tweaking cleared for a clean build.
+
+function openReceipt(log) {
+    lastReceiptLog = log;
+    // Use the legacy HTML receipt view instead of PDF output
+    const date = escapeHtml(log.date);
+    const time = escapeHtml(log.time);
+    const fleetText = escapeHtml(log.fleet);
+    const dens = escapeHtml(log.dens || '---');
+    const tempC = escapeHtml(log.tempC || '---');
+    const block = escapeHtml(log.block);
+    const actTotal = escapeHtml(log.act_total);
+    const actL = escapeHtml(log.act_l);
+    const actC = escapeHtml(log.act_c);
+    const actR = escapeHtml(log.act_r);
+    const tgtL = escapeHtml(log.tgt_l);
+    const tgtC = escapeHtml(log.tgt_c);
+    const tgtR = escapeHtml(log.tgt_r);
+    const kg = escapeHtml(log.kg);
+    const lt = escapeHtml(log.lt);
+
+    const iframe = document.getElementById('receipt-iframe');
+    if (iframe) { iframe.style.display = 'none'; iframe.src = ''; }
+    const detailsEl = document.getElementById('r-details');
+    if (detailsEl) {
+        detailsEl.style.display = 'block';
+        detailsEl.innerHTML = `<b>${escapeHtml(t('label_date'))}:</b> ${date} ${time}<br><b>${escapeHtml(t('label_fleet'))}:</b> ${fleetText}<br><b>${escapeHtml(t('label_density'))}:</b> ${dens} | <b>${escapeHtml(t('label_temp'))}:</b> ${tempC}°C<br><hr style="border:0; border-top:1px dashed #000; margin:10px 0"><b>${escapeHtml(t('label_block'))}:</b> ${block} KG<br><b>${escapeHtml(t('label_actual'))}:</b> ${actTotal} KG<br><small>(LH:${actL} | CTR:${actC} | RH:${actR})</small><br><hr style="border:0; border-top:1px dashed #000; margin:10px 0"><b>${escapeHtml(t('label_target'))}:</b><br>LH: ${tgtL} | CTR: ${tgtC} | RH: ${tgtR} KG<br><hr style="border:0; border-top:2px solid #000; margin:10px 0"><div style="font-size:16px; font-weight:900">${escapeHtml(t('label_uplift_kg'))}: ${kg}<br>${escapeHtml(t('label_uplift_ltr'))}: ${lt}</div>`;
+    }
+    const receiptModalEl = document.getElementById('receipt-modal');
+    if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
+}
+// Service worker kaydı (offline desteği için)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => { try { reg.update(); } catch (e) {} })
+            .catch(() => {});
+    });
+}
+window.addEventListener('load', () => {
+    validateAll(false);
+    setTimeout(updateAllUnits, 100);
+    try {
+        const r = document.getElementById('receipt-modal');
+        if (r) { r.style.display = 'none'; r.style.pointerEvents = 'none'; }
+        const w = document.getElementById('warning-modal');
+        if (w) { w.style.display = 'none'; w.style.pointerEvents = 'none'; }
+    } catch (e) {}
+});
+
+// Adjustable tick regions: defaults can be nudged via the debug UI and persisted to localStorage
+// Finalized tick regions (fixed values determined from tuning)
+const FINAL_TICK_REGIONS = {
+    requested_block:   { xStart: 0.700, y: 0.502, spacing: 0.0185, count: 8, size: 12 },
+    requested_remain:  { xStart: 0.700, y: 0.459, spacing: 0.0185, count: 8, size: 12 },
+    requested_supply:  { xStart: 0.700, y: 0.419, spacing: 0.0185, count: 8, size: 12 },
+    actual_block:      { xStart: 0.735, y: 0.479, spacing: 0.0185, count: 8, size: 12 },
+    actual_remain:     { xStart: 0.745, y: 0.439, spacing: 0.0185, count: 8, size: 12 },
+    actual_supply:     { xStart: 0.745, y: 0.399, spacing: 0.0185, count: 8, size: 12 },
+    actual_supply_lt: { xStart: 0.942, y: 0.300, spacing: 0.020, count: 7, size: 11 },
+    density_boxes: { xStart: 0.225, y: 0.144, spacing: 0.020, count: 3, size: 12 },
+    remaining_left: { xStart: 0.188, y: 0.144, spacing: 0.020, count: 8, size: 12 },
+    actual_supply_long: { xStart: 0.515, y: 0.144, spacing: 0.020, count: 8, size: 12 },
+    actual_indic_block_long: { xStart: 0.770, y: 0.144, spacing: 0.020, count: 8, size: 12 },
+    registration_boxes: { xStart: 0.435, y: 0.184, spacing: 0.022, count: 6, size: 12 },
+    fuel_temp: { xStart: 0.710, y: 0.177, spacing: 0.035, count: 3, size: 12 }
+};
+
+// Re-create adjustable regions for runtime tweaking (nudger). Load overrides from localStorage if present.
+// adjustableTickRegions removed: use FINAL_TICK_REGIONS only (clean build)
+
+// Apply view mode once early
+try { applyViewMode(); } catch (e) {}
+
+// --- Cross-device return robustness (BFCache + delayed form restore) ---
+const CALC_STATE_KEY = 'calc_state_v1';
+let saveStateTimer = null;
+
+function captureCalcState() {
+    const ids = ['block_fuel','total_actual','la','ca','ra','density','temp_c','temp_f'];
+    const out = { ts: Date.now(), data: {} };
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        out.data[id] = el ? el.value : '';
+    });
+    return out;
+}
+
+function scheduleSaveCalcState() {
+    try {
+        if (saveStateTimer) clearTimeout(saveStateTimer);
+        saveStateTimer = setTimeout(() => {
+            try { sessionStorage.setItem(CALC_STATE_KEY, JSON.stringify(captureCalcState())); } catch (e) {}
+        }, 120);
+    } catch (e) {}
+}
+
+function shouldRestoreFromHistory(e) {
+    if (e && e.persisted) return true;
+    try {
+        const nav = performance.getEntriesByType && performance.getEntriesByType('navigation');
+        const entry = nav && nav[0];
+        if (entry && entry.type === 'back_forward') return true;
+        if (performance && performance.navigation && performance.navigation.type === 2) return true;
+    } catch (err) {}
+    return false;
+}
+
+function restoreCalcStateIfNeeded(e) {
+    if (!shouldRestoreFromHistory(e)) return;
+    let raw;
+    try { raw = sessionStorage.getItem(CALC_STATE_KEY); } catch (err) { raw = null; }
+    if (!raw) return;
+
+    let state;
+    try { state = JSON.parse(raw); } catch (err) { state = null; }
+    if (!state || !state.data) return;
+
+    // Sadece gerçekten boş kalan alanları restore et (RESET sonrası eski state'i geri basmasın).
+    const ids = ['block_fuel','total_actual','la','ca','ra','density','temp_c','temp_f'];
+    let didRestore = false;
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const current = (el.value || '').trim();
+        const saved = (state.data[id] ?? '').toString();
+        if (current === '' && saved !== '') {
+            el.value = saved;
+            didRestore = true;
+        }
+    });
+
+    if (didRestore) {
+        // Unit pozisyonlarını da toparla
+        setTimeout(updateAllUnits, 0);
+    }
+}
+
+// Back/forward cache (özellikle iOS Safari/Chrome) dönüşlerinde `load` tetiklenmeyebilir.
+// Ayrıca bazı cihazlarda input değerleri geri dönüşte gecikmeli restore edilir.
+function refreshUIAfterReturn() {
+    validateAll(false);
+    updateAllUnits();
+
+    requestAnimationFrame(() => {
+        validateAll(false);
+        updateAllUnits();
+        requestAnimationFrame(() => {
+            validateAll(false);
+            updateAllUnits();
+        });
+    });
+
+    setTimeout(() => {
+        validateAll(false);
+        updateAllUnits();
+    }, 220);
+}
+
+window.addEventListener('pagehide', () => {
+    try { sessionStorage.setItem(CALC_STATE_KEY, JSON.stringify(captureCalcState())); } catch (e) {}
+});
+
+window.addEventListener('pageshow', (e) => {
+    restoreCalcStateIfNeeded(e);
+    refreshUIAfterReturn();
+});
+window.addEventListener('focus', refreshUIAfterReturn);
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshUIAfterReturn();
+});
+window.addEventListener('resize', updateAllUnits);
+</script>
+</body>
+</html>

@@ -1,0 +1,2820 @@
+{
+    "tailMap": {
+        "TC-JCI": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JDO": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JDP": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JDR": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JDS": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JFC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFM": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFP": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JFU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFY": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFZ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JGS": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JGV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JGY": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800-AJ"
+        },
+        "TC-JHK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHM": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHP": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHS": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHY": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JHZ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JIO": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JIP": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JIR": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JIS": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JIT": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JJE": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJF": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJG": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJH": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJI": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJJ": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJK": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJL": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJM": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJN": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJO": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJP": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJR": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJS": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJT": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJU": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJV": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJY": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JJZ": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-JKU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JKV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JKY": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JLS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JLT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JLU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JLV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JLY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JLZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JML": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JNA": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JNB": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JNC": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JND": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JNE": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JNH": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNI": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNJ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNK": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNL": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNM": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNN": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNO": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNP": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNR": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-JNS": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JNT": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JNZ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOA": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOB": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOD": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOE": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOF": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOG": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOH": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOI": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOJ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOK": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOL": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JOO": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-PW"
+        },
+        "TC-JOU": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JOV": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JOY": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JOZ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200F-RR"
+        },
+        "TC-JPH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JRZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JST": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-LAE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LAK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LBA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-LBD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-LBF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-LBO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-LBR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LBU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-LBV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-LBZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LCA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCM": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCP": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCS": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LCU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "8MAX"
+        },
+        "TC-LGA": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGB": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGC": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGD": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGE": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGF": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGG": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGH": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGI": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGJ": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGK": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGL": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGM": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGN": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGO": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGP": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGR": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGS": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGT": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGU": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGV": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGY": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LGZ": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHA": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHB": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHC": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHD": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHE": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHF": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHG": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHH": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHI": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LHJ": {
+            "oem": "AIRBUS",
+            "family": "A350",
+            "model": "RR-XWB"
+        },
+        "TC-LJA": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJB": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJC": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJD": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJE": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJF": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJG": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJH": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJI": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJJ": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJK": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LJL": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJM": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJN": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJO": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJP": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJR": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJS": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJT": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJU": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJV": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJY": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LJZ": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "F-GE"
+        },
+        "TC-LKA": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LKB": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LKC": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LKD": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LKE": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LKF": {
+            "oem": "BOEING",
+            "family": "B777",
+            "model": "300ER-GE"
+        },
+        "TC-LLA": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLB": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLC": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLD": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLE": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLF": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLG": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLH": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLI": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLJ": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLK": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLM": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLN": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLO": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLP": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLR": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLS": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLT": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLU": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLV": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLY": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LLZ": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LMB": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LMC": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LMD": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LME": {
+            "oem": "BOEING",
+            "family": "B787",
+            "model": "9-GE"
+        },
+        "TC-LNC": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LND": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LNE": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LNF": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LNG": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LOA": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOB": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOC": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOD": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOE": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOF": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOG": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOM": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "243"
+        },
+        "TC-LON": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-LPA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPW": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPX": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LPZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LRZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G-AJ"
+        },
+        "TC-LTY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G-2ACT",
+            "actCount": 2,
+            "actCapacityKg": 4992
+        },
+        "TC-LUJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G-2ACT",
+            "actCount": 2,
+            "actCapacityKg": 4992
+        },
+        "TC-LUK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G-2ACT",
+            "actCount": 2,
+            "actCapacityKg": 4992
+        },
+        "TC-LUN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LYA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "9MAX"
+        },
+        "TC-LYB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "9MAX"
+        },
+        "TC-LYC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "9MAX"
+        },
+        "TC-LYD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "9MAX"
+        },
+        "TC-LYE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "9MAX"
+        },
+        "TC-JFG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JFV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JGZ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JIL": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JIM": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JIN": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-GE"
+        },
+        "TC-JIZ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-JKO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "700"
+        },
+        "TC-JMM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JMO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JOM": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-GE"
+        },
+        "TC-JPC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JPG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JSH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JTS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-JTT": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-JTU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-JTV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-JTY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500-AJ"
+        },
+        "TC-JUE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JUF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JUG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JUI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JUJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JUK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "V2500"
+        },
+        "TC-JVA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVM": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVP": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVS": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVY": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JVZ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JYA": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYB": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYC": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYD": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYI": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYM": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JYP": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "900"
+        },
+        "TC-JZE": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZF": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZG": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZH": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZJ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZK": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZL": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZN": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZO": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZR": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZS": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZT": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZU": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZV": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-JZZ": {
+            "oem": "BOEING",
+            "family": "B737",
+            "model": "800"
+        },
+        "TC-LNA": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-LNB": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-LOI": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "200-PW"
+        },
+        "TC-LOJ": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOK": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LOL": {
+            "oem": "AIRBUS",
+            "family": "A330",
+            "model": "300-TR"
+        },
+        "TC-LSA": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSB": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSC": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSE": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LST": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSU": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSV": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSY": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LSZ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTI": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTJ": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTK": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTL": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTM": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTN": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTO": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTP": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTR": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LTS": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G-AJ"
+        },
+        "TC-LUD": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUF": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUG": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        },
+        "TC-LUH": {
+            "oem": "AIRBUS",
+            "family": "A320 FAMILY",
+            "model": "PW1100G"
+        }
+    },
+    "byOem": {
+        "AIRBUS": {
+            "A320 FAMILY": [
+                "PW1100G",
+                "PW1100G-AJ",
+                "V2500",
+                "V2500-AJ"
+            ],
+            "A330": [
+                "200F-PW",
+                "200F-RR",
+                "200-GE",
+                "200-PW",
+                "300-GE",
+                "300-TR"
+            ],
+            "A350": [
+                "RR-XWB"
+            ]
+        },
+        "BOEING": {
+            "B737": [
+                "200-PW",
+                "200-RR",
+                "700",
+                "800",
+                "800-AJ",
+                "8MAX",
+                "900",
+                "9MAX"
+            ],
+            "B777": [
+                "300ER-GE",
+                "F-GE"
+            ],
+            "B787": [
+                "9-GE"
+            ]
+        }
+    }
+}
