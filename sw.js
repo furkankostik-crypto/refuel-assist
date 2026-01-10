@@ -32,8 +32,17 @@ self.addEventListener('install', event => {
 
 self.addEventListener('message', event => {
   try {
-    if (event && event.data && event.data.type === 'SKIP_WAITING') {
-      self.skipWaiting();
+    if (event && event.data) {
+      if (event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+      } else if (event.data.type === 'GET_VERSION') {
+        try {
+          const c = event.source || (event && event.ports && event.ports[0]);
+          if (c && typeof c.postMessage === 'function') {
+            try { c.postMessage({ type: 'CURRENT_VERSION', version: CACHE_NAME }); } catch (e) {}
+          }
+        } catch (e) {}
+      }
     }
   } catch (e) {}
 });

@@ -390,6 +390,12 @@
                             try { sessionStorage.removeItem('__sw_reloaded'); } catch(e) {}
                             navigator.serviceWorker.register('./sw.js').then(reg => {
                                 try { reg.update(); } catch (e) {}
+                                // Ask the controlling worker for its version so we can compare later
+                                try {
+                                    if (navigator.serviceWorker.controller) {
+                                        try { navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' }); } catch (e) {}
+                                    }
+                                } catch (e) {}
                             }).catch(() => {});
 
                             // Listen for messages from SW
@@ -397,6 +403,11 @@
                                 try {
                                     const d = ev && ev.data;
                                     if (!d) return;
+                                    // Current worker version response
+                                    if (d.type === 'CURRENT_VERSION') {
+                                        try { window.__swCurrentVersion = d.version || null; } catch (e) {}
+                                        return;
+                                    }
                                     if (d.type === 'NEW_VERSION') {
                                         try {
                                             navigator.serviceWorker.getRegistration().then(r => {
@@ -406,6 +417,14 @@
                                                 const btn = document.getElementById('sw-update-btn');
 
                                                 const waiting = (r && r.waiting);
+                                                // If we already know the current version and it's the same as incoming, nothing to do
+                                                try {
+                                                    if (d && d.version && window.__swCurrentVersion && d.version === window.__swCurrentVersion) {
+                                                        // versions match — hide any banner and exit
+                                                        if (bar) bar.style.display = 'none';
+                                                        return;
+                                                    }
+                                                } catch (e) {}
                                                 if (waiting) {
                                                     if (bar) bar.style.display = 'flex';
                                                     if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
