@@ -388,197 +388,52 @@
                     if ('serviceWorker' in navigator) {
                         window.addEventListener('load', () => {
                             try { sessionStorage.removeItem('__sw_reloaded'); } catch(e) {}
-                            navigator.serviceWorker.register('./sw.js').then(reg => {
-                                try { reg.update(); } catch (e) {}
-                                // Ask the controlling worker for its version so we can compare later
-                                try {
-                                    if (navigator.serviceWorker.controller) {
-                                        try { navigator.serviceWorker.controller.postMessage({ type: 'GET_VERSION' }); } catch (e) {}
-                                    }
-                                } catch (e) {}
-                            }).catch(() => {});
-
-                            // Listen for messages from SW
-                            navigator.serviceWorker.addEventListener('message', (ev) => {
-                                try {
-                                    const d = ev && ev.data;
-                                    if (!d) return;
-                                    // Current worker version response
-                                    if (d.type === 'CURRENT_VERSION') {
-                                        try { window.__swCurrentVersion = d.version || null; } catch (e) {}
-                                        return;
-                                    }
-                                    if (d.type === 'NEW_VERSION') {
-                                        try {
-                                            navigator.serviceWorker.getRegistration().then(r => {
-                                                try { window.__swReg = r; } catch(e) {}
-                                                const bar = document.getElementById('sw-update');
-                                                const txt = document.getElementById('sw-update-text');
-                                                const btn = document.getElementById('sw-update-btn');
-
-                                                const waiting = (r && r.waiting);
-                                                // If we already know the current version and it's the same as incoming, nothing to do
-                                                try {
-                                                    if (d && d.version && window.__swCurrentVersion && d.version === window.__swCurrentVersion) {
-                                                        // versions match — hide any banner and exit
-                                                        if (bar) bar.style.display = 'none';
-                                                        return;
-                                                    }
-                                                } catch (e) {}
-                                                if (waiting) {
-                                                    if (bar) bar.style.display = 'flex';
-                                                    if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
-                                                    try {
-                                                        const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
-                                                        const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
-                                                        if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
-                                                    } catch (e) {}
-                                                } else {
-                                                    // No waiting worker — try to detect an installing worker or updatefound event
-                                                    try {
-                                                        const installing = (r && r.installing);
-                                                        const controller = navigator.serviceWorker.controller;
-                                                        let handled = false;
-
-                                                        const showBanner = () => {
-                                                            try {
-                                                                if (bar) bar.style.display = 'flex';
-                                                                if (txt) txt.textContent = d.version ? ('Yeni sürüm: ' + d.version) : 'Yeni sürüm hazır.';
-                                                                const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
-                                                                const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
-                                                                if (btn) btn.textContent = dict.sw_update_reload || 'GÜNCELLE';
-                                                            } catch (e) {}
-                                                        };
-
-                                                        if (installing) {
-                                                            installing.addEventListener('statechange', function sc() {
-                                                                try {
-                                                                    if (installing.state === 'installed') {
-                                                                        handled = true; showBanner();
-                                                                    }
-                                                                } catch (e) {}
-                                                            });
-                                                        }
-
-                                                        if (r && typeof r.addEventListener === 'function') {
-                                                            r.addEventListener('updatefound', () => {
-                                                                try {
-                                                                    const nw = r.installing;
-                                                                    if (nw) {
-                                                                        nw.addEventListener('statechange', () => {
-                                                                            try {
-                                                                                if (nw.state === 'installed') { handled = true; showBanner(); }
-                                                                            } catch (e) {}
-                                                                        });
-                                                                    }
-                                                                } catch (e) {}
-                                                            });
-                                                        }
-
-                                                        // If active worker differs from controller, reload once
-                                                        try {
-                                                            const active = (r && r.active);
-                                                            if (active && controller && active.scriptURL !== controller.scriptURL) {
-                                                                if (!sessionStorage.getItem('__sw_reloaded')) {
-                                                                    sessionStorage.setItem('__sw_reloaded','1');
-                                                                    window.location.reload();
-                                                                    return;
-                                                                }
-                                                            }
-                                                        } catch (e) {}
-
-                                                        // After short timeout, if nothing appeared, hide banner
-                                                        setTimeout(() => {
-                                                            try {
-                                                                if (!handled) {
-                                                                    if (bar) bar.style.display = 'none';
-                                                                }
-                                                            } catch (e) {}
-                                                        }, 4000);
-                                                    } catch (e) {}
-                                                }
-                                            }).catch(()=>{});
-                                        } catch (e) {}
-                                    }
-                                } catch (e) {}
-                            });
-
-                            document.getElementById('sw-update-btn')?.addEventListener('click', () => {
-                                const btn = document.getElementById('sw-update-btn');
-                                const bar = document.getElementById('sw-update');
-                                // immediately hide banner for better UX; if update fails we'll restore it
-                                try { if (bar) bar.style.display = 'none'; } catch (e) {}
-                                // show immediate feedback on button
-                                try {
-                                    const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase();
-                                    const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {};
-                                    if (btn) {
-                                        btn.disabled = true;
-                                        btn.textContent = dict.sw_update_progress || 'GÜNCELLENİYOR...';
-                                        btn.style.opacity = '0.7';
-                                    }
-                                } catch (e) {}
-
-                                navigator.serviceWorker.getRegistration().then(reg => {
-                                    const waiting = (reg && reg.waiting) || (window.__swReg && window.__swReg.waiting);
-                                    if (waiting) {
-                                        try {
-                                            waiting.postMessage({ type: 'SKIP_WAITING' });
-                                        } catch (e) {}
-                                        try {
-                                            // listen for the worker to become activated
-                                            if (!waiting.__sw_state_attached) {
-                                                waiting.__sw_state_attached = true;
-                                                waiting.addEventListener('statechange', function () {
-                                                    try {
-                                                        const st = waiting.state;
-                                                        if (st === 'activated') {
-                                                            const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
-                                                            if (!window.__swReloading) { sessionStorage.setItem('__sw_reloaded','1'); window.__swReloading = true; window.location.reload(); }
-                                                        }
-                                                    } catch (e) {}
-                                                });
-                                            }
-                                        } catch (e) {}
-                                    } else {
-                                        // If no waiting worker, but a controlling worker exists, reload immediately to pick up new SW
-                                        try {
-                                            if (navigator.serviceWorker.controller) {
-                                                const bar = document.getElementById('sw-update'); if (bar) bar.style.display = 'none';
-                                                if (!window.__swReloading) { sessionStorage.setItem('__sw_reloaded','1'); window.__swReloading = true; window.location.reload(); }
+                            // Register service worker. If online, try to update and activate immediately.
+                            try {
+                                navigator.serviceWorker.register('./sw.js').then(reg => {
+                                    try {
+                                        if (navigator.onLine) {
+                                            try { reg.update(); } catch(e) {}
+                                            // If there's a waiting worker, activate it immediately
+                                            if (reg.waiting) {
+                                                try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
                                                 return;
                                             }
-                                        } catch (e) {}
-                                        // no waiting SW — re-enable button after short timeout and show hint
-                                        setTimeout(() => {
-                                            if (btn) {
-                                                try { const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase(); const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {}; btn.disabled = false; btn.textContent = dict.sw_update_reload || 'GÜNCELLE'; btn.style.opacity = ''; } catch (e) {}
+                                            // If installing, wait until installed then activate
+                                            if (reg.installing) {
+                                                reg.installing.addEventListener('statechange', () => {
+                                                    try {
+                                                        if (reg.installing.state === 'installed' && reg.waiting) {
+                                                            try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
+                                                        }
+                                                    } catch(e) {}
+                                                });
                                             }
-                                            if (bar) {
-                                                // no waiting worker found — keep banner hidden for now
-                                                bar.style.display = 'none';
-                                            }
-                                            // If update didn't complete, restore the banner and button after a short delay
-                                            setTimeout(() => {
+                                            // Otherwise listen for updatefound
+                                            reg.addEventListener('updatefound', () => {
                                                 try {
-                                                    if (!window.__swReloading) {
-                                                        if (bar) bar.style.display = 'flex';
-                                                        try { const lang = (localStorage.getItem('refuel_assist_lang') || 'tr').toLowerCase(); const dict = (window.I18N && window.I18N[lang]) ? window.I18N[lang] : (window.I18N && window.I18N.tr) || {}; if (btn) { btn.disabled = false; btn.textContent = dict.sw_update_reload || 'GÜNCELLE'; btn.style.opacity = ''; } } catch (e) {}
+                                                    const nw = reg.installing;
+                                                    if (nw) {
+                                                        nw.addEventListener('statechange', () => {
+                                                            try {
+                                                                if (nw.state === 'installed' && reg.waiting) {
+                                                                    try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
+                                                                }
+                                                            } catch(e){}
+                                                        });
                                                     }
-                                                } catch (e) {}
-                                            }, 6000);
-                                        }, 4000);
-                                    }
-                                });
-                            });
-                            // Reload page when the new Service Worker takes control
+                                                } catch(e){}
+                                            });
+                                        }
+                                    } catch(e){}
+                                }).catch(()=>{});
+                            } catch(e){}
+
+                            // Reload when new SW takes control
                             try {
                                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                                     try {
-                                        const bar = document.getElementById('sw-update');
-                                        if (bar) bar.style.display = 'none';
                                         if (!window.__swReloading) {
-                                            sessionStorage.setItem('__sw_reloaded','1');
                                             window.__swReloading = true;
                                             window.location.reload();
                                         }
