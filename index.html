@@ -840,7 +840,25 @@
         var guideModal = document.getElementById('guide-modal');
         if(guideModal){
             var closeBtn = document.getElementById('guide-close');
-            if(closeBtn) closeBtn.onclick = function(){guideModal.style.display='none';};
+            var closeGuide = function(){
+                try { guideModal.style.display='none'; } catch(e) {}
+                try { localStorage.setItem('refuel_assist_guide_shown','1'); } catch(e) {}
+            };
+            if(closeBtn) closeBtn.onclick = closeGuide;
+            // Click on backdrop closes modal
+            guideModal.addEventListener('click', function(ev){
+                try {
+                    if (ev.target === guideModal) closeGuide();
+                } catch(e) {}
+            });
+            // Escape key closes modal
+            document.addEventListener('keydown', function(ev){
+                try {
+                    if (ev.key === 'Escape' && guideModal.style.display && guideModal.style.display !== 'none') {
+                        closeGuide();
+                    }
+                } catch(e) {}
+            });
         }
     });
 
