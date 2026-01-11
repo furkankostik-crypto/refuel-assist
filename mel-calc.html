@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+	<title>Refuel Assist — MEL Süre Hesaplayıcı</title>
+	<meta name="theme-color" content="#0f172a">
+	<link rel="icon" type="image/png" href="assets/logo-192.png">
+	<style>
+		:root { --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; --muted:#64748b; --amber:#f59e0b; --brand-font: 'Segoe UI', Arial, sans-serif; }
+		html,body{height:100%;margin:0;font-family:var(--brand-font);background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff}
+		.page{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;min-height:100dvh}
+		.hero{text-align:center;margin-bottom:18px}
+		.logo-text{font-size:20px;font-weight:800;color:var(--primary);margin:6px 0}
+		.card{background:rgba(30,41,59,0.6);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:14px}
+			/* section divider between fields */
+			.section-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0;border-radius:2px}
+		.group-label{font-size:14px;color:#fff;font-weight:900;text-transform:uppercase;margin-bottom:12px;text-align:center;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.45)}
+		.cat-summary{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+		.cat-item{font-weight:900;font-size:14px;color:#fff;display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+			.cat-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+					.cat-label{flex:0 0 40px;font-weight:900;font-size:14px;color:var(--muted);width:40px;text-align:center}
+			.cat-input{flex:0 0 56px;max-width:56px;box-sizing:border-box}
+			.cat-comb{flex:1 1 auto;min-width:120px;box-sizing:border-box}
+		.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+		input[type="text"], input[type="number"], input[type="datetime-local"], select{background:#0f172a;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:10px 12px;border-radius:12px;font-weight:700;font-size:15px}
+		.row{display:flex;gap:8px}
+		.small{flex:0 0 120px}
+		.btn{width:100%;background:rgba(56,189,248,0.18);border:2px solid rgba(56,189,248,0.28);color:white;padding:10px;border-radius:12px;font-weight:900;cursor:pointer}
+		.result{margin-top:12px;padding:12px;border-radius:12px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.04);font-weight:800}
+		.result-summary{white-space:nowrap;overflow-x:auto;font-size:13px;color:var(--muted);font-weight:800;padding:8px 6px;border-radius:10px;background:rgba(15,23,42,0.04);border:1px solid rgba(255,255,255,0.02)}
+			.result-row{display:flex;align-items:center;gap:14px}
+			/* daha rafine sonuç rozeti */
+			.res-left{
+				flex:0 0 72px;
+				width:72px;
+				height:72px;
+				display:grid;
+				place-items:center;
+				font-size:34px;
+				font-weight:900;
+				color:#052635;
+				background:linear-gradient(180deg,#67d9ff 0%,var(--primary) 100%);
+				border-radius:14px;
+				box-shadow:0 8px 20px rgba(2,8,20,0.45), inset 0 -4px 8px rgba(0,0,0,0.06);
+				border:1px solid rgba(255,255,255,0.08);
+				text-align:center;
+				padding:0;
+				transition:transform .16s ease,box-shadow .16s ease;
+			}
+			.res-left:active{transform:translateY(1px) scale(.997);box-shadow:0 6px 14px rgba(2,8,20,0.36)}
+			.res-right{flex:1 1 auto;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+			.due-text{font-size:14px;color:#fff;font-weight:800}
+			.remaining-text{font-size:13px;color:var(--muted);font-weight:700}
+			.note-amber{margin-top:8px;font-size:13px;color:var(--amber);font-weight:800;background:rgba(245,158,11,0.06);padding:6px;border-radius:8px;border:1px solid rgba(245,158,11,0.08)}
+			.cat-info-btn{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.18);color:var(--amber);font-weight:900;cursor:pointer}
+			/* Flash button (top-right) */
+			.flash-btn{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(56,189,248,0.12);border:1.5px solid rgba(56,189,248,0.22);color:var(--primary);font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+			.flash-btn.on{background:linear-gradient(180deg,#f59e0b 0%,#fbbf24 100%);color:#052635;border-color:rgba(245,158,11,0.24)}
+			/* Modal for A info */
+			.modal-overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
+			.modal-card{background:var(--card);padding:16px;border-radius:12px;max-width:420px;color:#fff;box-shadow:0 8px 30px rgba(2,6,23,0.6);box-sizing:border-box;margin:16px}
+			.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+			.modal-body{font-size:14px;color:var(--muted);line-height:1.45}
+			.modal-close{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+		.muted{color:var(--muted);font-weight:700;font-size:13px;text-align:center}
+		.link-back{display:inline-block;margin-top:12px;color:var(--primary);font-weight:800;text-decoration:none}
+	</style>
+</head>
+<body>
+	<div class="page">
+		<div class="hero">
+			<div style="text-align:center;margin-bottom:10px;">
+				<img src="assets/logo-192.png" alt="logo" style="width:64px;height:auto;border-radius:12px;display:inline-block;">
+			</div>
+			<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+				<button onclick="window.location.href='../index.html'" aria-label="Back" style="width:44px; height:44px; padding:0; border-radius:14px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.22); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+					<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+				<div style="flex:1; text-align:center">
+					<div class="logo-text">MEL Süre Hesaplayıcı</div>
+					<div class="muted">Tüm MEL kategorileri için bitiş (due) tarihlerini hesaplayın</div>
+				</div>
+				<button id="flashBtn" class="cat-info-btn flash-btn" aria-label="Fener" title="Feneri aç" type="button" style="flex:0 0 44px; width:44px; height:44px;">
+					<img id="flashBtnImg" src="assets/flashlight-off-svgrepo-com.svg" alt="Fener" style="width:20px;height:20px;display:block;" />
+				</button>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="field">
+				<label class="group-label">Tespit zamanı</label>
+				<input id="detectedAt" type="datetime-local" title="GMT/UTC zamanı seçin" />
+				<div class="muted" style="margin-top:6px">Arızanın tespit edildiği zaman (GMT/UTC olarak giriniz). Varsayılan: şimdi (GMT)</div>
+			</div>
+			<div class="section-divider" aria-hidden="true"></div>
+			<div class="field">
+				<label class="group-label">Kategoriler</label>
+				<div class="muted" style="margin-top:6px;font-weight:600;font-size:13px">A kategorisi için 'Takvim Günü' veya 'Saat' seçin; diğer kategoriler otomatik olarak hesaplanacaktır.</div>
+				<div id="categories"></div>
+			</div>
+
+			<button class="btn" onclick="calculateAll()">TÜM KATEGORİLERİ HESAPLA</button>
+
+			<div id="resultsWrap" style="margin-top:12px;display:none">
+				<div class="muted" style="margin-bottom:8px">Hesaplanan bitiş tarihleri ve kalan süreler</div>
+				<div id="results"></div>
+			</div>
+
+			<!-- A category info modal -->
+			<div id="aInfoModal" class="modal-overlay" onclick="if(event.target===this) closeAInfo();">
+				<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="aInfoTitle">
+					<div class="modal-header">
+						<div id="aInfoTitle" style="font-weight:900">A Kategorisi — Açıklama</div>
+						<button class="modal-close" onclick="closeAInfo()" aria-label="Kapat">×</button>
+					</div>
+					<div class="modal-body">
+						<p><strong>Takvim Günü ("Takvim Günü"):</strong> Arıza tespit tarihinden sonra gelen takvim günü sabahı saat 00:01 (UTC) başlangıç olarak alınır. Örneğin 1 gün verildiyse; başlangıç sonraki gün 00:01 UTC, bitiş ise o gün 23:59 UTC olur.</p>
+						<p><strong>Saat ("Saat" / 24 Saat):</strong> Arıza tespit zamanından itibaren tam süre (saat olarak) sayılır; başlangıç tespit zamanı, bitiş tespit zamanı + süre olur (zamanlar UTC olarak değerlendirilir).</p>
+						<p>Seçenekler arasındaki farkı göstermek için istediğiniz örneği girip hesaplayabilirsiniz.</p>
+					</div>
+					<div style="text-align:right; margin-top:12px;"><button class="btn" onclick="closeAInfo()">Kapat</button></div>
+				</div>
+			</div>
+
+			<!-- moved header back-button above; keep link for fallback but point to cover -->
+			<a class="link-back" href="../index.html" style="display:none">← Hesaplayıcıya geri dön</a>
+		</div>
+	</div>
+
+	<script>
+		const defaultCategories = [
+			{ id: 'A', label: 'Kategori A', value: 0, unit: 'hours', hint: 'Kullanıcı düzenleyebilir' },
+			{ id: 'B', label: 'Kategori B', value: 72, unit: 'hours', hint: 'Standart: 3 gün' },
+			{ id: 'C', label: 'Kategori C', value: 240, unit: 'hours', hint: 'Standart: 10 gün' },
+			{ id: 'D', label: 'Kategori D', value: 2880, unit: 'hours', hint: 'Standart: 120 gün' }
+		];
+
+		function formatDisplayValue(value, unit){
+			if(unit === 'hours'){
+				if(value % 24 === 0) return (value/24) + ' gün';
+				return value + ' saat';
+			}
+			return value + ' ' + unit;
+		}
+
+		// compute due date from start by ms and normalize to 23:59 UTC (GMT)
+		function computeDueFromStart(startDate, ms){
+			const due = new Date(startDate.getTime() + ms);
+			// set to 23:59 UTC so B/C/D use GMT end-of-day
+			due.setUTCHours(23,59,0,0);
+			return due;
+		}
+
+		// Helper: format a Date into a value suitable for <input type="datetime-local"> using UTC (so input shows UTC/GMT)
+		function formatDatetimeLocalUTC(d){
+			function pad(n){return n<10? '0'+n : ''+n}
+			return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
+		}
+
+		// format Date into numeric DD/MM/YYYY HH:MM GMT using UTC
+		function formatDateUTC(d){
+			if(!d) return '';
+			const date = (d instanceof Date) ? d : new Date(d);
+			function pad(n){return n<10? '0'+n : ''+n}
+			const day = pad(date.getUTCDate());
+			const mon = pad(date.getUTCMonth()+1);
+			const year = date.getUTCFullYear();
+			const hh = pad(date.getUTCHours());
+			const mm = pad(date.getUTCMinutes());
+			return `${day}/${mon}/${year} ${hh}:${mm} GMT`;
+		}
+
+		// isolated calculation for Category A so special rules can be applied
+		// returns { due: Date, remaining: string, specialApplied: boolean }
+		function calculateA(dates, raw, unit, mode){
+			// dates: { startDate: Date, detectedDate: Date|null }
+			// mode: 'calendar' or '24hours'
+			const startDate = dates.startDate;
+			const detectedDate = dates.detectedDate || startDate;
+
+			// normalize raw => ms
+			let ms = 0;
+			if(unit === 'days') ms = raw * 24 * 3600 * 1000;
+			else ms = raw * 3600 * 1000;
+
+			let due;
+			let startForCount;
+			let specialApplied = true; // A always follows special rules
+			if(mode === '24hours'){
+				// strict 24-hour count from detection time
+				startForCount = new Date(detectedDate.getTime());
+				due = new Date(detectedDate.getTime() + ms);
+				// keep exact time for strict 24h
+			} else {
+				// 'calendar' mode per new rule:
+				// Start = the next day's 00:01 (local) after detection
+				// Due = end of the calendar day after counting N days (23:59 local)
+				let daysCount = 0;
+				if(unit === 'days') daysCount = raw;
+				else daysCount = Math.ceil(raw / 24);
+				// start at next day 00:01 UTC
+				const y = detectedDate.getUTCFullYear();
+				const m = detectedDate.getUTCMonth();
+				const day = detectedDate.getUTCDate();
+				startForCount = new Date(Date.UTC(y, m, day + 1, 0, 1, 0, 0));
+				// due = that start day + (daysCount - 1) days at 23:59 UTC
+				const dueDay = day + 1 + (daysCount - 1);
+				due = new Date(Date.UTC(y, m, dueDay, 23, 59, 0, 0));
+			}
+
+			// For display and remaining calculation, compute remaining from now
+			const now = new Date();
+			const diff = due.getTime() - now.getTime();
+			let remaining = '';
+			if(diff <= 0) remaining = 'Süre doldu';
+			else {
+				const secs = Math.floor(diff/1000);
+				const days = Math.floor(secs / 86400);
+				const hours = Math.floor((secs % 86400) / 3600);
+				const mins = Math.floor((secs % 3600) / 60);
+				remaining = (days?days+'g ':'') + (hours?hours+'s ':'') + (mins?mins+'dk':'');
+			}
+
+			return { start: startForCount, due, remaining, specialApplied };
+		}
+
+		function renderCategoryRows(){
+			const cont = document.getElementById('categories');
+			cont.innerHTML = '';
+			// Keep A editable, summarize others into a single-line summary
+			const summaryParts = [];
+			defaultCategories.forEach(cat => {
+				if(cat.id === 'A'){
+					const row = document.createElement('div');
+					row.className = 'cat-row';
+
+					const label = document.createElement('div');
+					label.textContent = cat.id; // show only the short letter to reduce clutter
+					label.title = cat.label; // full name available as tooltip
+					label.setAttribute('aria-label', cat.label);
+					label.className = 'cat-label';
+
+					const input = document.createElement('input');
+					input.type = 'number'; input.min = '0'; input.value = cat.value; input.dataset.cat = cat.id; input.className = 'cat-input';
+					const infoBtn = document.createElement('button');
+					infoBtn.type = 'button'; infoBtn.className = 'cat-info-btn'; infoBtn.title = 'A kategorisi hakkında'; infoBtn.innerText = '!';
+					infoBtn.onclick = function(){ showAInfo(); };
+					// combined selector: only two options — Takvim Günü or Saat (hours)
+					const comb = document.createElement('select'); comb.dataset['catMode'] = cat.id; comb.className = 'cat-comb';
+					const o1 = document.createElement('option'); o1.value = 'hours:calendar'; o1.text = 'Takvim Günü';
+					const o2 = document.createElement('option'); o2.value = 'hours:24'; o2.text = 'Saat';
+					comb.appendChild(o1); comb.appendChild(o2);
+					comb.value = 'hours:calendar';
+
+					row.appendChild(label); row.appendChild(input); row.appendChild(comb); row.appendChild(infoBtn);
+					cont.appendChild(row);
+				} else {
+					summaryParts.push(`${cat.id}: ${formatDisplayValue(cat.value, cat.unit)}`);
+				}
+			});
+
+			if(summaryParts.length){
+				const summary = document.createElement('div');
+				summary.className = 'cat-summary';
+				summary.style.marginTop = '6px';
+				summaryParts.forEach(p => {
+					const it = document.createElement('div');
+					it.className = 'cat-item';
+					it.textContent = p;
+					summary.appendChild(it);
+				});
+				cont.appendChild(summary);
+			}
+		}
+
+		function calculateAll(){
+			// Merge: use single `detectedAt` field for both detection and start
+			// NOTE: the datetime-local input is treated as GMT/UTC — we append 'Z' so the string is parsed as UTC
+			const detectedEl = document.getElementById('detectedAt');
+			let detectedDate = null;
+			if(detectedEl && detectedEl.value){
+				// parse as UTC
+				detectedDate = new Date(detectedEl.value + 'Z');
+			}
+			if(!(detectedDate instanceof Date) || isNaN(detectedDate)) detectedDate = new Date();
+			const startDate = detectedDate;
+
+			const results = [];
+			defaultCategories.forEach(cat => {
+				let raw = cat.value; let unit = cat.unit;
+				if(cat.id === 'A'){
+					const input = document.querySelector('input[data-cat="A"]');
+					const comb = document.querySelector('select[data-cat-mode="A"]') || document.querySelector('select[data-catmode="A"]');
+					raw = input ? (Number(input.value) || 0) : raw;
+					let unitA = unit;
+					let modeA = 'calendar';
+					if(comb){
+						const parts = (comb.value || '').split(':');
+						if(parts.length === 2){ unitA = parts[0]; modeA = parts[1] === '24' ? '24hours' : parts[1]; }
+					}
+					const ares = calculateA({ startDate, detectedDate }, raw, unitA, modeA);
+					results.push({ id: cat.id, start: ares.start || null, due: ares.due, remaining: ares.remaining, special: ares.specialApplied });
+				} else {
+					let ms = 0;
+					if(unit === 'days') ms = raw * 24 * 3600 * 1000;
+					else ms = raw * 3600 * 1000;
+
+					const due = computeDueFromStart(startDate, ms);
+					const now = new Date();
+					const diff = due.getTime() - now.getTime();
+					let remaining = '';
+					if(diff <= 0) remaining = 'Süre doldu';
+					else {
+						const secs = Math.floor(diff/1000);
+						const days = Math.floor(secs / 86400);
+						const hours = Math.floor((secs % 86400) / 3600);
+						const mins = Math.floor((secs % 3600) / 60);
+						remaining = (days?days+'g ':'') + (hours?hours+'s ':'') + (mins?mins+'dk':'');
+					}
+
+					results.push({ id: cat.id, due: due, remaining });
+				}
+			});
+
+			showResults(results);
+		}
+
+		function showResults(results){
+			const wrap = document.getElementById('resultsWrap');
+			const out = document.getElementById('results');
+			out.innerHTML = '';
+			results.forEach(r => {
+				const b = document.createElement('div');
+				b.style.padding = '10px';
+				b.style.borderRadius = '10px';
+				b.style.background = 'rgba(15,23,42,0.5)';
+				b.style.marginBottom = '8px';
+				// left: big category letter, right: stacked due date and remaining, note below
+				let html = '';
+				html += `<div class="result-row"><div class="res-left">${r.id}</div><div class="res-right"><div class="due-text"><strong>Bitiş:</strong> ${formatDateUTC(r.due)}</div><div class="remaining-text"><strong>Kalan:</strong> ${r.remaining}</div></div></div>`;
+				if(r.special) html += `<div class="note-amber"><strong>Not:</strong> A kategorisi için özel kural uygulandı</div>`;
+				b.innerHTML = html;
+				out.appendChild(b);
+			});
+			wrap.style.display = 'block';
+		}
+
+		// A category info modal controls
+		function showAInfo(){
+			const m = document.getElementById('aInfoModal');
+			if(m) m.style.display = 'flex';
+		}
+		function closeAInfo(){
+			const m = document.getElementById('aInfoModal');
+			if(m) m.style.display = 'none';
+		}
+
+		// Flashlight (torch) handling
+		let _flashStream = null;
+		let _flashTrack = null;
+		let _torchOn = false;
+		const ICON_OFF = 'assets/flashlight-off-svgrepo-com.svg';
+		const ICON_ON = 'assets/' + encodeURIComponent('flashlight-on-svgrepo-com (1).svg');
+
+		async function startFlashStream(){
+			if(!_flashTrack){
+				if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('getUserMedia desteklenmiyor');
+				const constraints = { video: { facingMode: { ideal: 'environment' } } };
+				_flashStream = await navigator.mediaDevices.getUserMedia(constraints);
+				_flashTrack = _flashStream.getVideoTracks()[0];
+				const caps = _flashTrack.getCapabilities ? _flashTrack.getCapabilities() : {};
+				if(!caps.torch){
+					stopFlashStream();
+					throw new Error('Cihaz feneri desteklenmiyor');
+				}
+			}
+		}
+
+		function stopFlashStream(){
+			if(_flashStream){
+				_flashStream.getTracks().forEach(t=>t.stop());
+			}
+			_flashStream = null; _flashTrack = null; _torchOn = false;
+			const btn = document.getElementById('flashBtn');
+			if(btn) {
+				btn.classList.remove('on');
+				const img = document.getElementById('flashBtnImg'); if(img) img.src = ICON_OFF;
+			}
+		}
+
+		async function toggleFlash(){
+			const btn = document.getElementById('flashBtn');
+			if(!_torchOn){
+				try{
+					await startFlashStream();
+					await _flashTrack.applyConstraints({ advanced: [{ torch: true }] });
+					_torchOn = true; if(btn) { btn.classList.add('on'); btn.title = 'Feneri kapat'; }
+					const img = document.getElementById('flashBtnImg'); if(img) img.src = ICON_ON;
+				}catch(err){
+					stopFlashStream();
+					alert('Fener açılamıyor: '+(err && err.message?err.message:err));
+				}
+			}else{
+				try{
+					await _flashTrack.applyConstraints({ advanced: [{ torch: false }] });
+				}catch(e){}
+				stopFlashStream();
+			}
+		}
+
+		function initFlashlightButton(){
+			const btn = document.getElementById('flashBtn');
+			if(!btn) return;
+			btn.addEventListener('click', (e)=>{ e.preventDefault(); toggleFlash(); });
+			// stop stream when leaving page
+			window.addEventListener('pagehide', stopFlashStream);
+		}
+
+		(function init(){
+			// Prefill detectedAt with current UTC (so input shows GMT/UTC time)
+			const det = document.getElementById('detectedAt');
+			if(det) det.value = formatDatetimeLocalUTC(new Date());
+			renderCategoryRows();
+			initFlashlightButton();
+		})();
+	</script>
+		<script>
+		// Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('/sw.js', { scope: '/' })
+				.then(reg => console.log('SW registered:', reg.scope))
+				.catch(err => console.error('SW registration failed:', err));
+		}
+
+		window.__unregisterSW = async function() {
+			if (!('serviceWorker' in navigator)) return console.log('ServiceWorker desteklenmiyor');
+			const regs = await navigator.serviceWorker.getRegistrations();
+			await Promise.all(regs.map(r => r.unregister()));
+			console.log('Service worker kayıtları kaldırıldı:', regs.map(r => r.scope));
+		};
+		</script>
+</body>
+</html>
+

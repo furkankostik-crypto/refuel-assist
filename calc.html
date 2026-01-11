@@ -448,7 +448,14 @@
             <h3 id="receipt-title" style="text-align:center; border-bottom:2px dashed #000; padding-bottom:12px; margin-top:0">REFUEL RECEIPT</h3>
             <div id="r-details" style="font-size:13px; line-height:1.6; display:block;"></div>
             <iframe id="receipt-iframe" style="display:none; width:100%; height:520px; border:none; background:#fff"></iframe>
-            <button id="receipt-close" onclick="(function(){var r=document.getElementById('receipt-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:#000; color:#fff; border:none; padding:18px; margin-top:20px; font-weight:800; border-radius:6px; cursor:pointer">CLOSE</button>
+            <button id="receipt-torch-btn" type="button" title="Fener Aç" aria-pressed="false" style="width:44px; height:44px; background:#10b981; color:#fff; border:none; padding:0; margin-top:12px; font-weight:800; border-radius:50%; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
+                    <rect x="1.8" y="9" width="7" height="6" rx="1.2" transform="rotate(-18 5.3 12)" fill="#ffffff" stroke="none"/>
+                    <circle cx="7.2" cy="6.8" r="1.4" fill="#ffffff" />
+                    <polygon points="9,3 22,7 22,17 9,13" fill="#fde68a" stroke="#ffffff" stroke-width="0.9"/>
+                </svg>
+            </button>
+            <button id="receipt-close" onclick="(function(){var r=document.getElementById('receipt-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:#000; color:#fff; border:none; padding:18px; margin-top:12px; font-weight:800; border-radius:6px; cursor:pointer">CLOSE</button>
         </div>
     </div>
     <div id="warning-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:100; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(10px);">
@@ -1990,12 +1997,42 @@ window.addEventListener('resize', updateAllUnits);
 // Floating export button + PDF fill logic (uses assets/pdf_field_map.json)
 (function(){
     function normalize(name){ return (name||'').toString().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); }
+    function asciiFold(s){ if(!s) return ''; return String(s).replace(/[İIıiÇçĞğŞşÖöÜü]/g, function(c){ return ({'İ':'I','I':'I','ı':'i','i':'i','Ç':'C','ç':'c','Ğ':'G','ğ':'g','Ş':'S','ş':'s','Ö':'O','ö':'o','Ü':'U','ü':'u'})[c]||c; }); }
 
     async function loadMap(){
         try{
-            const r = await fetch('assets/pdf_field_map.json');
-            if(!r.ok) return {};
-            const data = await r.json();
+            // Load the canonical mapping (single source of truth)
+            let data = null;
+            try{
+                const r2 = await fetch('assets/pdf_calc_mapping.json');
+                if(r2.ok) data = await r2.json();
+            }catch(e){ data = null; }
+            if(!data) return {};
+            // If file uses new 'mappings' structure (objects with mappedTo/maxLen), normalize to legacy shape
+            try {
+                if (data && data.mappings && !data.fields) {
+                    const fieldsObj = {};
+                    const maxLenObj = {};
+                    const fixedObj = data.fixed || {};
+                    const pad6Arr = data.pad6 || [];
+                    const noFillArr = data.noFill || [];
+                    for (const k of Object.keys(data.mappings)) {
+                        const v = data.mappings[k];
+                        if (v && typeof v === 'object') {
+                            fieldsObj[k] = v.mappedTo || '';
+                            if (v.maxLen !== undefined) maxLenObj[k] = v.maxLen;
+                        } else {
+                            fieldsObj[k] = v;
+                        }
+                    }
+                    data.fields = fieldsObj;
+                    data.maxLen = Object.assign({}, data.maxLen || {}, maxLenObj);
+                    data.fixed = Object.assign({}, data.fixed || {}, fixedObj);
+                    data.pad6 = Array.isArray(data.pad6) && data.pad6.length ? data.pad6 : pad6Arr;
+                    data.noFill = Array.isArray(data.noFill) && data.noFill.length ? data.noFill : noFillArr;
+                }
+            } catch (e) {}
+
             // build normalized lookup tables for resilient matching
             const lookup = {};
             const fixedLookup = {};
@@ -2004,10 +2041,16 @@ window.addEventListener('resize', updateAllUnits);
 
             function addLookup(k, v){
                 if(k === undefined || k === null) return;
-                lookup[k] = v;
-                lookup[String(k).toLowerCase()] = v;
-                lookup[String(k).toUpperCase()] = v;
-                lookup[normalize(String(k))] = v;
+                const ks = String(k);
+                lookup[ks] = v;
+                lookup[ks.toLowerCase()] = v;
+                lookup[ks.toUpperCase()] = v;
+                lookup[normalize(ks)] = v;
+                // ascii-folded variants (Turkish chars -> ASCII)
+                const af = asciiFold(ks);
+                lookup[af] = v;
+                lookup[af.toLowerCase()] = v;
+                lookup[normalize(af)] = v;
             }
 
             if(data && data.fields){
@@ -2016,10 +2059,18 @@ window.addEventListener('resize', updateAllUnits);
             if(data && data.fixed){
                 for(const k of Object.keys(data.fixed)){
                     const v = data.fixed[k];
-                    fixedLookup[k] = v;
-                    fixedLookup[String(k).toLowerCase()] = v;
-                    fixedLookup[String(k).toUpperCase()] = v;
-                    fixedLookup[normalize(String(k))] = v;
+                    const ks = String(k);
+                    fixedLookup[ks] = v;
+                    fixedLookup[ks.toLowerCase()] = v;
+                    fixedLookup[ks.toUpperCase()] = v;
+                    fixedLookup[normalize(ks)] = v;
+                    // ascii-folded variants (Turkish chars -> ASCII) to improve matching
+                    try{
+                        const af = asciiFold(ks);
+                        fixedLookup[af] = v;
+                        fixedLookup[af.toLowerCase()] = v;
+                        fixedLookup[normalize(af)] = v;
+                    }catch(e){}
                 }
             }
             if(data && data.maxLen){
@@ -2033,10 +2084,30 @@ window.addEventListener('resize', updateAllUnits);
             }
             if(data && Array.isArray(data.pad6)){
                 for(const p of data.pad6){
-                    pad6Set.add(p);
-                    pad6Set.add(String(p).toLowerCase());
-                    pad6Set.add(String(p).toUpperCase());
-                    pad6Set.add(normalize(String(p)));
+                    const ps = String(p);
+                    pad6Set.add(ps);
+                    pad6Set.add(ps.toLowerCase());
+                    pad6Set.add(ps.toUpperCase());
+                    pad6Set.add(normalize(ps));
+                    const af = asciiFold(ps);
+                    pad6Set.add(af);
+                    pad6Set.add(af.toLowerCase());
+                    pad6Set.add(normalize(af));
+                }
+            }
+            // optional: fields to skip entirely (do not set any value)
+            const noFillSet = new Set();
+            if(data && Array.isArray(data.noFill)){
+                for(const p of data.noFill){
+                    const ps = String(p);
+                    noFillSet.add(ps);
+                    noFillSet.add(ps.toLowerCase());
+                    noFillSet.add(ps.toUpperCase());
+                    noFillSet.add(normalize(ps));
+                    const af = asciiFold(ps);
+                    noFillSet.add(af);
+                    noFillSet.add(af.toLowerCase());
+                    noFillSet.add(normalize(af));
                 }
             }
 
@@ -2044,6 +2115,7 @@ window.addEventListener('resize', updateAllUnits);
             data._fixedLookup = fixedLookup;
             data._maxLenLookup = maxLenLookup;
             data._pad6Set = pad6Set;
+            data._noFillSet = noFillSet;
 
             return data;
         }catch(e){ return {}; }
@@ -2055,24 +2127,42 @@ window.addEventListener('resize', updateAllUnits);
         if(key === '__day') return String(d.getDate()).padStart(2,'0');
         if(key === '__month') return String(d.getMonth()+1).padStart(2,'0');
         if(key === '__now') return d.toLocaleDateString('tr-TR');
+        if(key === '__time') return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
         return '';
     }
 
     async function resolveMappedValue(mapVal){
         if(!mapVal) return '';
         if(typeof mapVal === 'string' && mapVal.startsWith('__')){
-            const special = resolveSpecial(mapVal);
-            // special handling for registration: extract 3 chars after 'TC-'
+            // special token handling
+            // __registration: return registration (fallback to stored/local) processed
             if(mapVal === '__registration'){
+                const special = resolveSpecial(mapVal);
                 try{
                     const m = String(special || '').toUpperCase().match(/TC-(\w{3})/i);
                     if(m && m[1]) return m[1].toString();
-                    // fallback: if value contains characters, return last 3
                     const raw = String(special || '').replace(/[^A-Z0-9]/ig,'');
                     if(raw.length >= 3) return raw.slice(-3);
                     return raw;
                 }catch(e){ return special; }
             }
+
+            // __registration_from_url: only return registration if provided via URL param (cover page -> calc navigation)
+            if(mapVal === '__registration_from_url'){
+                const fromUrl = normalizeReg(REG_PARAM_RAW);
+                if(!fromUrl) return '';
+                // reuse resolveSpecial behavior for formatting
+                const special = resolveSpecial('__registration');
+                try{
+                    const m = String(special || '').toUpperCase().match(/TC-(\w{3})/i);
+                    if(m && m[1]) return m[1].toString();
+                    const raw = String(special || '').replace(/[^A-Z0-9]/ig,'');
+                    if(raw.length >= 3) return raw.slice(-3);
+                    return raw;
+                }catch(e){ return special; }
+            }
+
+            const special = resolveSpecial(mapVal);
             return special;
         }
         // try element by id or name
@@ -2142,9 +2232,85 @@ window.addEventListener('resize', updateAllUnits);
         }catch(e){}
     }
 
+    // Torch (fener) kontrolü: global state ve yardımcı fonksiyonlar
+    let _torchStream = null;
+    let _torchOn = false;
+
+    async function setTorch(on){
+        if(on === _torchOn) return;
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Tarayıcınız kamera/torch API desteğine sahip değil.');
+            return;
+        }
+        try{
+            if(on){
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+                const track = stream.getVideoTracks()[0];
+                const caps = track.getCapabilities ? track.getCapabilities() : {};
+                if(caps.torch){
+                    try{ await track.applyConstraints({ advanced: [{ torch: true }] }); _torchStream = stream; _torchOn = true; return; }catch(e){}
+                }
+                // Fallback: ImageCapture
+                try{
+                    if(window.ImageCapture){
+                        const ic = new ImageCapture(track);
+                        const pc = await ic.getPhotoCapabilities();
+                        if(pc && pc.fillLightMode && pc.fillLightMode.includes && pc.fillLightMode.includes('torch')){
+                            try{ await track.applyConstraints({ advanced: [{ torch: true }] }); _torchStream = stream; _torchOn = true; return; }catch(e){}
+                        }
+                    }
+                }catch(e){}
+                // Eğer buraya geldiyse torch desteklenmiyor
+                track.stop();
+                alert('Cihaz feneri desteklenmiyor veya erişilemedi.');
+            }else{
+                if(_torchStream){
+                    _torchStream.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
+                    _torchStream = null;
+                }
+                _torchOn = false;
+            }
+        }catch(e){
+            alert('Kamera erişimi reddedildi veya hata: ' + (e && e.message ? e.message : e));
+        }
+    }
+
+    async function toggleTorchAndSyncButtons(sourceBtn){
+        const ICON_OFF = 'assets/flashlight-off-svgrepo-com.svg';
+        const ICON_ON = 'assets/' + encodeURIComponent('flashlight-on-svgrepo-com (1).svg');
+        try{
+            sourceBtn.disabled = true;
+            await setTorch(!_torchOn);
+            const label = _torchOn ? 'Fener Kapat' : 'Fener Aç';
+            try{
+                sourceBtn.title = label;
+                sourceBtn.setAttribute('aria-pressed', String(_torchOn));
+                let img = sourceBtn.querySelector('img');
+                if(!img){ img = document.createElement('img'); img.style.width='18px'; img.style.height='18px'; img.alt = 'Torch'; sourceBtn.appendChild(img); }
+                img.src = _torchOn ? ICON_ON : ICON_OFF;
+            }catch(e){}
+            const other = document.getElementById('receipt-torch-btn');
+            if(other){
+                other.title = label; other.setAttribute('aria-pressed', String(_torchOn));
+                let oimg = other.querySelector('img');
+                if(!oimg){ oimg = document.createElement('img'); oimg.style.width='18px'; oimg.style.height='18px'; oimg.alt='Torch'; other.appendChild(oimg); }
+                oimg.src = _torchOn ? ICON_ON : ICON_OFF;
+                other.style.backgroundColor = _torchOn ? '#f59e0b' : '#10b981';
+            }
+            const pageBtn = document.getElementById('toggle-torch-btn');
+            if(pageBtn){
+                pageBtn.title = label; pageBtn.setAttribute('aria-pressed', String(_torchOn));
+                let pimg = pageBtn.querySelector('img');
+                if(!pimg){ pimg = document.createElement('img'); pimg.style.width='18px'; pimg.style.height='18px'; pimg.alt='Torch'; pageBtn.appendChild(pimg); }
+                pimg.src = _torchOn ? ICON_ON : ICON_OFF;
+                pageBtn.style.backgroundColor = _torchOn ? '#f59e0b' : '#0ea5a4';
+            }
+        }finally{ try{ sourceBtn.disabled = false; }catch(e){} }
+    }
+
     const btn = document.createElement('button');
     btn.id = 'export-pdf-btn';
-    btn.textContent = 'Fiş Yazdır';
+    btn.textContent = 'Formu Görüntüle';
     Object.assign(btn.style, {
         display: 'block', width: '100%', marginTop: '12px',
         background: '#10b981', color: '#fff', border: 'none', padding: '12px 14px', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', boxShadow: '0 6px 20px rgba(16,185,129,0.18)'
@@ -2156,18 +2322,32 @@ window.addEventListener('resize', updateAllUnits);
         document.body.appendChild(btn);
     }
 
+    // Page-level torch button removed — only modal torch button remains
+    // Eğer fiş modalındaki buton mevcutsa ona da dinleyici ekle
+    try{
+        const receiptTorchBtn = document.getElementById('receipt-torch-btn');
+        if(receiptTorchBtn){
+            // remove any inline SVG and add image icon
+            receiptTorchBtn.innerHTML = '';
+            const rimg = document.createElement('img'); rimg.src = ICON_OFF; rimg.style.width='18px'; rimg.style.height='18px'; rimg.alt='Fener'; receiptTorchBtn.appendChild(rimg);
+            receiptTorchBtn.addEventListener('click', async function(){ await toggleTorchAndSyncButtons(this); });
+        }
+    }catch(e){}
+
+    // (PDF scan removed — mapping now comes from assets/pdf_calc_mapping.json)
+
     btn.addEventListener('click', async function(){
         btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
         try{
             const map = await loadMap();
-            // Try cleaned updated template first (if we produced it), then updated template, then original
-            let res = await fetch('assets/fuel-slip-blank-u-clean.pdf');
-            if(!res.ok){
-                res = await fetch('assets/fuel-slip-blank-u.pdf');
-                if(!res.ok){
-                    res = await fetch('assets/fuel-slip-blank.pdf');
-                }
-            }
+            // Load single PDF template (avoid unnecessary 404 requests)
+            // Use the new blank template (u suffix) if available, otherwise fallback
+            let templateUrl = 'assets/fuel-slip-blank-u.pdf';
+            try{
+                const chk = await fetch(templateUrl, { method: 'HEAD' });
+                if(!chk.ok) templateUrl = 'assets/fuel-slip-blank.pdf';
+            }catch(e){ templateUrl = 'assets/fuel-slip-blank.pdf'; }
+            const res = await fetch(templateUrl);
             if(!res.ok) throw new Error('PDF yüklenemedi');
             const arrayBuffer = await res.arrayBuffer();
             const { PDFDocument } = PDFLib;
@@ -2253,6 +2433,20 @@ window.addEventListener('resize', updateAllUnits);
                                 textWidth = usedFont.widthOfTextAtSize ? usedFont.widthOfTextAtSize(finalText, fontSize) : (finalText.length * fontSize * 0.5);
                             }
                         }catch(e){ /* ignore */ }
+                        // Heuristic: if still not found, try substring/normalized matches between PDF field name and fixed keys
+                        try{
+                            if((fixedVal === null || fixedVal === undefined) && map && map._fixedLookup){
+                                const lname = normalize(String(name || ''));
+                                for(const fk of Object.keys(map._fixedLookup)){
+                                    const nf = normalize(String(fk || ''));
+                                    const afk = (typeof asciiFold === 'function') ? normalize(asciiFold(String(fk || ''))) : nf;
+                                    if(nf === lname || afk === lname || lname.indexOf(nf) !== -1 || nf.indexOf(lname) !== -1){
+                                        fixedVal = map._fixedLookup[fk];
+                                        break;
+                                    }
+                                }
+                            }
+                        }catch(e){ /* ignore */ }
                         // center text horizontally and vertically
                         const drawX = llx + Math.max(2, (boxW - textWidth) / 2);
                         const drawY = lly + (boxH - fontSize) / 2;
@@ -2262,12 +2456,54 @@ window.addEventListener('resize', updateAllUnits);
                     }catch(e){ return false; }
                 }
 
+            // Helper: robust fixed lookup for PDF field names (check many normalized variants)
+            function getFixedForField(name, map){
+                if(!map || !map._fixedLookup) return null;
+                const candidates = [];
+                try{
+                    const s = String(name || '');
+                    const n = normalize(s);
+                    const af = (typeof asciiFold === 'function') ? asciiFold(s) : s;
+                    const naf = (typeof asciiFold === 'function') ? normalize(asciiFold(s)) : normalize(s);
+                    // raw forms
+                    candidates.push(s);
+                    candidates.push(s.toLowerCase());
+                    candidates.push(s.toUpperCase());
+                    // normalized with underscores
+                    candidates.push(n);
+                    // normalized without underscores (remove underscores/spaces)
+                    candidates.push(n.replace(/_/g,''));
+                    // space-removed/raw without spaces
+                    candidates.push(s.replace(/\s+/g,''));
+                    // ascii-folded variants
+                    candidates.push(af);
+                    candidates.push(af.toLowerCase());
+                    candidates.push(af.toUpperCase());
+                    candidates.push(naf);
+                    candidates.push(naf.replace(/_/g,''));
+                }catch(e){ }
+                for(const c of candidates){
+                    if(c === undefined || c === null) continue;
+                    if(map._fixedLookup[c] !== undefined) return map._fixedLookup[c];
+                }
+                return null;
+            }
+
             for(const f of fields){
+                // dış kapsamda kullanılacak: temp alanı tespiti
+                let isTempField = false;
                 try{
                     const name = f.getName();
                     const mapped = (map && map._lookup) ? (map._lookup[name] || map._lookup[normalize(name)] || null) : (map[name] || map[normalize(name)] || map[name.toUpperCase()] || null);
                     let value = '';
-                    const fixedVal = (map && map._fixedLookup) ? (map._fixedLookup[name] || map._fixedLookup[normalize(name)] || null) : (map && map.fixed ? (map.fixed[name] || map.fixed[normalize(name)] || map.fixed[name.toUpperCase()] || null) : null);
+                    const fixedVal = getFixedForField(f.getName && typeof f.getName === 'function' ? f.getName() : f.name, map) || (map && map.fixed ? (map.fixed[f.getName && typeof f.getName === 'function' ? f.getName() : f.name] || null) : null);
+                    // If this field is configured to be skipped, do not set any value
+                    try{
+                        const noFillSet = (map && map._noFillSet) ? map._noFillSet : new Set();
+                        if(noFillSet.has(name) || noFillSet.has(normalize(name)) || noFillSet.has(String(name).toUpperCase())){
+                            continue;
+                        }
+                    }catch(e){}
                         if(fixedVal !== null && fixedVal !== undefined){
                         // If field has a fixed mapping (like 'u' or 'LT'), write it directly and skip further formatting
                         const fixedStr = String(fixedVal);
@@ -2275,6 +2511,14 @@ window.addEventListener('resize', updateAllUnits);
                         try{ if(typeof f.setText === 'function') { f.setText(fixedStr); makeFieldBackgroundTransparent(f); continue; } }catch(e){}
                     } else if(mapped){
                         value = await resolveMappedValue(mapped);
+                        // If this mapping points to the important total_actual field, prefer reading the
+                        // page input directly to avoid any resolution edge-cases.
+                        try{
+                            if(String(mapped).toLowerCase() === 'total_actual'){
+                                const el = document.getElementById('total_actual');
+                                if(el) value = (el.value !== undefined) ? String(el.value) : (el.textContent || el.innerText || value);
+                            }
+                        }catch(e){ /* ignore */ }
                     } else {
                         // fallback: try element with same name/id
                         let el = document.getElementById(name) || document.querySelector('[name="'+name+'"]') || document.getElementById(normalize(name));
@@ -2286,14 +2530,32 @@ window.addEventListener('resize', updateAllUnits);
 
                     // Debug: log mapping resolution for this field
                     try{ console.debug('[pdf-fill] field=', name, 'mapped=', mapped, 'fixedVal=', fixedVal, 'valueRaw=', value, 'needsPad6=', needsPad6); }catch(e){}
+                    // Extra debug for the important "ikmalden önce KALAN YAKIT kg" -> total_actual mapping
+                    try{
+                        if(String(name).toLowerCase().includes('ikmalden') && String(mapped).toLowerCase() === 'total_actual'){
+                            console.info('[pdf-fill-debug] target field=', name, 'resolved total_actual=', value);
+                        }
+                    }catch(e){}
 
                     // Ensure every field is set; use '-' as fallback for empty values
                     let setVal = (value !== undefined && value !== null && String(value).toString().trim() !== '') ? String(value) : '-';
 
                     // Special formatting for SICAKLIK C: first char is sign (+/-), then two digits (pad with 0 if needed)
                     try {
-                        if((name && String(name).toUpperCase() === 'SICAKLIK C') || normalize(name) === normalize('SICAKLIK C')){
-                            // Use only temp_c (ignore any temp_f). Format: sign + two digits.
+                        // Apply temperature formatting when the target is our temp field or PDF field indicates temperature.
+                        isTempField = (String(mapped || '').toLowerCase() === 'temp_c') ||
+                                            (name && (String(name).toUpperCase() === 'SICAKLIK C' || String(name).toUpperCase() === 'TEMP C')) ||
+                                            normalize(name) === normalize('SICAKLIK C') || normalize(name) === normalize('temp c') ||
+                                            // also check if this PDF field maps (via nameToKey) to a mapping entry whose mappedTo is temp_c
+                                            (map && map._nameToKey && (function(){
+                                                try{
+                                                    const orig = map._nameToKey[name] || map._nameToKey[normalize(name)] || map._nameToKey[String(name).toLowerCase()] || map._nameToKey[String(name).toUpperCase()] || null;
+                                                    if(!orig) return false;
+                                                    const entry = map.mappings && map.mappings[orig];
+                                                    return entry && (String(entry.mappedTo || '').toLowerCase() === 'temp_c');
+                                                }catch(e){ return false; }
+                                            })());
+                        if(isTempField){
                             const tempCEl = document.getElementById('temp_c');
                             let cVal = null;
                             try{
@@ -2308,8 +2570,10 @@ window.addEventListener('resize', updateAllUnits);
                                 setVal = '+00';
                             } else {
                                 const sign = (cVal < 0) ? '-' : '+';
-                                const absn = Math.abs(Math.round(cVal));
-                                const digits = String(absn).padStart(2, '0').slice(-2);
+                                let digits = String(Math.abs(Math.round(cVal)));
+                                if (digits.length > 2) digits = digits.slice(-2);
+                                if (digits.length === 1) digits = digits + ' ';
+                                else if (digits.length === 0) digits = '  ';
                                 setVal = sign + digits;
                             }
                         }
@@ -2326,7 +2590,8 @@ window.addEventListener('resize', updateAllUnits);
                     const forcePad = forceNumericFields.includes(String(mappedKey)) || (String(normalize(name)).includes('ikmal')) || (String(normalize(name)).includes('supply')) || (String(normalize(name)).includes('block'));
 
                     // If this field requires 6-char numeric formatting: draw each character into separate box
-                    if(needsPad6 || forcePad){
+                    // But never apply pad6 rendering to the temperature field (we handle it as sign+chars)
+                    if((needsPad6 || forcePad) && !(typeof isTempField !== 'undefined' && isTempField)){
                         try{
                             // prepare chars: only digits, right-aligned into fieldLen slots; empty slots become space
                             let raw = String(value || '');
@@ -2337,6 +2602,8 @@ window.addEventListener('resize', updateAllUnits);
                             if(digits.length > fieldLen) digits = digits.slice(-fieldLen);
                             // pad with plain spaces to required width
                             digits = digits.padStart(fieldLen, ' ');
+                            // If there are no digits at all, show a single '0' in the rightmost box
+                            if(digits.trim() === '') digits = '0'.padStart(fieldLen, ' ');
 
                             // attempt to get widget rectangle using pdf-lib internals
                             const acroField = f.acroField;
@@ -2411,9 +2678,45 @@ window.addEventListener('resize', updateAllUnits);
                             }
 
                             // fallback: try to draw into widget rect; if not possible, set the field value
-                            try{ const drawn = await drawTextIntoWidget(f, digits); if(drawn){ makeFieldBackgroundTransparent(f); continue; } }catch(e){}
-                            try{ form.getTextField(name).setText(digits); makeFieldBackgroundTransparent(f); continue; }catch(e){}
-                            try{ if(typeof f.setText === 'function') { f.setText(digits); makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                            try{
+                                const drawn = await drawTextIntoWidget(f, digits);
+                                console.debug('[pdf-fill-debug] drawTextIntoWidget', name, 'drawn=', drawn);
+                                if(drawn){ makeFieldBackgroundTransparent(f); continue; }
+                            }catch(e){ console.error('[pdf-fill-error] drawTextIntoWidget', name, e); }
+                            try{
+                                const tf = form.getTextField(name);
+                                if(tf){
+                                    try{ tf.setText(digits); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] form.getTextField.setText OK', name, digits); continue; }
+                                    catch(e){
+                                        console.error('[pdf-fill-error] form.getTextField.setText', name, e);
+                                        // If error indicates maxLength, try to shorten value and retry
+                                        try{
+                                            const m = String(e && e.message || '').match(/maxLength=(\d+)/i);
+                                            if(m && m[1]){
+                                                const allowed = Number(m[1]);
+                                                const trimmed = String(digits).slice(-allowed);
+                                                tf.setText(trimmed); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] form.getTextField.setText RETRY trimmed', name, trimmed); continue;
+                                            }
+                                        }catch(e2){ console.error('[pdf-fill-error] retry setText', name, e2); }
+                                    }
+                                }
+                            }catch(e){ console.error('[pdf-fill-error] form.getTextField.setText', name, e); }
+                            try{
+                                if(typeof f.setText === 'function') {
+                                    try{ f.setText(digits); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] field.setText OK', name, digits); continue; }
+                                    catch(e){
+                                        console.error('[pdf-fill-error] field.setText', name, e);
+                                        try{
+                                            const m = String(e && e.message || '').match(/maxLength=(\d+)/i);
+                                            if(m && m[1]){
+                                                const allowed = Number(m[1]);
+                                                const trimmed = String(digits).slice(-allowed);
+                                                f.setText(trimmed); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] field.setText RETRY trimmed', name, trimmed); continue;
+                                            }
+                                        }catch(e2){ console.error('[pdf-fill-error] retry field.setText', name, e2); }
+                                    }
+                                }
+                            }catch(e){ console.error('[pdf-fill-error] field.setText', name, e); }
                         }catch(e){ /* fallback to simple setText below */ }
                     }
 
@@ -2427,6 +2730,13 @@ window.addEventListener('resize', updateAllUnits);
                                 let cleaned = raw.toString().trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
                                 if(cleaned.length > fieldMaxLen) cleaned = cleaned.slice(-fieldMaxLen);
                                 finalVal = cleaned;
+                            }
+                            // Special-case: temperature field (SICAKLIK C) -> keep leading sign and pad on the right
+                            else if((typeof isTempField !== 'undefined' && isTempField) || (name && String(name).toUpperCase() === 'SICAKLIK C') || normalize(name) === normalize('SICAKLIK C')){
+                                let out = raw;
+                                if(out.length > fieldMaxLen) out = out.slice(0, fieldMaxLen);
+                                else out = out.padEnd(fieldMaxLen, ' ');
+                                finalVal = out;
                             } else {
                                 // remove punctuation for numeric/text and then decide
                                 const cleanedRaw = raw.replace(/[.,]/g,'').trim();
@@ -2444,20 +2754,74 @@ window.addEventListener('resize', updateAllUnits);
                         }
                     }catch(e){ finalVal = setVal; }
 
-                    try{ const drawn = await drawTextIntoWidget(f, finalVal); if(drawn){ makeFieldBackgroundTransparent(f); continue; } }catch(e){}
-                    try{ form.getTextField(name).setText(finalVal); makeFieldBackgroundTransparent(f); continue; }catch(e){}
-                    try{ if(typeof f.setText === 'function') { f.setText(finalVal); makeFieldBackgroundTransparent(f); } }catch(e){}
+                    try{
+                        const drawn = await drawTextIntoWidget(f, finalVal);
+                        console.debug('[pdf-fill-debug] drawTextIntoWidget(final)', name, 'drawn=', drawn);
+                        if(drawn){ makeFieldBackgroundTransparent(f); continue; }
+                    }catch(e){ console.error('[pdf-fill-error] drawTextIntoWidget(final)', name, e); }
+                    try{
+                        const tf2 = form.getTextField(name);
+                        if(tf2){
+                            try{ tf2.setText(finalVal); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] form.getTextField.setText(final) OK', name, finalVal); continue; }
+                            catch(e){
+                                console.error('[pdf-fill-error] form.getTextField.setText(final)', name, e);
+                                try{
+                                    const m = String(e && e.message || '').match(/maxLength=(\d+)/i);
+                                    if(m && m[1]){
+                                        const allowed = Number(m[1]);
+                                        const trimmed = String(finalVal).slice(-allowed);
+                                        tf2.setText(trimmed); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] form.getTextField.setText(final) RETRY trimmed', name, trimmed); continue;
+                                    }
+                                }catch(e2){ console.error('[pdf-fill-error] retry form.setText(final)', name, e2); }
+                            }
+                        }
+                    }catch(e){ console.error('[pdf-fill-error] form.getTextField.setText(final)', name, e); }
+                    try{
+                        if(typeof f.setText === 'function') {
+                            try{ f.setText(finalVal); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] field.setText(final) OK', name, finalVal); }
+                            catch(e){
+                                console.error('[pdf-fill-error] field.setText(final)', name, e);
+                                try{
+                                    const m = String(e && e.message || '').match(/maxLength=(\d+)/i);
+                                    if(m && m[1]){
+                                        const allowed = Number(m[1]);
+                                        const trimmed = String(finalVal).slice(-allowed);
+                                        f.setText(trimmed); makeFieldBackgroundTransparent(f); console.debug('[pdf-fill-debug] field.setText(final) RETRY trimmed', name, trimmed);
+                                    }
+                                }catch(e2){ console.error('[pdf-fill-error] retry field.setText(final)', name, e2); }
+                            }
+                        }
+                    }catch(e){ console.error('[pdf-fill-error] field.setText(final)', name, e); }
                 }catch(e){ /* ignore per-field errors */ }
             }
 
-            try{ form.flatten(); }catch(e){}
+                    try{
+                        // Ensure field appearances are updated so values are visible in PDF viewers
+                        try{ if(typeof form.updateFieldAppearances === 'function') form.updateFieldAppearances(embeddedFont || helv); }catch(e){}
+                        // Fallback: set NeedAppearances flag on AcroForm for viewers that respect it
+                        try{
+                            const root = pdfDoc.context.lookup(pdfDoc.context.trailer.get(PDFLib.PDFName.of('Root')));
+                            const ac = root && root.get ? root.get(PDFLib.PDFName.of('AcroForm')) : null;
+                            if(ac && ac.set){
+                                try{ ac.set(PDFLib.PDFName.of('NeedAppearances'), pdfDoc.context.obj(true)); }catch(e){}
+                            }
+                        }catch(e){}
+                        try{ form.flatten(); }catch(e){}
+                    }catch(e){}
 
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], {type: 'application/pdf'});
+            // Show PDF in modal iframe instead of forcing download
+            try { if (_lastReceiptBlobUrl) { try { URL.revokeObjectURL(_lastReceiptBlobUrl); } catch(e){} } } catch(e){}
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'fuel-slip-filled.pdf'; document.body.appendChild(a); a.click(); a.remove();
-            URL.revokeObjectURL(url);
-            btn.textContent = 'Fiş Yazdır';
+            _lastReceiptBlobUrl = url;
+            const iframe = document.getElementById('receipt-iframe');
+            const details = document.getElementById('r-details');
+            if (iframe) { iframe.src = _lastReceiptBlobUrl; iframe.style.display = 'block'; }
+            if (details) details.style.display = 'none';
+            const receiptModalEl = document.getElementById('receipt-modal');
+            if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
+            btn.textContent = 'Fiş Görüntüle';
         }catch(err){
             console.error('PDF oluşturulurken hata:', err);
             btn.textContent = 'Fiş Yazdır';
@@ -2465,5 +2829,20 @@ window.addEventListener('resize', updateAllUnits);
     });
 })();
 </script>
+    <script>
+    // Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+    }
+
+    window.__unregisterSW = async function() {
+        if (!('serviceWorker' in navigator)) return console.log('ServiceWorker desteklenmiyor');
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        console.log('Service worker kayıtları kaldırıldı:', regs.map(r => r.scope));
+    };
+    </script>
 </body>
 </html>
