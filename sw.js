@@ -11,6 +11,7 @@ const urlsToCache = [
   './assets/airbus.svg',
   './assets/boeing.svg',
   './assets/logo-192.png',
+  './assets/logo-192.png',
   './assets/logo-512.png'
 ];
 

@@ -1,0 +1,42 @@
+{
+  "source": "pruned_from_pdf",
+  "mappings": {
+    "block1": { "mappedTo": "block_fuel", "maxLen": 6 },
+    "block2": { "mappedTo": "block_fuel", "maxLen": 6 },
+    "ikmalden önce kalan kg1": { "mappedTo": "total_actual", "maxLen": 6 },
+    "ikmalden önce kalan kg2": { "mappedTo": "total_actual", "maxLen": 6 },
+    "ikmal kg1": { "mappedTo": "res_kg", "maxLen": 6 },
+    "ikmal edilen lt2": { "mappedTo": "res_lit", "maxLen": 6 },
+    "ikmal lt1": { "mappedTo": "res_lit", "maxLen": 6 },
+    "temp c": { "mappedTo": "temp_c", "maxLen": 3 },
+    "ay": { "mappedTo": "__month", "maxLen": 2 },
+    "gün": { "mappedTo": "__day", "maxLen": 2 },
+    "tail code": { "mappedTo": "__registration_from_url", "maxLen": 3 },
+    "station1": { "mappedTo": "active-fleet", "maxLen": 3 },
+    "station2": { "mappedTo": "r-details", "maxLen": 3 },
+    "density": { "mappedTo": "density", "maxLen": 3 },
+    "LT": { "mappedTo": "lt", "maxLen": 2 },
+    "clock": { "mappedTo": "__time", "maxLen": 5 }
+  },
+  "fixed": {
+    "u": "u",
+    "U": "u",
+    "LT": "LT",
+    "fueltype1": "1"
+  },
+  "pad6": [
+    "block1",
+    "block2",
+    "ikmalden önce kalan kg1",
+    "ikmalden önce kalan kg2",
+    "ikmal kg1",
+    "ikmal edilen lt2",
+    "ikmal lt1"
+  ],
+  "noFill": [
+    "station1",
+    "station2",
+    "signiture area1"
+  ],
+  "notes": "Pruned to actual PDF AcroForm fields on 2026-01-11."
+}

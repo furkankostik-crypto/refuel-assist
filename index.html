@@ -181,28 +181,50 @@
         .brand-card .brand-name { margin: 0; font-size: 14px; font-weight: 900; }
         .brand-card .brand-sub { margin-top: 2px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; color: #94a3b8; }
         .brand-card-wrap .reveal { margin-top: 12px; }
-        .btn-primary {
+        /* Daha belirgin buton stilleri */
+        .btn, .btn-primary {
             width: 100%;
             margin-top: 14px;
-            background: rgba(56,189,248,0.18);
-            border: 2px solid rgba(56,189,248,0.28);
-            color: white;
-            padding: 10px 0;
-            border-radius: 14px;
-            font-size: 15px;
+            background: linear-gradient(90deg, rgba(var(--primary-rgb),1) 0%, rgba(6,182,212,1) 100%);
+            border: none;
+            color: #04212a;
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 16px;
             font-weight: 900;
-            letter-spacing: 0.8px;
+            letter-spacing: 0.9px;
             cursor: pointer;
-            min-height: 36px;
+            min-height: 48px;
             user-select: none;
             touch-action: manipulation;
-            transition: background 0.2s, border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 10px 30px rgba(56,189,248,0.18), 0 2px 6px rgba(2,6,23,0.45);
+            transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms, filter 160ms;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            text-transform: uppercase;
         }
-        .btn-primary:active {
-            background: rgba(56,189,248,0.28);
-            border-color: var(--primary);
+        .btn:hover, .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 40px rgba(56,189,248,0.22), 0 6px 18px rgba(2,6,23,0.5);
+            filter: saturate(1.08);
         }
-        .btn-primary:disabled { opacity: 0.30; cursor: not-allowed; }
+        .btn:active, .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 18px rgba(2,6,23,0.55);
+            filter: none;
+        }
+        .btn:focus-visible, .btn-primary:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 6px rgba(56,189,248,0.14);
+        }
+        .btn:disabled, .btn-primary:disabled {
+            opacity: 0.36;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         .divider-note {
             margin: 6px 0 0 0;
             text-align: center;
@@ -379,6 +401,7 @@
 <body>
     <div class="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); overflow-y: auto; height: 100dvh; min-height: 100dvh;">
         <div class="hero-section" style="margin-bottom: 18px; position: relative; display: flex; flex-direction: row; align-items: flex-start; justify-content: center; gap: 0; min-height:180px;">
+            <!-- MEL hesaplama butonu removed here; will be placed next to the title -->
             <div style="position:fixed;top:calc(12px + env(safe-area-inset-top,12px));left:calc(12px + env(safe-area-inset-left,12px));z-index:9999;margin:0;">
                 <div class="lang-toggle" role="group" aria-label="Language" style="margin:0;">
                     <button id="lang-tr" type="button" aria-pressed="false" aria-label="Türkçe">TR</button>
@@ -444,11 +467,18 @@
                     }
                     </script>
             </div>
-            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; width:100%;">
-                <img class="app-logo" src="assets/logo-512.png" alt="Refuel Assist" style="width:96px;max-width:96px;margin-top:18px;">
-                <div class="logo-text" style="font-size:26px;"><span class="bold">REFUEL</span><span class="light">ASSIST</span></div>
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; width:100%; position:relative;">
+                <img class="app-logo" src="assets/logo-192.png" alt="Refuel Assist" style="width:96px;max-width:96px;margin-top:18px;">
+                <!-- Orjinal başlık/alt açıklama akışı korunuyor -->
+                <div class="logo-text" style="font-size:26px;margin:8px 0 0 0;"><span class="bold">REFUEL</span><span class="light">ASSIST</span></div>
                 <div id="subtitle" class="logo-subtitle" style="font-size:10px;">Flight Operations Support</div>
                 <div class="logo-line" style="width:120px;margin:12px auto;"></div>
+
+                <!-- MEL butonu akışı bozmayacak şekilde absolute konumlandırma ile eklenir -->
+                <button id="mel-btn" title="MEL Hesap Makinesi" aria-label="MEL Hesap Makinesi" style="position:absolute;left:8px;top:32px;width:56px;height:56px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(30,41,59,0.85);color:var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px;cursor:pointer;">
+                    <span style="font-weight:900;font-size:12px;letter-spacing:0.6px;color:#cfeeff;line-height:1;">MEL</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.2" fill="none" opacity="0.12"/><rect x="7" y="7" width="10" height="3" rx="0.6" fill="currentColor" opacity="0.98"/><rect x="7" y="12" width="3" height="3" rx="0.6" fill="currentColor" opacity="0.98"/><rect x="11" y="12" width="6" height="3" rx="0.6" fill="currentColor" opacity="0.98"/></svg>
+                </button>
             </div>
         </div>
 
@@ -2252,7 +2282,7 @@
                             if (tailSummary) {
                                 const familyTitle = escapeHtml((normalizeFamilyName(hit.family) || '') + (hit.model ? (' ' + String(hit.model).toUpperCase()) : ''));
                                 // choose logo based on OEM
-                                let logoSrc = 'assets/logo-192.png';
+                                let logoSrc = 'assets/logo.svg';
                                 try {
                                     const oem = String(hit.oem || '').toUpperCase();
                                     if (oem === 'AIRBUS') logoSrc = 'assets/airbus.svg';
@@ -2629,6 +2659,75 @@
                 } catch (e) {}
             });
     })();
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+        var melBtn = document.getElementById('mel-btn');
+        var logoContainer = document.querySelector('.app-logo')?.parentElement;
+        function alignMelButton(){
+            try {
+                if (!melBtn || !logoContainer) return;
+                var title = document.querySelector('.logo-text');
+                var subtitle = document.getElementById('subtitle');
+                var rectTitle = title ? title.getBoundingClientRect() : null;
+                var rectSub = subtitle ? subtitle.getBoundingClientRect() : null;
+                var containerRect = logoContainer.getBoundingClientRect();
+                var btnRect = melBtn.getBoundingClientRect();
+                var btnH = btnRect.height || 56;
+                var btnW = btnRect.width || 56;
+                // compute combined block center (title + subtitle). If subtitle missing, use title center.
+                var topEdge = rectTitle ? rectTitle.top : containerRect.top;
+                var bottomEdge = rectSub ? rectSub.bottom : (rectTitle ? rectTitle.bottom : containerRect.bottom);
+                var centerY = (topEdge + bottomEdge) / 2;
+                var offsetTop = Math.round(centerY - containerRect.top - (btnH / 2));
+                // Place button to the left of the logo container (outside) so it does not overlay title/subtitle.
+                var gap = 20; // px gap between logo container and button (increased for clearer separation)
+                // Set left negative inside container so it sits to the left
+                var leftInside = - (btnW + gap);
+                // If container is too close to the viewport left edge, clamp to inside with minimal padding
+                var viewportLeft = containerRect.left;
+                if (viewportLeft < (btnW + gap + 8)) {
+                    // not enough space on left: place button above-left of the logo container
+                    // so it stays visually on the left without overlaying title/subtitle
+                    var aboveGap = 8;
+                    var aboveTop = - (btnH + aboveGap);
+                    melBtn.style.top = aboveTop + 'px';
+                    melBtn.style.left = '8px';
+                    melBtn.style.boxShadow = '0 6px 18px rgba(2,6,23,0.6)';
+                } else {
+                    melBtn.style.top = offsetTop + 'px';
+                    melBtn.style.left = leftInside + 'px';
+                }
+            } catch (e) {}
+        }
+
+        if (melBtn) {
+            melBtn.addEventListener('click', function(){
+                window.location.href = 'mel-calc.html';
+            });
+            // Align now and on resize / font load
+            setTimeout(alignMelButton, 20);
+            window.addEventListener('resize', alignMelButton);
+            // Re-align after fonts or images load
+            window.addEventListener('load', function(){ setTimeout(alignMelButton, 50); });
+        }
+    });
+    </script>
+    <script>
+    // Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.error('SW registration failed:', err));
+    }
+
+    // Konsolda çalıştırmak için: window.__unregisterSW()
+    window.__unregisterSW = async function() {
+        if (!('serviceWorker' in navigator)) return console.log('ServiceWorker desteklenmiyor');
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
+        console.log('Service worker kayıtları kaldırıldı:', regs.map(r => r.scope));
+    };
     </script>
 </body>
 </html>
