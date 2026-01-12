@@ -508,7 +508,7 @@
                 <div id="tail-title" class="selector-title" style="font-size:12px;letter-spacing:1.5px;margin-bottom:4px;">KUYRUK KODU</div>
                 <div class="selector-row" style="justify-content:center;align-items:center;gap:0; width:100%; min-height:56px;">
                     <div class="tail-input-wrap" style="width:220px;display:flex;justify-content:space-between;align-items:center;margin:0 auto;box-sizing:border-box;">
-                        <input id="tail-input" class="selector-input" type="text" inputmode="text" maxlength="6" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="TC-___" aria-label="Tail Code" style="height:56px;line-height:normal;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-weight:800;letter-spacing:3px;text-transform:uppercase;box-sizing:border-box; width:180px; text-align:center; display:block;" />
+                        <input id="tail-input" class="selector-input" type="text" inputmode="text" maxlength="6" autocapitalize="characters" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="TC-___" aria-label="Tail Code" enterkeyhint="go" style="height:56px;line-height:normal;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;font-weight:800;letter-spacing:3px;text-transform:uppercase;box-sizing:border-box; width:180px; text-align:center; display:block;" />
                         <span id="tail-check" style="display:none; font-size:22px; color:#22c55e; vertical-align:middle; position:static; transform:none; width:auto; height:auto; right:auto; top:auto; z-index:auto; align-items:center; justify-content:center; transition:opacity 0.12s, transform 0.12s; margin-left:8px;">✔</span>
                     </div>
                 </div>
@@ -736,6 +736,7 @@
                 document.getElementById('guide-modal').style.display='flex';
             };
             document.body.appendChild(guideBtn);
+            
         }
         var guideModal = document.getElementById('guide-modal');
         if(guideModal){
@@ -2224,6 +2225,11 @@
             if (tailHint) tailHint.innerHTML = '';
             if (goBtn) { goBtn.style.display = 'block'; goBtn.classList.remove('fade-hidden'); goBtn.classList.remove('is-hidden'); goBtn.disabled = false; }
 
+            // Ensure the go button is visible even when mobile virtual keyboard is open.
+            // Use a helper that measures the visual viewport (if available) and shifts the
+            // tail panel upward rather than blurring/focusing elements which may hide the keyboard.
+            try { window.setTimeout(function(){ ensureGoVisible(); }, 260); } catch(e) {}
+
             // hide previous summary while loading (use direct styles to avoid class/display conflicts)
             if (tailSummary) { tailSummary.style.display = 'none'; tailSummary.classList.remove('fade-hidden'); tailSummary.classList.remove('is-hidden'); tailSummary.innerHTML = ''; }
             // hide manual-select now that we have a model
@@ -2314,6 +2320,49 @@
 
         let tailDebounce = null;
         const tailInput = document.getElementById('tail-input');
+    
+        // Helper: keep `go-btn` visible when virtual keyboard reduces viewport height.
+        function ensureGoVisible() {
+            try {
+                const gb = document.getElementById('go-btn');
+                const panel = document.getElementById('tail-panel');
+                if (!gb || !panel) return;
+                const rect = gb.getBoundingClientRect();
+                const vv = window.visualViewport;
+                const viewportHeight = vv ? vv.height : window.innerHeight;
+                const overlap = rect.bottom - viewportHeight;
+                if (overlap > 0) {
+                    const shift = Math.min(Math.ceil(overlap + 16), 360);
+                    panel.style.transition = 'transform .28s ease';
+                    panel.style.transform = 'translateY(-' + shift + 'px)';
+                    panel.dataset.kbShift = String(shift);
+                } else {
+                    if (panel.dataset.kbShift) {
+                        panel.style.transition = 'transform .22s ease';
+                        panel.style.transform = '';
+                        panel.dataset.kbShift = '';
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // Restore panel position when input blurs or tail info is hidden
+        function restoreTailPanelPosition() {
+            try {
+                const panel = document.getElementById('tail-panel');
+                if (panel && panel.dataset.kbShift) {
+                    panel.style.transition = 'transform .22s ease';
+                    panel.style.transform = '';
+                    panel.dataset.kbShift = '';
+                }
+            } catch (e) {}
+        }
+
+        // If visualViewport exists, keep adjusting while keyboard appears/changes
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', ensureGoVisible);
+            window.visualViewport.addEventListener('scroll', ensureGoVisible);
+        }
         if (tailInput) {
             // Init fixed prefix
             tailInput.value = 'TC-';
@@ -2363,6 +2412,23 @@
             if (!tailInput) return;
             const s = tailInput.selectionStart ?? 0;
             const ePos = tailInput.selectionEnd ?? 0;
+            // If virtual keyboard sends a line-break insertion, treat it as submit/go
+            if (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph') {
+                try {
+                    e.preventDefault();
+                } catch (ex) {}
+                enforceTailInput();
+                applyTailLookup(tailInput.value);
+                window.setTimeout(function(){
+                    try {
+                        const gb = document.getElementById('go-btn');
+                        if (gb && gb.style.display !== 'none' && !gb.disabled) {
+                            try { gb.click(); } catch(e) { /* ignore */ }
+                        }
+                    } catch (e) {}
+                }, 320);
+                return;
+            }
             if (e.inputType === 'deleteContentBackward' && s <= 3 && ePos <= 3) {
                 e.preventDefault();
                 lockTailCaret(tailInput);
@@ -2527,7 +2593,25 @@
                 e.preventDefault();
                 enforceTailInput();
                 applyTailLookup(tailInput.value);
+                // On Enter key, attempt to activate go button (navigate).
+                // Use a short delay to allow applyTailLookup debounce to complete.
+                window.setTimeout(function(){
+                    try {
+                        const gb = document.getElementById('go-btn');
+                        if (gb && gb.style.display !== 'none' && !gb.disabled) {
+                            try { gb.click(); } catch(e) { /* ignore */ }
+                        } else {
+                            // If button not yet visible, ensure it's scrolled into view
+                            try { ensureGoVisible(); } catch(e) {}
+                        }
+                    } catch (e) {}
+                }, 320);
             }
+        });
+
+        tailInput?.addEventListener('blur', () => {
+            // restore any temporary shift after brief delay (allow click to proceed)
+            window.setTimeout(restoreTailPanelPosition, 250);
         });
 
         // Debug helper: call from console to inspect current selection and computed tankKey
@@ -2716,9 +2800,22 @@
     <script>
     // Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
-            .then(reg => console.log('SW registered:', reg.scope))
+        // Diagnostic: try fetching sw.js to show HTTP status in DevTools
+        try { fetch('./sw.js', { cache: 'no-store' })
+            .then(res => console.log('sw.js fetch status:', res.status, res.headers.get('content-type')))
+            .catch(err => console.error('sw.js fetch failed:', err));
+        } catch (e) {}
+
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW registered:', reg.scope || ''))
             .catch(err => console.error('SW registration failed:', err));
+
+        // Diagnostic: list existing registrations for debugging
+        try {
+            navigator.serviceWorker.getRegistrations()
+                .then(regs => console.log('Existing SW registrations:', regs.map(r => ({ scope: r.scope, scriptURL: (r.active && r.active.scriptURL) || (r.waiting && r.waiting.scriptURL) || (r.installing && r.installing.scriptURL) || '' }))))
+                .catch(() => {});
+        } catch (e) {}
     }
 
     // Konsolda çalıştırmak için: window.__unregisterSW()

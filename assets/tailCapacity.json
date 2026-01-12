@@ -1,109 +1,102 @@
-﻿{
-    "meta":  {
-                 "generatedAt":  "2026-01-06T11:11:53.940Z",
-                 "assumptions":  [
-                                     "no-act",
-                                     "no-aux-tanks",
-                                     "detailed-tanks"
-                                 ],
-                 "sources":  {
-                                 "a330-300":  "manual-entry",
-                                 "a330-200":  "manual-entry",
-                                 "b737ng":  "https://en.wikipedia.org/wiki/Boeing_737_Next_Generation",
-                                 "a321neo-std":  "manual-entry",
-                                 "a350-900":  "manual-entry",
-                                 "a321neo-lr":  "manual-entry",
-                                 "b737max8-900er":  "manual-entry",
-                                 "a320family":  "https://en.wikipedia.org/wiki/Airbus_A320_family",
-                                 "b787-9":  "manual-entry",
-                                 "b737max":  "https://en.wikipedia.org/wiki/Boeing_737_MAX",
-                                 "a320neo-ceo":  "manual-entry",
-                                 "b777-300er":  "manual-entry",
-                                 "b737-800":  "manual-entry"
-                             }
-             },
-    "tankLimitsKg":  {
-                         "A330-200": {
-                             "totalFuelKg": 115190,
-                             "leftWingFuelKg": 39200,
-                             "rightWingFuelKg": 39200,
-                             "centerFuelKg": 32000,
-                             "trimFuelKg": 4790
-                         },
-                         "A330-300": {
-                             "totalFuelKg": 109190,
-                             "leftWingFuelKg": 39200,
-                             "rightWingFuelKg": 39200,
-                             "centerFuelKg": 26000,
-                             "trimFuelKg": 4790
-                         },
-                         "B777-300ER":  {
-                             "totalFuelKg":  145500,
-                             "leftWingFuelKg":  29000,
-                             "rightWingFuelKg":  29000,
-                             "centerFuelKg":  87500,
-                             "trimFuelKg":  0
-                         },
-                         "A350-900":  {
-                                          "totalFuelKg":  110400,
-                                          "leftWingFuelKg":  33000,
-                                          "rightWingFuelKg":  33000,
-                                          "centerFuelKg":  44400,
-                                          "trimFuelKg":  0
-                                      },
-                         "B787-9":  {
-                                        "totalFuelKg":  101200,
-                                        "leftWingFuelKg":  18000,
-                                        "rightWingFuelKg":  18000,
-                                        "centerFuelKg":  65200,
-                                        "trimFuelKg":  0
-                                    },
-                         "A330-300":  {
-                                          "totalFuelKg":  109190,
-                                          "leftWingFuelKg":  39200,
-                                          "rightWingFuelKg":  39200,
-                                          "centerFuelKg":  26000,
-                                          "trimFuelKg":  4790
-                                      },
-                         "A321-200 CEO":  {
-                                              "totalFuelKg":  19000,
-                                              "leftWingFuelKg":  6200,
-                                              "rightWingFuelKg":  6200,
-                                              "centerFuelKg":  6600,
-                                              "trimFuelKg":  0,
-                                              "actFuelKg":  0
-                                          },
-                         "A320neo":  {
-                                         "totalFuelKg":  19000,
-                                         "leftWingFuelKg":  6200,
-                                         "rightWingFuelKg":  6200,
-                                         "centerFuelKg":  6600,
-                                         "trimFuelKg":  0,
-                                         "actFuelKg":  0
-                                     },
-                         "A320-200":  {
-                                          "totalFuelKg":  19000,
-                                          "leftWingFuelKg":  6200,
-                                          "rightWingFuelKg":  6200,
-                                          "centerFuelKg":  6600,
-                                          "trimFuelKg":  0,
-                                          "actFuelKg":  0
-                                      },
-                         "B737-700/800/900ER":  {
-                                                    "totalFuelKg":  20896,
-                                                    "leftWingFuelKg":  3915,
-                                                    "rightWingFuelKg":  3915,
-                                                    "centerFuelKg":  13066,
-                                                    "trimFuelKg":  0,
-                                                    "actFuelKg":  0
-                                                },
-                         "B737MAX8/MAX9":  {
-                                               "totalFuelKg":  20680,
-                                               "leftWingFuelKg":  3915,
-                                               "rightWingFuelKg":  3915,
-                                               "centerFuelKg":  12850,
-                                               "trimFuelKg":  0,
-                                               "actFuelKg":  0
-                                           }
-                     }
+{
+    "meta": {
+        "generatedAt": "2026-01-06T11:11:53.940Z",
+        "assumptions": [
+            "no-act",
+            "no-aux-tanks",
+            "detailed-tanks"
+        ],
+        "sources": {
+            "a330-300": "manual-entry",
+            "a330-200": "manual-entry",
+            "b737ng": "https://en.wikipedia.org/wiki/Boeing_737_Next_Generation",
+            "a321neo-std": "manual-entry",
+            "a350-900": "manual-entry",
+            "a321neo-lr": "manual-entry",
+            "b737max8-900er": "manual-entry",
+            "a320family": "https://en.wikipedia.org/wiki/Airbus_A320_family",
+            "b787-9": "manual-entry",
+            "b737max": "https://en.wikipedia.org/wiki/Boeing_737_MAX",
+            "a320neo-ceo": "manual-entry",
+            "b777-300er": "manual-entry",
+            "b737-800": "manual-entry"
+        }
+    },
+    "tankLimitsKg": {
+        "A330-200": {
+            "totalFuelKg": 115190,
+            "leftWingFuelKg": 39200,
+            "rightWingFuelKg": 39200,
+            "centerFuelKg": 32000,
+            "trimFuelKg": 4790
+        },
+        "A330-300": {
+            "totalFuelKg": 109190,
+            "leftWingFuelKg": 39200,
+            "rightWingFuelKg": 39200,
+            "centerFuelKg": 26000,
+            "trimFuelKg": 4790
+        },
+        "B777-300ER": {
+            "totalFuelKg": 145500,
+            "leftWingFuelKg": 29000,
+            "rightWingFuelKg": 29000,
+            "centerFuelKg": 87500,
+            "trimFuelKg": 0
+        },
+        "A350-900": {
+            "totalFuelKg": 110400,
+            "leftWingFuelKg": 33000,
+            "rightWingFuelKg": 33000,
+            "centerFuelKg": 44400,
+            "trimFuelKg": 0
+        },
+        "B787-9": {
+            "totalFuelKg": 101200,
+            "leftWingFuelKg": 18000,
+            "rightWingFuelKg": 18000,
+            "centerFuelKg": 65200,
+            "trimFuelKg": 0
+        },
+        "A321-200 CEO": {
+            "totalFuelKg": 19000,
+            "leftWingFuelKg": 6200,
+            "rightWingFuelKg": 6200,
+            "centerFuelKg": 6600,
+            "trimFuelKg": 0,
+            "actFuelKg": 0
+        },
+        "A320neo": {
+            "totalFuelKg": 19000,
+            "leftWingFuelKg": 6200,
+            "rightWingFuelKg": 6200,
+            "centerFuelKg": 6600,
+            "trimFuelKg": 0,
+            "actFuelKg": 0
+        },
+        "A320-200": {
+            "totalFuelKg": 19000,
+            "leftWingFuelKg": 6200,
+            "rightWingFuelKg": 6200,
+            "centerFuelKg": 6600,
+            "trimFuelKg": 0,
+            "actFuelKg": 0
+        },
+        "B737-700/800/900ER": {
+            "totalFuelKg": 20896,
+            "leftWingFuelKg": 3915,
+            "rightWingFuelKg": 3915,
+            "centerFuelKg": 13066,
+            "trimFuelKg": 0,
+            "actFuelKg": 0
+        },
+        "B737MAX8/MAX9": {
+            "totalFuelKg": 20680,
+            "leftWingFuelKg": 3915,
+            "rightWingFuelKg": 3915,
+            "centerFuelKg": 12850,
+            "trimFuelKg": 0,
+            "actFuelKg": 0
+        }
+    }
 }

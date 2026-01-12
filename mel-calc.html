@@ -29,34 +29,38 @@
 		.btn{width:100%;background:rgba(56,189,248,0.18);border:2px solid rgba(56,189,248,0.28);color:white;padding:10px;border-radius:12px;font-weight:900;cursor:pointer}
 		.result{margin-top:12px;padding:12px;border-radius:12px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.04);font-weight:800}
 		.result-summary{white-space:nowrap;overflow-x:auto;font-size:13px;color:var(--muted);font-weight:800;padding:8px 6px;border-radius:10px;background:rgba(15,23,42,0.04);border:1px solid rgba(255,255,255,0.02)}
-			.result-row{display:flex;align-items:center;gap:14px}
-			/* daha rafine sonuç rozeti */
+		/* Birleştirilmiş sonuç listesi (kompakt) */
+		.result-list{padding:0;border-radius:10px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.04);overflow:hidden}
+		.result-item{padding:8px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:6px}
+		.result-item:first-child{border-top:0}
+			.result-row{display:flex;align-items:center;gap:10px}
+			/* daha kompakt rozet */
 			.res-left{
-				flex:0 0 72px;
-				width:72px;
-				height:72px;
+				flex:0 0 48px;
+				width:48px;
+				height:48px;
 				display:grid;
 				place-items:center;
-				font-size:34px;
+				font-size:20px;
 				font-weight:900;
 				color:#052635;
 				background:linear-gradient(180deg,#67d9ff 0%,var(--primary) 100%);
-				border-radius:14px;
-				box-shadow:0 8px 20px rgba(2,8,20,0.45), inset 0 -4px 8px rgba(0,0,0,0.06);
+				border-radius:10px;
+				box-shadow:0 6px 14px rgba(2,8,20,0.35), inset 0 -3px 6px rgba(0,0,0,0.05);
 				border:1px solid rgba(255,255,255,0.08);
 				text-align:center;
 				padding:0;
-				transition:transform .16s ease,box-shadow .16s ease;
+				transition:transform .12s ease,box-shadow .12s ease;
 			}
-			.res-left:active{transform:translateY(1px) scale(.997);box-shadow:0 6px 14px rgba(2,8,20,0.36)}
+			.res-left:active{transform:translateY(1px) scale(.997);box-shadow:0 4px 10px rgba(2,8,20,0.32)}
 			.res-right{flex:1 1 auto;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-			.due-text{font-size:14px;color:#fff;font-weight:800}
-			.remaining-text{font-size:13px;color:var(--muted);font-weight:700}
+			.due-text{font-size:13px;color:var(--muted);font-weight:700;display:flex;gap:8px;align-items:center}
+			.due-text strong{color:var(--muted);font-weight:800;font-size:12px}
+				.due-value{color:#ffffff;font-weight:900;font-size:18px}
+			.remaining-text{font-size:12px;color:var(--muted);font-weight:700}
 			.note-amber{margin-top:8px;font-size:13px;color:var(--amber);font-weight:800;background:rgba(245,158,11,0.06);padding:6px;border-radius:8px;border:1px solid rgba(245,158,11,0.08)}
 			.cat-info-btn{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.18);color:var(--amber);font-weight:900;cursor:pointer}
-			/* Flash button (top-right) */
-			.flash-btn{flex:0 0 44px;width:44px;height:44px;border-radius:14px;background:rgba(56,189,248,0.12);border:1.5px solid rgba(56,189,248,0.22);color:var(--primary);font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:18px}
-			.flash-btn.on{background:linear-gradient(180deg,#f59e0b 0%,#fbbf24 100%);color:#052635;border-color:rgba(245,158,11,0.24)}
+			/* Flash button removed for web builds */
 			/* Modal for A info */
 			.modal-overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
 			.modal-card{background:var(--card);padding:16px;border-radius:12px;max-width:420px;color:#fff;box-shadow:0 8px 30px rgba(2,6,23,0.6);box-sizing:border-box;margin:16px}
@@ -66,6 +70,11 @@
 		.muted{color:var(--muted);font-weight:700;font-size:13px;text-align:center}
 		.link-back{display:inline-block;margin-top:12px;color:var(--primary);font-weight:800;text-decoration:none}
 	</style>
+		<style>
+			/* Touch / modal helpers */
+			.no-scroll{overflow:hidden;height:100%;}
+			button, .cat-info-btn{touch-action:manipulation;-webkit-tap-highlight-color: rgba(0,0,0,0.12);}
+		</style>
 </head>
 <body>
 	<div class="page">
@@ -74,16 +83,14 @@
 				<img src="assets/logo-192.png" alt="logo" style="width:64px;height:auto;border-radius:12px;display:inline-block;">
 			</div>
 			<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-				<button onclick="window.location.href='../index.html'" aria-label="Back" style="width:44px; height:44px; padding:0; border-radius:14px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.22); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+				<button onclick="window.location.href='index.html'" aria-label="Back" style="width:44px; height:44px; padding:0; border-radius:14px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.22); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
 					<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				</button>
 				<div style="flex:1; text-align:center">
 					<div class="logo-text">MEL Süre Hesaplayıcı</div>
 					<div class="muted">Tüm MEL kategorileri için bitiş (due) tarihlerini hesaplayın</div>
 				</div>
-				<button id="flashBtn" class="cat-info-btn flash-btn" aria-label="Fener" title="Feneri aç" type="button" style="flex:0 0 44px; width:44px; height:44px;">
-					<img id="flashBtnImg" src="assets/flashlight-off-svgrepo-com.svg" alt="Fener" style="width:20px;height:20px;display:block;" />
-				</button>
+				<!-- Fener butonu kaldırıldı (web-only) -->
 			</div>
 		</div>
 
@@ -96,35 +103,19 @@
 			<div class="section-divider" aria-hidden="true"></div>
 			<div class="field">
 				<label class="group-label">Kategoriler</label>
-				<div class="muted" style="margin-top:6px;font-weight:600;font-size:13px">A kategorisi için 'Takvim Günü' veya 'Saat' seçin; diğer kategoriler otomatik olarak hesaplanacaktır.</div>
 				<div id="categories"></div>
 			</div>
 
-			<button class="btn" onclick="calculateAll()">TÜM KATEGORİLERİ HESAPLA</button>
+			<!-- Hesaplama otomatik hale getirildi; manuel buton kaldırıldı -->
 
 			<div id="resultsWrap" style="margin-top:12px;display:none">
-				<div class="muted" style="margin-bottom:8px">Hesaplanan bitiş tarihleri ve kalan süreler</div>
 				<div id="results"></div>
 			</div>
 
-			<!-- A category info modal -->
-			<div id="aInfoModal" class="modal-overlay" onclick="if(event.target===this) closeAInfo();">
-				<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="aInfoTitle">
-					<div class="modal-header">
-						<div id="aInfoTitle" style="font-weight:900">A Kategorisi — Açıklama</div>
-						<button class="modal-close" onclick="closeAInfo()" aria-label="Kapat">×</button>
-					</div>
-					<div class="modal-body">
-						<p><strong>Takvim Günü ("Takvim Günü"):</strong> Arıza tespit tarihinden sonra gelen takvim günü sabahı saat 00:01 (UTC) başlangıç olarak alınır. Örneğin 1 gün verildiyse; başlangıç sonraki gün 00:01 UTC, bitiş ise o gün 23:59 UTC olur.</p>
-						<p><strong>Saat ("Saat" / 24 Saat):</strong> Arıza tespit zamanından itibaren tam süre (saat olarak) sayılır; başlangıç tespit zamanı, bitiş tespit zamanı + süre olur (zamanlar UTC olarak değerlendirilir).</p>
-						<p>Seçenekler arasındaki farkı göstermek için istediğiniz örneği girip hesaplayabilirsiniz.</p>
-					</div>
-					<div style="text-align:right; margin-top:12px;"><button class="btn" onclick="closeAInfo()">Kapat</button></div>
-				</div>
-			</div>
+
 
 			<!-- moved header back-button above; keep link for fallback but point to cover -->
-			<a class="link-back" href="../index.html" style="display:none">← Hesaplayıcıya geri dön</a>
+			<a class="link-back" href="index.html" style="display:none">← Hesaplayıcıya geri dön</a>
 		</div>
 	</div>
 
@@ -194,19 +185,22 @@
 				// keep exact time for strict 24h
 			} else {
 				// 'calendar' mode per new rule:
-				// Start = the next day's 00:01 (local) after detection
-				// Due = end of the calendar day after counting N days (23:59 local)
-				let daysCount = 0;
-				if(unit === 'days') daysCount = raw;
-				else daysCount = Math.ceil(raw / 24);
-				// start at next day 00:01 UTC
+				// Start = the next day's 00:01 UTC after detection
+				// Behavior:
+				// - If unit is 'days': keep previous end-of-day semantics (count full days, due at 23:59)
+				// - If unit is 'hours': compute due = start + ms so changing hours updates due immediately
 				const y = detectedDate.getUTCFullYear();
 				const m = detectedDate.getUTCMonth();
 				const day = detectedDate.getUTCDate();
 				startForCount = new Date(Date.UTC(y, m, day + 1, 0, 1, 0, 0));
-				// due = that start day + (daysCount - 1) days at 23:59 UTC
-				const dueDay = day + 1 + (daysCount - 1);
-				due = new Date(Date.UTC(y, m, dueDay, 23, 59, 0, 0));
+				if (unit === 'days'){
+					const daysCount = raw;
+					const dueDay = day + 1 + (daysCount - 1);
+					due = new Date(Date.UTC(y, m, dueDay, 23, 59, 0, 0));
+				} else {
+					// hours: immediate update relative to calendar start
+					due = new Date(startForCount.getTime() + ms);
+				}
 			}
 
 			// For display and remaining calculation, compute remaining from now
@@ -232,46 +226,13 @@
 			const summaryParts = [];
 			defaultCategories.forEach(cat => {
 				if(cat.id === 'A'){
-					const row = document.createElement('div');
-					row.className = 'cat-row';
-
-					const label = document.createElement('div');
-					label.textContent = cat.id; // show only the short letter to reduce clutter
-					label.title = cat.label; // full name available as tooltip
-					label.setAttribute('aria-label', cat.label);
-					label.className = 'cat-label';
-
-					const input = document.createElement('input');
-					input.type = 'number'; input.min = '0'; input.value = cat.value; input.dataset.cat = cat.id; input.className = 'cat-input';
-					const infoBtn = document.createElement('button');
-					infoBtn.type = 'button'; infoBtn.className = 'cat-info-btn'; infoBtn.title = 'A kategorisi hakkında'; infoBtn.innerText = '!';
-					infoBtn.onclick = function(){ showAInfo(); };
-					// combined selector: only two options — Takvim Günü or Saat (hours)
-					const comb = document.createElement('select'); comb.dataset['catMode'] = cat.id; comb.className = 'cat-comb';
-					const o1 = document.createElement('option'); o1.value = 'hours:calendar'; o1.text = 'Takvim Günü';
-					const o2 = document.createElement('option'); o2.value = 'hours:24'; o2.text = 'Saat';
-					comb.appendChild(o1); comb.appendChild(o2);
-					comb.value = 'hours:calendar';
-
-					row.appendChild(label); row.appendChild(input); row.appendChild(comb); row.appendChild(infoBtn);
-					cont.appendChild(row);
+					// Intentionally do not render the A badge/label here (removed per request)
 				} else {
 					summaryParts.push(`${cat.id}: ${formatDisplayValue(cat.value, cat.unit)}`);
 				}
 			});
 
-			if(summaryParts.length){
-				const summary = document.createElement('div');
-				summary.className = 'cat-summary';
-				summary.style.marginTop = '6px';
-				summaryParts.forEach(p => {
-					const it = document.createElement('div');
-					it.className = 'cat-item';
-					it.textContent = p;
-					summary.appendChild(it);
-				});
-				cont.appendChild(summary);
-			}
+			// Removed summary badges for B/C/D to simplify UI per request
 		}
 
 		function calculateAll(){
@@ -292,15 +253,29 @@
 				if(cat.id === 'A'){
 					const input = document.querySelector('input[data-cat="A"]');
 					const comb = document.querySelector('select[data-cat-mode="A"]') || document.querySelector('select[data-catmode="A"]');
-					raw = input ? (Number(input.value) || 0) : raw;
+					// keep the raw select value (e.g. "hours:calendar" or "hours:24") so we can
+					// persist and reapply the selection to the <select> later
+					let combVal = 'hours:24';
+					if(comb) combVal = comb.value || combVal;
+					// Distinguish between empty input (user hasn't provided value) and numeric 0
+					if(input){
+						if(input.value === '') raw = null; else raw = Number(input.value);
+					} else {
+						// if no input element found (first render), keep raw as null so we don't show A result
+						raw = null;
+					}
 					let unitA = unit;
 					let modeA = 'calendar';
-					if(comb){
-						const parts = (comb.value || '').split(':');
-						if(parts.length === 2){ unitA = parts[0]; modeA = parts[1] === '24' ? '24hours' : parts[1]; }
+					const parts = (combVal || '').split(':');
+					if(parts.length === 2){ unitA = parts[0]; modeA = parts[1] === '24' ? '24hours' : parts[1]; }
+					if(raw !== null && !isNaN(raw)){
+						const ares = calculateA({ startDate, detectedDate }, raw, unitA, modeA);
+						// store the full select value so the UI select can be set back correctly
+						results.push({ id: cat.id, start: ares.start || null, due: ares.due, remaining: ares.remaining, special: ares.specialApplied, mode: combVal, raw: raw });
+					} else {
+						// push a placeholder so we can render input/select in results but without computed due/remaining
+						results.push({ id: cat.id, due: null, remaining: null, mode: combVal, raw: null });
 					}
-					const ares = calculateA({ startDate, detectedDate }, raw, unitA, modeA);
-					results.push({ id: cat.id, start: ares.start || null, due: ares.due, remaining: ares.remaining, special: ares.specialApplied });
 				} else {
 					let ms = 0;
 					if(unit === 'days') ms = raw * 24 * 3600 * 1000;
@@ -330,105 +305,131 @@
 			const wrap = document.getElementById('resultsWrap');
 			const out = document.getElementById('results');
 			out.innerHTML = '';
+			const list = document.createElement('div');
+			list.className = 'result-list';
 			results.forEach(r => {
-				const b = document.createElement('div');
-				b.style.padding = '10px';
-				b.style.borderRadius = '10px';
-				b.style.background = 'rgba(15,23,42,0.5)';
-				b.style.marginBottom = '8px';
-				// left: big category letter, right: stacked due date and remaining, note below
+				const item = document.createElement('div');
+				item.className = 'result-item';
 				let html = '';
-				html += `<div class="result-row"><div class="res-left">${r.id}</div><div class="res-right"><div class="due-text"><strong>Bitiş:</strong> ${formatDateUTC(r.due)}</div><div class="remaining-text"><strong>Kalan:</strong> ${r.remaining}</div></div></div>`;
-				if(r.special) html += `<div class="note-amber"><strong>Not:</strong> A kategorisi için özel kural uygulandı</div>`;
-				b.innerHTML = html;
-				out.appendChild(b);
+				html += `<div class="result-row"><div class="res-left">${r.id}</div><div class="res-right">`;
+				const dueText = r.due ? formatDateUTC(r.due) : '—';
+				const remainingText = r.remaining ? r.remaining : '—';
+				html += `<div class="due-text"><strong>Bitiş:</strong> <span class="due-value">${dueText}</span></div><div class="remaining-text"><strong>Kalan:</strong> ${remainingText}</div>`;
+				html += `</div></div>`;
+
+				if(r.id === 'A'){
+					const modeVal = r.mode || 'hours:calendar';
+					const rawVal = (typeof r.raw !== 'undefined' && r.raw !== null) ? r.raw : '';
+					html += `<div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+						<label style="font-weight:800;color:var(--muted);font-size:12px">A değer:</label>
+						<input type="number" data-cat="A" min="0" class="cat-input" style="width:64px;padding:6px;border-radius:6px;background:rgba(15,23,42,0.6);color:#fff;border:1px solid rgba(255,255,255,0.04);font-weight:700;font-size:13px" />
+						<label style="font-weight:800;color:var(--muted);font-size:12px">Mod:</label>
+						<select data-cat-mode="A" style="padding:6px;border-radius:6px;background:rgba(15,23,42,0.6);color:#fff;border:1px solid rgba(255,255,255,0.04);font-size:13px"><option value="hours:calendar">Takvim Günü</option><option value="hours:24">Saat</option></select>
+						<button class="cat-info-btn" type="button" title="A kategorisi hakkında" style="margin-left:auto;padding:6px;font-size:13px">!</button>
+					</div>`;
+				}
+
+
+				item.innerHTML = html;
+				list.appendChild(item);
+			});
+			out.appendChild(list);
+
+			// After DOM insertion, set select values and wire info button actions
+			const selectA = out.querySelector('select[data-cat-mode="A"]');
+			if(selectA){
+				const found = results.find(x=>x.id==='A');
+				if(found && found.mode) selectA.value = found.mode;
+				selectA.addEventListener('change', function(){ calculateAll(); });
+			}
+			// wire A numeric input inside the card
+			const inputA = out.querySelector('input[data-cat="A"]');
+			if(inputA){
+				const found = results.find(x=>x.id==='A');
+				if(found && typeof found.raw !== 'undefined' && found.raw !== null) inputA.value = found.raw; else inputA.value = '';
+				inputA.addEventListener('input', function(){ calculateAll(); });
+				inputA.addEventListener('change', function(){ calculateAll(); });
+			}
+			const infoBtns = out.querySelectorAll('.cat-info-btn');
+			infoBtns.forEach(btn=>{
+				btn.addEventListener('click', showAInfo);
+				btn.addEventListener('pointerup', showAInfo);
 			});
 			wrap.style.display = 'block';
 		}
 
 		// A category info modal controls
+		let __aInfo_lastFocused = null;
 		function showAInfo(){
 			const m = document.getElementById('aInfoModal');
-			if(m) m.style.display = 'flex';
+			if(!m) return;
+			__aInfo_lastFocused = document.activeElement;
+			m.style.display = 'flex';
+			document.body.classList.add('no-scroll');
+			const closeBtn = m.querySelector('.modal-close');
+			if(closeBtn) closeBtn.focus();
+			document.addEventListener('keydown', __aInfo_keydown);
 		}
 		function closeAInfo(){
 			const m = document.getElementById('aInfoModal');
-			if(m) m.style.display = 'none';
+			if(!m) return;
+			m.style.display = 'none';
+			document.body.classList.remove('no-scroll');
+			document.removeEventListener('keydown', __aInfo_keydown);
+			try{ if(__aInfo_lastFocused) __aInfo_lastFocused.focus(); }catch(e){}
 		}
-
-		// Flashlight (torch) handling
-		let _flashStream = null;
-		let _flashTrack = null;
-		let _torchOn = false;
-		const ICON_OFF = 'assets/flashlight-off-svgrepo-com.svg';
-		const ICON_ON = 'assets/' + encodeURIComponent('flashlight-on-svgrepo-com (1).svg');
-
-		async function startFlashStream(){
-			if(!_flashTrack){
-				if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('getUserMedia desteklenmiyor');
-				const constraints = { video: { facingMode: { ideal: 'environment' } } };
-				_flashStream = await navigator.mediaDevices.getUserMedia(constraints);
-				_flashTrack = _flashStream.getVideoTracks()[0];
-				const caps = _flashTrack.getCapabilities ? _flashTrack.getCapabilities() : {};
-				if(!caps.torch){
-					stopFlashStream();
-					throw new Error('Cihaz feneri desteklenmiyor');
-				}
+		function __aInfo_keydown(e){
+			if(e.key === 'Escape' || e.key === 'Esc'){
+				closeAInfo();
 			}
 		}
+		// overlay click / touch close
+		document.addEventListener('DOMContentLoaded', function(){
+			const overlay = document.getElementById('aInfoModal');
+			if(!overlay) return;
+			overlay.addEventListener('pointerup', function(ev){ if(ev.target === overlay) closeAInfo(); });
+			overlay.addEventListener('click', function(ev){ if(ev.target === overlay) closeAInfo(); });
+		});
 
-		function stopFlashStream(){
-			if(_flashStream){
-				_flashStream.getTracks().forEach(t=>t.stop());
-			}
-			_flashStream = null; _flashTrack = null; _torchOn = false;
-			const btn = document.getElementById('flashBtn');
-			if(btn) {
-				btn.classList.remove('on');
-				const img = document.getElementById('flashBtnImg'); if(img) img.src = ICON_OFF;
-			}
-		}
-
-		async function toggleFlash(){
-			const btn = document.getElementById('flashBtn');
-			if(!_torchOn){
-				try{
-					await startFlashStream();
-					await _flashTrack.applyConstraints({ advanced: [{ torch: true }] });
-					_torchOn = true; if(btn) { btn.classList.add('on'); btn.title = 'Feneri kapat'; }
-					const img = document.getElementById('flashBtnImg'); if(img) img.src = ICON_ON;
-				}catch(err){
-					stopFlashStream();
-					alert('Fener açılamıyor: '+(err && err.message?err.message:err));
-				}
-			}else{
-				try{
-					await _flashTrack.applyConstraints({ advanced: [{ torch: false }] });
-				}catch(e){}
-				stopFlashStream();
-			}
-		}
-
-		function initFlashlightButton(){
-			const btn = document.getElementById('flashBtn');
-			if(!btn) return;
-			btn.addEventListener('click', (e)=>{ e.preventDefault(); toggleFlash(); });
-			// stop stream when leaving page
-			window.addEventListener('pagehide', stopFlashStream);
-		}
+		// Flashlight removed — button and related JS disabled for web-only build
 
 		(function init(){
 			// Prefill detectedAt with current UTC (so input shows GMT/UTC time)
 			const det = document.getElementById('detectedAt');
 			if(det) det.value = formatDatetimeLocalUTC(new Date());
 			renderCategoryRows();
-			initFlashlightButton();
+
+			// set up automatic calculation: update on inputs and periodically refresh remaining times
+			function setupAutoCalculate(){
+				const detected = document.getElementById('detectedAt');
+				if(detected){
+					detected.addEventListener('input', calculateAll);
+					detected.addEventListener('change', calculateAll);
+				}
+
+				// listen for changes inside categories (A input/select)
+				function categoryChangeHandler(e){
+					if(!e || !e.target) return;
+					if(e.target.matches && (e.target.matches('input[data-cat="A"]') || e.target.matches('select[data-cat-mode="A"]'))){
+						calculateAll();
+					}
+				}
+				document.addEventListener('input', categoryChangeHandler);
+				document.addEventListener('change', categoryChangeHandler);
+
+				// periodic refresh to update remaining times (every 30s)
+				setInterval(calculateAll, 30000);
+			}
+
+			setupAutoCalculate();
+			// initial calculation so results are visible on load
+			calculateAll();
 		})();
 	</script>
 		<script>
 		// Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
 		if ('serviceWorker' in navigator) {
-			navigator.serviceWorker.register('/sw.js', { scope: '/' })
+			navigator.serviceWorker.register('./sw.js')
 				.then(reg => console.log('SW registered:', reg.scope))
 				.catch(err => console.error('SW registration failed:', err));
 		}
@@ -440,6 +441,24 @@
 			console.log('Service worker kayıtları kaldırıldı:', regs.map(r => r.scope));
 		};
 		</script>
+
+	<!-- A kategorisi bilgi modalı -->
+	<div id="aInfoModal" class="modal-overlay" role="dialog" aria-modal="true" style="display:none" onclick="if(event.target===this) closeAInfo();">
+		<div class="modal-card">
+			<div class="modal-header">
+				<div style="font-weight:900">Kategori A Bilgisi</div>
+				<button class="modal-close" aria-label="Kapat" type="button" onclick="closeAInfo()">×</button>
+			</div>
+			<div class="modal-body">
+				<p>Kategori A için iki farklı hesaplama modu vardır:</p>
+				<ul>
+					<li><strong>Saat (24h):</strong> Tespit anından itibaren kesin 24 saat esaslı sayım.</li>
+					<li><strong>Takvim Günü:</strong> Tespit gününü izleyen günün 00:01 UTC'sinden itibaren sayım; gün bazlı değerlerde bitiş günün 23:59 UTC'sinde olur.</li>
+				</ul>
+				<p>Buradaki "A değer" alanını boş bırakırsanız sonuç gösterilmez. Değeri girince sonuç otomatik güncellenecektir.</p>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
 
