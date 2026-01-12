@@ -37,6 +37,9 @@
             .input-group.state-empty .main-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 10px rgba(245,158,11,0.08); }
             .input-group.state-error .main-input:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(239,68,68,0.18), 0 0 10px rgba(239,68,68,0.08); }
             .input-group.state-valid .main-input:focus { border-color: #94a3b8; box-shadow: 0 0 0 3px rgba(148,163,184,0.16); }
+            /* Odaklanan input grubunu vurgula: sadece hafif gölge uygulansın, state renklerini bozmayalım */
+            .input-group.focused { box-shadow: 0 8px 26px rgba(148,163,184,0.08); }
+            /* Label rengini state-* sınıfları belirlesin; burada override yapmıyoruz */
         .main-input::-webkit-outer-spin-button,
         .main-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         .input-with-unit { position: relative; flex: 1; min-width: 0; }
@@ -138,6 +141,7 @@
             }
             .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(148,163,184,0.35), 0 0 10px rgba(148,163,184,0.08); }
             .input-group.state-empty .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(245,158,11,0.45), 0 0 10px rgba(245,158,11,0.08); }
+        .cat-info-btn{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.18);color:var(--amber);font-weight:900;cursor:pointer}
             .input-group.state-error .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(239,68,68,0.45), 0 0 10px rgba(239,68,68,0.08); }
             .input-group.state-valid .tank-input-wrap:focus-within { box-shadow: inset 0 0 0 2px rgba(148,163,184,0.35), 0 0 10px rgba(148,163,184,0.08); }
         /* Input group içindeki ACT tank kutuları */
@@ -238,21 +242,24 @@
         .field-error { display: none; }
 
         .notice-area {
-            position: sticky;
-            top: 10px;
-            z-index: 20;
+            position: relative;
             margin: 0 -12px 12px -12px;
         }
         .notice {
             --notice-accent: var(--error);
-            background: rgba(15,23,42,0.88);
+            background: rgba(15,23,42,0.92);
             border: none;
-            border-radius: 0;
+            border-radius: 14px;
             padding: 10px 14px;
             display: flex;
             justify-content: center;
             text-align: center;
-            position: relative;
+            position: fixed; /* always fixed overlay */
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 24px);
+            max-width: 420px;
             overflow: hidden;
             font-size: 11px;
             font-weight: 800;
@@ -262,7 +269,9 @@
             color: white;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            box-shadow: 0 0 12px rgba(239,68,68,0.10);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.45), 0 0 12px rgba(239,68,68,0.10);
+            z-index: 9999;
+            box-sizing: border-box;
         }
         .notice-text { position: relative; display: inline-block; max-width: 100%; }
         .notice-text::after {
@@ -372,23 +381,24 @@
 
             <div id="notice-area" class="notice-area">
                 <div id="notice" class="notice hidden" role="status" aria-live="polite"><span class="notice-text"></span></div>
+                <div id="notice-spacer" style="display:none;height:0px;visibility:hidden"></div>
             </div>
 
             <div class="input-capsule" style="background: rgba(30,41,59,0.55); border-radius: 28px; border: 1.5px solid rgba(100,116,139,0.18); box-shadow: 0 2px 16px 0 rgba(100,116,139,0.08); backdrop-filter: blur(8px); padding: 18px 10px 10px 10px; margin-bottom: 22px;">
             <!-- INPUTS BAŞLIĞI KALDIRILDI -->
             <div id="sec_block" class="input-group state-empty">
                 <span id="lbl-block" class="group-label">Block Fuel</span>
-                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('block_fuel', -10)">-</button><div class="input-with-unit"><input type="number" id="block_fuel" class="main-input" inputmode="numeric" pattern="[0-9]*" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('block_fuel', 10)">+</button></div>
+                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('block_fuel', -10)">-</button><div class="input-with-unit"><input type="text" id="block_fuel" class="main-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" onkeydown="onFieldEnter(event,'block_fuel')" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('block_fuel', 10)">+</button></div>
                 <div id="err_block" class="field-error"></div>
             </div>
             <div id="sec_actual" class="input-group state-empty">
                 <span id="lbl-actual" class="group-label">Actual FOB</span>
-                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('total_actual', -10)">-</button><div class="input-with-unit"><input type="number" id="total_actual" class="main-input" inputmode="numeric" pattern="[0-9]*" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('total_actual', 10)">+</button></div>
+                <div style="display:flex; align-items:center; gap:8px;"><button class="btn-step" onclick="stepValue('total_actual', -10)">-</button><div class="input-with-unit"><input type="text" id="total_actual" class="main-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" onkeydown="onFieldEnter(event,'total_actual')" oninput="validateAll(true); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)"><span class="unit-corner">KG</span></div><button class="btn-step" onclick="stepValue('total_actual', 10)">+</button></div>
                 <div id="err_actual" class="field-error"></div>
                 <div class="tank-grid">
-                    <div class="tank-box"><span>LH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="la" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('la',-10)">-</button><button class="btn-mini" onclick="stepTank('la',10)">+</button></div></div>
-                    <div class="tank-box"><span>CENTER</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="ca" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ca',-10)">-</button><button class="btn-mini" onclick="stepTank('ca',10)">+</button></div></div>
-                    <div class="tank-box"><span>RH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="number" id="ra" class="tank-input" inputmode="numeric" pattern="[0-9]*" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ra',-10)">-</button><button class="btn-mini" onclick="stepTank('ra',10)">+</button></div></div>
+                    <div class="tank-box"><span>LH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="text" id="la" class="tank-input" inputmode="numeric" pattern="[0-9]*" tabindex="-1" onpointerdown="this.dataset.userActivated='1'" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="onTankFocus('la', this); clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)" enterkeyhint="next" onkeydown="onTankEnter(event,'la')"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('la',-10)">-</button><button class="btn-mini" onclick="stepTank('la',10)">+</button></div></div>
+                    <div class="tank-box"><span>CENTER</span><div class="tank-mid"><div class="tank-input-wrap"><input type="text" id="ca" class="tank-input" inputmode="numeric" pattern="[0-9]*" tabindex="-1" onpointerdown="this.dataset.userActivated='1'" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="onTankFocus('ca', this); clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)" enterkeyhint="next" onkeydown="onTankEnter(event,'ca')"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ca',-10)">-</button><button class="btn-mini" onclick="stepTank('ca',10)">+</button></div></div>
+                    <div class="tank-box"><span>RH</span><div class="tank-mid"><div class="tank-input-wrap"><input type="text" id="ra" class="tank-input" inputmode="numeric" pattern="[0-9]*" tabindex="-1" onpointerdown="this.dataset.userActivated='1'" oninput="manualActualEntry(); updateTankUnitPosition(this)" onfocus="onTankFocus('ra', this); clearZeroOnFocus(this); updateTankUnitPosition(this)" onblur="restoreZeroOnBlur(this); updateTankUnitPosition(this)" enterkeyhint="next" onkeydown="onTankEnter(event,'ra')"><span class="tank-unit-corner">KG</span></div></div><div class="tank-step-row"><button class="btn-mini" onclick="stepTank('ra',-10)">-</button><button class="btn-mini" onclick="stepTank('ra',10)">+</button></div></div>
                 </div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: stretch;">
@@ -396,7 +406,7 @@
                     <span id="lbl-density" class="group-label">Density</span>
                     <div style="display:flex; justify-content:center;">
                         <div class="input-with-unit" style="width:100%;">
-                            <input type="text" id="density" inputmode="decimal" oninput="handleDensityInput(this); updateUnitPosition(this)" onfocus="initDensity(this)" class="main-input" style="font-size:18px; height:42px; text-align:center;">
+                            <input type="text" id="density" inputmode="decimal" enterkeyhint="next" onkeydown="onFieldEnter(event,'density')" oninput="handleDensityInput(this); updateUnitPosition(this)" onfocus="initDensity(this)" class="main-input" style="font-size:18px; height:42px; text-align:center;">
                             <span class="unit-corner">u</span>
                         </div>
                     </div>
@@ -406,11 +416,11 @@
                     <span id="lbl-temp" class="group-label">Temp</span>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                         <div class="input-with-unit">
-                            <input type="number" id="temp_c" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" oninput="calcTemp('c'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
+                            <input type="text" id="temp_c" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" enterkeyhint="next" onkeydown="onFieldEnter(event,'temp_c')" oninput="calcTemp('c'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
                             <span class="unit-corner">°C</span>
                         </div>
                         <div class="input-with-unit">
-                            <input type="number" id="temp_f" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" oninput="calcTemp('f'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
+                            <input type="text" id="temp_f" inputmode="decimal" pattern="-?[0-9]*[.,]?[0-9]*" enterkeyhint="done" onkeydown="onFieldEnter(event,'temp_f')" oninput="calcTemp('f'); updateUnitPosition(this)" onfocus="updateUnitPosition(this)" onblur="updateUnitPosition(this)" class="main-input" style="font-size:18px; height:42px;">
                             <span class="unit-corner">°F</span>
                         </div>
                     </div>
@@ -429,6 +439,203 @@
                     <div id="uplift-title" class="uplift-title">UPLIFT</div>
                     <div class="uplift-split">
                         <div>
+                        <script>
+                            (function(){
+                                const inputsSelector = '.main-input, .tank-input';
+                                const inputs = () => Array.from(document.querySelectorAll(inputsSelector));
+
+                                function getVisibleNoticeRect(){
+                                    try{
+                                        const notice = document.getElementById('notice');
+                                        if(!notice) return null;
+                                        if(notice.classList && notice.classList.contains('hidden')) return null;
+                                        if(notice.offsetParent === null) return null; // not rendered
+                                        return notice.getBoundingClientRect();
+                                    }catch(e){ return null; }
+                                }
+
+                                function focusScroll(el){
+                                    // wait for virtual keyboard to appear on mobile; moderate delay
+                                    setTimeout(()=>{
+                                                if(!el) return;
+                                                const viewportH = window.innerHeight || document.documentElement.clientHeight;
+                                                const basePadding = Math.min(80, Math.round(viewportH * 0.12));
+                                                const extraMargin = 8;
+
+                                                // If available, prefer the whole input-group container so the label and frame stay visible
+                                                const container = el.closest && el.closest('.input-group') ? el.closest('.input-group') : el;
+                                                let cRect = null;
+                                                try{ cRect = container.getBoundingClientRect(); }catch(e){ cRect = el.getBoundingClientRect(); }
+
+                                                // Read notice rect (use bottom for precise visible position)
+                                                const nRect = getVisibleNoticeRect();
+                                                const desiredViewportTop = nRect ? Math.round(nRect.bottom) + extraMargin : basePadding;
+
+                                                const id = el.id || '';
+                                                // Align the container top under the notice (keeps title & frame visible)
+                                                try{
+                                                    const target = window.scrollY + cRect.top - desiredViewportTop;
+                                                    // Special-case small jumps for certain fields to avoid large page jumps
+                                                    const isSpecial = (id === 'density' || id === 'temp_c' || id === 'temp_f' || id === 'total_actual');
+                                                    if (isSpecial) {
+                                                        const maxDelta = 90;
+                                                        const curr = window.scrollY;
+                                                        const desiredScroll = Math.max(0, Math.round(target));
+                                                        const safeBottom = viewportH - 60;
+                                                        const ensureBottomScroll = Math.max(0, window.scrollY + cRect.bottom - safeBottom);
+                                                        let chosen = desiredScroll;
+                                                        if (ensureBottomScroll > chosen) chosen = ensureBottomScroll;
+                                                        if (chosen > curr + maxDelta) chosen = curr + maxDelta;
+                                                        if (chosen < curr - maxDelta) chosen = Math.max(0, curr - maxDelta);
+                                                        window.scrollTo({ top: Math.max(0, Math.round(chosen)), behavior: 'smooth' });
+                                                    } else {
+                                                        window.scrollTo({ top: Math.max(0, Math.round(target)), behavior: 'smooth' });
+                                                    }
+                                                }catch(e){
+                                                    // fallback to element-based alignment
+                                                    try{ const r = el.getBoundingClientRect(); window.scrollTo({ top: Math.max(0, Math.round(window.scrollY + r.top - desiredViewportTop)), behavior: 'smooth' }); }catch(_){}
+                                                }
+
+                                                // ensure next input is also visible; if not, nudge more upward
+                                                const arr = inputs();
+                                                const idx = arr.indexOf(el);
+                                                if(idx >= 0 && idx < arr.length - 1){
+                                                    const next = arr[idx + 1];
+                                                    const nRect2 = next.getBoundingClientRect();
+                                                    if(nRect2.bottom > viewportH - 60){
+                                                        const extra = nRect2.bottom - (viewportH - 60);
+                                                        window.scrollTo({ top: Math.max(0, window.scrollY + extra + 12), behavior: 'smooth' });
+                                                    }
+                                                }
+                                    }, 300);
+                                }
+
+                                document.addEventListener('focusin', (e)=>{
+                                    const el = e.target;
+                                    if(el && el.matches && el.matches(inputsSelector)){
+                                        try{ const g = el.closest && el.closest('.input-group'); if(g) g.classList.add('focused'); }catch(_){}
+                                        // If a suppression flag is set (programmatic move e.g. density->temp), skip scrolling once
+                                        if(window._suppressNextFocusScroll){ try{ window._suppressNextFocusScroll = false; }catch(_){}; return; }
+                                        focusScroll(el);
+                                    }
+                                }, true);
+
+                                document.addEventListener('focusout', (e)=>{
+                                    const el = e.target;
+                                    if(el && el.matches && el.matches(inputsSelector)){
+                                        try{ const g = el.closest && el.closest('.input-group'); if(g) g.classList.remove('focused'); }catch(_){}
+                                    }
+                                }, true);
+
+                                // Also handle touchstart/pointerdown to anticipate focus on iOS where focus happens after keyboard
+                                document.addEventListener('pointerdown', (e)=>{
+                                    const el = e.target.closest ? e.target.closest(inputsSelector) : null;
+                                    if(el) focusScroll(el);
+                                }, {passive: true});
+
+                                // Keep spacer synced with the (now fixed) notice height so
+                                // layout doesn't jump and automatic scrolling can offset correctly.
+                                (function syncNoticeSpacer(){
+                                    const notice = document.getElementById('notice');
+                                    const spacer = document.getElementById('notice-spacer');
+                                    if(!notice || !spacer) return;
+
+                                    function update(){
+                                        try{
+                                            if(notice.classList && notice.classList.contains('hidden')){
+                                                spacer.style.display = 'none';
+                                                spacer.style.height = '0px';
+                                                spacer.style.visibility = 'hidden';
+                                            } else {
+                                                const h = notice.offsetHeight || 48;
+                                                spacer.style.display = 'block';
+                                                spacer.style.height = h + 'px';
+                                                spacer.style.visibility = 'visible';
+                                            }
+                                        }catch(e){}
+                                    }
+
+                                    window.addEventListener('resize', update, {passive:true});
+                                    // watch for hide/show via class changes
+                                    try{
+                                        const mo = new MutationObserver(update);
+                                        mo.observe(notice, { attributes: true, attributeFilter: ['class', 'style'] });
+                                    }catch(e){}
+
+                                    // initial sync
+                                    setTimeout(update, 40);
+                                    document.addEventListener('DOMContentLoaded', update);
+                                })();
+                                // Position the fixed notice so that when the page is at top
+                                // it visually sits above the Block Fuel group; when the user
+                                // scrolls down it pins to top (12px). Keep spacer synced.
+                                (function positionNoticeAboveBlock(){
+                                    const notice = document.getElementById('notice');
+                                    const spacer = document.getElementById('notice-spacer');
+                                    const blockGroup = document.getElementById('sec_block');
+                                    if(!notice || !spacer || !blockGroup) return;
+
+                                    const extra = 8;
+
+                                    function syncSpacer(){
+                                        try{
+                                            if(notice.classList && notice.classList.contains('hidden')){
+                                                spacer.style.display = 'none';
+                                                spacer.style.height = '0px';
+                                                spacer.style.visibility = 'hidden';
+                                            } else {
+                                                const h = notice.offsetHeight || 48;
+                                                spacer.style.display = 'block';
+                                                spacer.style.height = h + 'px';
+                                                spacer.style.visibility = 'visible';
+                                            }
+                                        }catch(e){}
+                                    }
+
+                                    let anchorScrollY = null;
+                                    function position(){
+                                        try{
+                                            syncSpacer();
+                                            const noticeH = notice.offsetHeight || 48;
+                                            // Compute block group's document Y using offsetTop for reliability
+                                            const blockDocY = (function(n){ let y=0; while(n){ y += n.offsetTop || 0; n = n.offsetParent; } return y; })(blockGroup);
+                                            // desired top relative to viewport = block's doc Y - noticeH - extra - window.scrollY
+                                            const desiredTopViewport = Math.round(blockDocY - noticeH - extra - window.scrollY);
+                                            // compute anchor only once or when null
+                                            if(anchorScrollY === null){
+                                                // when scrollY reaches this value, we pin notice to 12px
+                                                anchorScrollY = Math.max(0, blockDocY - noticeH - extra - 12);
+                                            }
+
+                                            if(window.scrollY >= anchorScrollY){
+                                                // pinned at top
+                                                notice.style.top = '12px';
+                                            } else {
+                                                // place above block group (but don't go above 12px)
+                                                const t = Math.max(12, desiredTopViewport);
+                                                notice.style.top = t + 'px';
+                                            }
+                                        }catch(e){}
+                                    }
+
+                                    // respond to viewport changes and DOM mutations
+                                    window.addEventListener('resize', ()=>{ position(); }, {passive:true});
+                                    window.addEventListener('scroll', ()=>{ position(); }, {passive:true});
+                                    window.addEventListener('pageshow', ()=>{ setTimeout(position, 40); });
+                                    try{
+                                        const mo = new MutationObserver(()=>{ position(); });
+                                        mo.observe(notice, { attributes: true, attributeFilter: ['class', 'style'] });
+                                        mo.observe(blockGroup, { attributes: true, childList: true, subtree: true });
+                                    }catch(e){}
+
+                                    // run multiple times shortly after load to account for rendering delays
+                                    setTimeout(position, 40);
+                                    setTimeout(position, 200);
+                                    setTimeout(position, 600);
+                                    document.addEventListener('DOMContentLoaded', position);
+                                })();
+                            })();
+                        </script>
                             <div class="uplift-unit">KG</div>
                             <div id="res_kg" class="val-num" style="color:var(--warning)">0</div>
                         </div>
@@ -448,13 +655,10 @@
             <h3 id="receipt-title" style="text-align:center; border-bottom:2px dashed #000; padding-bottom:12px; margin-top:0">REFUEL RECEIPT</h3>
             <div id="r-details" style="font-size:13px; line-height:1.6; display:block;"></div>
             <iframe id="receipt-iframe" style="display:none; width:100%; height:520px; border:none; background:#fff"></iframe>
-            <button id="receipt-torch-btn" type="button" title="Fener Aç" aria-pressed="false" style="width:44px; height:44px; background:#10b981; color:#fff; border:none; padding:0; margin-top:12px; font-weight:800; border-radius:50%; cursor:pointer; display:inline-flex; align-items:center; justify-content:center;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden="true">
-                    <rect x="1.8" y="9" width="7" height="6" rx="1.2" transform="rotate(-18 5.3 12)" fill="#ffffff" stroke="none"/>
-                    <circle cx="7.2" cy="6.8" r="1.4" fill="#ffffff" />
-                    <polygon points="9,3 22,7 22,17 9,13" fill="#fde68a" stroke="#ffffff" stroke-width="0.9"/>
-                </svg>
-            </button>
+            <div id="pdf-viewer" style="display:none; width:100%; height:520px; overflow:auto; text-align:center;">
+                <canvas id="pdf-canvas" style="max-width:100%; height:auto; display:block; margin:0 auto"></canvas>
+            </div>
+            <!-- Fener butonu kaldırıldı (özellik web-only projede desteklenmiyor) -->
             <button id="receipt-close" onclick="(function(){var r=document.getElementById('receipt-modal'); if(r){r.style.display='none'; r.style.pointerEvents='none';}})()" style="width:100%; background:#000; color:#fff; border:none; padding:18px; margin-top:12px; font-weight:800; border-radius:6px; cursor:pointer">CLOSE</button>
         </div>
     </div>
@@ -1081,6 +1285,121 @@ function handleDensityInput(el) {
     });
     el.addEventListener('focus', scheduleApply);
 })();
+// Handle Enter/Next from virtual keyboard and move focus in desired order.
+function onFieldEnter(ev, fieldId) {
+    if (!ev) return;
+    // Accept Enter key or virtual keyboard 'Enter'
+    if (ev.key && ev.key !== 'Enter') return;
+    try { ev.preventDefault(); } catch (e) {}
+
+    // Temperature navigation/finish rules:
+    // - If C is correctly entered and Enter pressed -> close keyboard and show dashboard
+    // - If C is NOT correctly entered and Enter pressed -> move focus to F
+    // - If F has a value and Enter pressed -> close keyboard and show dashboard
+    const tempCEl = document.getElementById('temp_c');
+    const tempFEl = document.getElementById('temp_f');
+    const cRaw = tempCEl ? (tempCEl.value || '').trim() : '';
+    const fRaw = tempFEl ? (tempFEl.value || '').trim() : '';
+    const cNum = parseFloat(cRaw);
+    const isCValid = (cRaw !== '' && !isNaN(cNum) && cNum >= -60 && cNum <= 60);
+    const isFFilled = (fRaw !== '');
+
+    if (fieldId === 'temp_c') {
+        if (isCValid) { showDashboardFully(); return; }
+        // c not valid -> move focus to F
+        if (tempFEl) { tempFEl.focus(); return; }
+        return;
+    }
+    if (fieldId === 'temp_f') {
+        if (isFFilled || isCValid) { showDashboardFully(); return; }
+        // otherwise, move back to C for correction
+        if (tempCEl) { tempCEl.focus(); return; }
+        return;
+    }
+    // If user pressed Enter on total_actual, skip ACT tank inputs and go to density
+    if (fieldId === 'total_actual') {
+        const d = document.getElementById('density');
+        if (d) { d.focus(); try { forceDensityCaretRight(d); } catch (e) {} }
+        return;
+    }
+
+    const order = ['block_fuel','total_actual','density','temp_c','temp_f'];
+    const idx = order.indexOf(fieldId);
+    if (idx === -1) return;
+    const nextId = order[idx + 1];
+    if (!nextId) return;
+    const nextEl = document.getElementById(nextId);
+    if (nextEl) {
+        // If moving from density -> temp, suppress the automatic focus scroll once
+        if (fieldId === 'density' && (nextId === 'temp_c' || nextId === 'temp_f')) {
+            try{ window._suppressNextFocusScroll = true; }catch(e){}
+        }
+        nextEl.focus();
+        if (nextId === 'density') try { forceDensityCaretRight(nextEl); } catch (e) {}
+    }
+}
+
+// When user finishes input flow (e.g. presses 'done' on temp_f), blur and reveal dashboard fully
+function getNoticeBottom(){
+    try{
+        const notice = document.getElementById('notice');
+        if(!notice) return 0;
+        if(notice.classList && notice.classList.contains('hidden')) return 0;
+        if(notice.offsetParent === null) return 0;
+        return Math.round(notice.getBoundingClientRect().bottom);
+    }catch(e){return 0;}
+}
+function showDashboardFully(){
+    try{ if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }catch(e){}
+    setTimeout(()=>{
+        const sec = document.getElementById('sec_result');
+        if(!sec) return;
+        const rect = sec.getBoundingClientRect();
+        const noticeBottom = getNoticeBottom();
+        const desired = window.scrollY + rect.top - (noticeBottom ? noticeBottom + 6 : 0);
+        window.scrollTo({ top: Math.max(0, desired), behavior: 'smooth' });
+    }, 220);
+}
+// Tank-specific focus handling: detect explicit user tap and allow Next navigation
+window._tankUserMode = false;
+window._currentTankId = '';
+function onTankFocus(id, el) {
+    // If element was explicitly tapped, mark tank user mode
+    try {
+        if (el && el.dataset && el.dataset.userActivated === '1') {
+            window._tankUserMode = true;
+            window._currentTankId = id;
+        } else {
+            // if focus came programmatically, do not enable tank mode
+            // keep previous tank mode state
+        }
+        // clear dataset flag
+        if (el && el.dataset) delete el.dataset.userActivated;
+    } catch (e) {}
+}
+
+function onTankEnter(ev, id) {
+    if (!ev) return;
+    if (ev.key && ev.key !== 'Enter') return;
+    try { ev.preventDefault(); } catch (e) {}
+
+    // Only handle tank navigation if user explicitly focused a tank
+    if (!window._tankUserMode) return;
+
+    const seq = ['la','ca','ra'];
+    const idx = seq.indexOf(id);
+    if (idx === -1) return;
+    if (idx < seq.length - 1) {
+        const next = document.getElementById(seq[idx+1]);
+        if (next) { next.focus(); window._currentTankId = seq[idx+1]; }
+        return;
+    }
+    // if last tank (ra) -> focus density and exit tank mode
+    const d = document.getElementById('density');
+    if (d) { d.focus(); try { forceDensityCaretRight(d); } catch (e) {} }
+    window._tankUserMode = false;
+    window._currentTankId = '';
+}
 function getDensityValue() {
     const raw = document.getElementById('density').value;
     if (!raw || raw === '0.' || raw === '') return 0;
@@ -1470,6 +1789,86 @@ function loadPdfLib() {
     });
 }
 
+// Try rendering PDF bytes using PDF.js (inline). Returns true if rendered.
+async function renderPdfWithPdfJs(pdfBytes) {
+    if (!pdfBytes) return false;
+    // Try local copy first (assets/pdfjs), then CDN fallback
+    if (!window.pdfjsLib) {
+        const tryLoad = async (src, workerSrc) => {
+            await new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+            if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+            }
+        };
+        try {
+            await tryLoad('./assets/pdfjs/pdf.min.js', './assets/pdfjs/pdf.worker.min.js');
+        } catch (e) {
+            try {
+                await tryLoad('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js');
+            } catch (e2) {
+                return false;
+            }
+        }
+    }
+
+    try {
+        const loadingTask = window.pdfjsLib.getDocument({ data: pdfBytes });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(1);
+        const scale = 1.2;
+        const viewport = page.getViewport({ scale });
+        let canvas = document.getElementById('pdf-canvas');
+        if (!canvas) return false;
+        const ctx = canvas.getContext('2d');
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        const renderTask = page.render({ canvasContext: ctx, viewport });
+        await renderTask.promise;
+        let viewer = document.getElementById('pdf-viewer');
+        if (viewer) {
+            // Move viewer to top-level so modal overlay/styling doesn't interfere
+            try {
+                viewer.style.display = 'block';
+                viewer.style.position = 'fixed';
+                viewer.style.left = '50%';
+                viewer.style.top = '50%';
+                viewer.style.transform = 'translate(-50%, -50%)';
+                viewer.style.width = '92%';
+                viewer.style.maxWidth = '720px';
+                viewer.style.height = 'auto';
+                viewer.style.maxHeight = '82vh';
+                viewer.style.background = '#fff';
+                viewer.style.zIndex = '999999';
+                viewer.style.boxShadow = '0 10px 40px rgba(0,0,0,0.6)';
+                viewer.style.borderRadius = '8px';
+                // detach and append to body
+                if (viewer.parentNode !== document.body) document.body.appendChild(viewer);
+                // add a close button to the viewer so it can be dismissed
+                let vclose = document.getElementById('pdf-viewer-close');
+                if (!vclose) {
+                    vclose = document.createElement('button');
+                    vclose.id = 'pdf-viewer-close';
+                    vclose.textContent = 'Kapat';
+                    vclose.style.cssText = 'position:absolute; right:8px; top:8px; z-index:1000000; background:#111; color:#fff; border:none; padding:6px 10px; border-radius:6px; cursor:pointer; font-weight:700';
+                    vclose.addEventListener('click', function(){
+                        try { viewer.style.display = 'none'; if (viewer.parentNode === document.body) document.body.removeChild(viewer); } catch(e){}
+                    });
+                    viewer.appendChild(vclose);
+                }
+            } catch (e) {}
+        }
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 async function openPdfReceipt(log, debugForceMode) {
     await loadPdfLib();
     const pdfDebugMode = (function(){
@@ -1767,10 +2166,123 @@ async function openPdfReceipt(log, debugForceMode) {
     _lastReceiptBlobUrl = URL.createObjectURL(blob);
     const iframe = document.getElementById('receipt-iframe');
     const details = document.getElementById('r-details');
-    if (iframe) { iframe.src = _lastReceiptBlobUrl; iframe.style.display = 'block'; }
+
+    // Try inline render with PDF.js first; if it fails, fall back to Open/Download button.
+    let didRender = false;
+    try {
+        didRender = await renderPdfWithPdfJs(pdfBytes);
+    } catch (e) { didRender = false; }
+
+    if (!didRender) {
+        try {
+            let openBtn = document.getElementById('receipt-open-btn');
+            const createBtn = () => {
+                const b = document.createElement('button');
+                b.id = 'receipt-open-btn';
+                b.type = 'button';
+                b.textContent = 'Aç / İndir PDF';
+                b.style.cssText = 'width:100%; background:#5b9bff; color:#fff; border:none; padding:12px; margin-top:12px; font-weight:800; border-radius:6px; cursor:pointer';
+                b.addEventListener('click', function(){
+                    try { window.open(_lastReceiptBlobUrl, '_blank'); }
+                    catch (e) {
+                        const a = document.createElement('a');
+                        a.href = _lastReceiptBlobUrl;
+                        a.download = 'yakit-fisi.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                    }
+                });
+                return b;
+            };
+
+            if (!openBtn) {
+                openBtn = createBtn();
+                const rc = document.querySelector('#receipt-modal .receipt-content');
+                if (rc) {
+                    const closeBtn = rc.querySelector('#receipt-close');
+                    if (closeBtn) rc.insertBefore(openBtn, closeBtn);
+                    else rc.appendChild(openBtn);
+                }
+            } else {
+                // Re-create handler to ensure it uses the latest blob URL
+                openBtn.parentNode && openBtn.parentNode.removeChild(openBtn);
+                const rc = document.querySelector('#receipt-modal .receipt-content');
+                if (rc) {
+                    openBtn = createBtn();
+                    const closeBtn = rc.querySelector('#receipt-close');
+                    if (closeBtn) rc.insertBefore(openBtn, closeBtn);
+                    else rc.appendChild(openBtn);
+                }
+            }
+            // Add a lightweight developer button to force-unregister Service Worker and clear caches
+            try {
+                const isLanHost = /^(localhost|127\.|192\.168\.|10\.|172\.)/.test(location.hostname);
+                if (isLanHost) {
+                    let resetBtn = document.getElementById('receipt-reset-sw');
+                    const createReset = () => {
+                        const b = document.createElement('button');
+                        b.id = 'receipt-reset-sw';
+                        b.type = 'button';
+                        b.textContent = 'SW Yenile (dev)';
+                        b.style.cssText = 'width:100%; background:#666; color:#fff; border:none; padding:8px; margin-top:8px; font-weight:700; border-radius:6px; cursor:pointer; font-size:12px';
+                        b.addEventListener('click', async function(){
+                            try {
+                                if ('serviceWorker' in navigator) {
+                                    const regs = await navigator.serviceWorker.getRegistrations();
+                                    for (const r of regs) { try { await r.unregister(); } catch(e){} }
+                                }
+                                if (typeof caches !== 'undefined' && caches && typeof caches.keys === 'function') {
+                                    try {
+                                        const keys = await caches.keys();
+                                        for (const k of keys) { try { await caches.delete(k); } catch(e){} }
+                                    } catch (e) {}
+                                } else {
+                                    // caches API not available in this context — nothing else we can do here
+                                }
+                            } catch (e) {}
+                            location.reload(true);
+                        });
+                        return b;
+                    };
+                    if (!resetBtn) {
+                        resetBtn = createReset();
+                        const rc2 = document.querySelector('#receipt-modal .receipt-content');
+                        if (rc2) {
+                            const closeBtn2 = rc2.querySelector('#receipt-close');
+                            if (closeBtn2) rc2.insertBefore(resetBtn, closeBtn2);
+                            else rc2.appendChild(resetBtn);
+                        }
+                    }
+                }
+            } catch (e) {}
+        } catch (e) {
+            // non-fatal: nothing to do
+        }
+    } else {
+        // If rendered inline, remove any old open button
+        try { const ob = document.getElementById('receipt-open-btn'); if (ob && ob.parentNode) ob.parentNode.removeChild(ob); } catch(e){}
+    }
+
+    // Hide embedded iframe by default (mobile-friendly). Desktop users can still open via the button.
+    if (iframe) { iframe.style.display = 'none'; iframe.src = ''; }
     if (details) details.style.display = 'none';
     const receiptModalEl = document.getElementById('receipt-modal');
     if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
+    // ensure close button also hides any rendered pdf-viewer overlay
+    try {
+        const closeBtn = document.getElementById('receipt-close');
+        if (closeBtn && !closeBtn._sw_close_hooked) {
+            closeBtn.addEventListener('click', function(){
+                try {
+                    const v = document.getElementById('pdf-viewer');
+                    if (v) { v.style.display = 'none'; if (v.parentNode === document.body) document.body.removeChild(v); }
+                    if (_lastReceiptBlobUrl) { try { URL.revokeObjectURL(_lastReceiptBlobUrl); } catch(e){} _lastReceiptBlobUrl = null; }
+                } catch (e) {}
+            });
+            closeBtn._sw_close_hooked = true;
+        }
+    } catch (e) {}
     return true;
 }
 
@@ -2232,81 +2744,7 @@ window.addEventListener('resize', updateAllUnits);
         }catch(e){}
     }
 
-    // Torch (fener) kontrolü: global state ve yardımcı fonksiyonlar
-    let _torchStream = null;
-    let _torchOn = false;
-
-    async function setTorch(on){
-        if(on === _torchOn) return;
-        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            alert('Tarayıcınız kamera/torch API desteğine sahip değil.');
-            return;
-        }
-        try{
-            if(on){
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
-                const track = stream.getVideoTracks()[0];
-                const caps = track.getCapabilities ? track.getCapabilities() : {};
-                if(caps.torch){
-                    try{ await track.applyConstraints({ advanced: [{ torch: true }] }); _torchStream = stream; _torchOn = true; return; }catch(e){}
-                }
-                // Fallback: ImageCapture
-                try{
-                    if(window.ImageCapture){
-                        const ic = new ImageCapture(track);
-                        const pc = await ic.getPhotoCapabilities();
-                        if(pc && pc.fillLightMode && pc.fillLightMode.includes && pc.fillLightMode.includes('torch')){
-                            try{ await track.applyConstraints({ advanced: [{ torch: true }] }); _torchStream = stream; _torchOn = true; return; }catch(e){}
-                        }
-                    }
-                }catch(e){}
-                // Eğer buraya geldiyse torch desteklenmiyor
-                track.stop();
-                alert('Cihaz feneri desteklenmiyor veya erişilemedi.');
-            }else{
-                if(_torchStream){
-                    _torchStream.getTracks().forEach(t => { try{ t.stop(); }catch(e){} });
-                    _torchStream = null;
-                }
-                _torchOn = false;
-            }
-        }catch(e){
-            alert('Kamera erişimi reddedildi veya hata: ' + (e && e.message ? e.message : e));
-        }
-    }
-
-    async function toggleTorchAndSyncButtons(sourceBtn){
-        const ICON_OFF = 'assets/flashlight-off-svgrepo-com.svg';
-        const ICON_ON = 'assets/' + encodeURIComponent('flashlight-on-svgrepo-com (1).svg');
-        try{
-            sourceBtn.disabled = true;
-            await setTorch(!_torchOn);
-            const label = _torchOn ? 'Fener Kapat' : 'Fener Aç';
-            try{
-                sourceBtn.title = label;
-                sourceBtn.setAttribute('aria-pressed', String(_torchOn));
-                let img = sourceBtn.querySelector('img');
-                if(!img){ img = document.createElement('img'); img.style.width='18px'; img.style.height='18px'; img.alt = 'Torch'; sourceBtn.appendChild(img); }
-                img.src = _torchOn ? ICON_ON : ICON_OFF;
-            }catch(e){}
-            const other = document.getElementById('receipt-torch-btn');
-            if(other){
-                other.title = label; other.setAttribute('aria-pressed', String(_torchOn));
-                let oimg = other.querySelector('img');
-                if(!oimg){ oimg = document.createElement('img'); oimg.style.width='18px'; oimg.style.height='18px'; oimg.alt='Torch'; other.appendChild(oimg); }
-                oimg.src = _torchOn ? ICON_ON : ICON_OFF;
-                other.style.backgroundColor = _torchOn ? '#f59e0b' : '#10b981';
-            }
-            const pageBtn = document.getElementById('toggle-torch-btn');
-            if(pageBtn){
-                pageBtn.title = label; pageBtn.setAttribute('aria-pressed', String(_torchOn));
-                let pimg = pageBtn.querySelector('img');
-                if(!pimg){ pimg = document.createElement('img'); pimg.style.width='18px'; pimg.style.height='18px'; pimg.alt='Torch'; pageBtn.appendChild(pimg); }
-                pimg.src = _torchOn ? ICON_ON : ICON_OFF;
-                pageBtn.style.backgroundColor = _torchOn ? '#f59e0b' : '#0ea5a4';
-            }
-        }finally{ try{ sourceBtn.disabled = false; }catch(e){} }
-    }
+    // Torch removed: simplified — feature intentionally disabled for web-only builds
 
     const btn = document.createElement('button');
     btn.id = 'export-pdf-btn';
@@ -2322,17 +2760,7 @@ window.addEventListener('resize', updateAllUnits);
         document.body.appendChild(btn);
     }
 
-    // Page-level torch button removed — only modal torch button remains
-    // Eğer fiş modalındaki buton mevcutsa ona da dinleyici ekle
-    try{
-        const receiptTorchBtn = document.getElementById('receipt-torch-btn');
-        if(receiptTorchBtn){
-            // remove any inline SVG and add image icon
-            receiptTorchBtn.innerHTML = '';
-            const rimg = document.createElement('img'); rimg.src = ICON_OFF; rimg.style.width='18px'; rimg.style.height='18px'; rimg.alt='Fener'; receiptTorchBtn.appendChild(rimg);
-            receiptTorchBtn.addEventListener('click', async function(){ await toggleTorchAndSyncButtons(this); });
-        }
-    }catch(e){}
+    // Fener butonu kaldırıldı — artık modal içinde veya sayfa düzeyinde kullanılmıyor
 
     // (PDF scan removed — mapping now comes from assets/pdf_calc_mapping.json)
 
@@ -2798,6 +3226,8 @@ window.addEventListener('resize', updateAllUnits);
                     try{
                         // Ensure field appearances are updated so values are visible in PDF viewers
                         try{ if(typeof form.updateFieldAppearances === 'function') form.updateFieldAppearances(embeddedFont || helv); }catch(e){}
+                    
+                    // --- end of PDF generation logic ---
                         // Fallback: set NeedAppearances flag on AcroForm for viewers that respect it
                         try{
                             const root = pdfDoc.context.lookup(pdfDoc.context.trailer.get(PDFLib.PDFName.of('Root')));
@@ -2815,13 +3245,30 @@ window.addEventListener('resize', updateAllUnits);
             try { if (_lastReceiptBlobUrl) { try { URL.revokeObjectURL(_lastReceiptBlobUrl); } catch(e){} } } catch(e){}
             const url = URL.createObjectURL(blob);
             _lastReceiptBlobUrl = url;
-            const iframe = document.getElementById('receipt-iframe');
-            const details = document.getElementById('r-details');
-            if (iframe) { iframe.src = _lastReceiptBlobUrl; iframe.style.display = 'block'; }
-            if (details) details.style.display = 'none';
-            const receiptModalEl = document.getElementById('receipt-modal');
-            if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
-            btn.textContent = 'Fiş Görüntüle';
+            // Open generated PDF in a new tab. If popup blocked, fall back to creating a temporary anchor.
+            try {
+                const newWin = window.open(_lastReceiptBlobUrl, '_blank', 'noopener,noreferrer');
+                if (!newWin) {
+                    const a = document.createElement('a');
+                    a.href = _lastReceiptBlobUrl;
+                    a.target = '_blank';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                }
+            } catch (e) {
+                const a = document.createElement('a');
+                a.href = _lastReceiptBlobUrl;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+            // Ensure modal/iframe remain hidden when opening in new tab
+            try { const iframe = document.getElementById('receipt-iframe'); if (iframe) { iframe.style.display = 'none'; iframe.src = ''; } } catch(e){}
+            try { const details = document.getElementById('r-details'); if (details) details.style.display = 'none'; } catch(e){}
+            try { const receiptModalEl = document.getElementById('receipt-modal'); if (receiptModalEl) { receiptModalEl.style.display = 'none'; receiptModalEl.style.pointerEvents = 'none'; } } catch(e){}
+            btn.textContent = 'Fiş Görüntülendi';
         }catch(err){
             console.error('PDF oluşturulurken hata:', err);
             btn.textContent = 'Fiş Yazdır';
@@ -2832,7 +3279,7 @@ window.addEventListener('resize', updateAllUnits);
     <script>
     // Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        navigator.serviceWorker.register('./sw.js')
             .then(reg => console.log('SW registered:', reg.scope))
             .catch(err => console.error('SW registration failed:', err));
     }
