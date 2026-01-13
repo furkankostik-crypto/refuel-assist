@@ -407,65 +407,6 @@
                     <button id="lang-tr" type="button" aria-pressed="false" aria-label="Türkçe">TR</button>
                     <button id="lang-en" type="button" aria-pressed="false" aria-label="English">EN</button>
                 </div>
-                    <script>
-                    if ('serviceWorker' in navigator) {
-                        window.addEventListener('load', () => {
-                            try { sessionStorage.removeItem('__sw_reloaded'); } catch(e) {}
-                            // Register service worker. If online, try to update and activate immediately.
-                            try {
-                                navigator.serviceWorker.register('./sw.js').then(reg => {
-                                    try {
-                                        if (navigator.onLine) {
-                                            try { reg.update(); } catch(e) {}
-                                            // If there's a waiting worker, activate it immediately
-                                            if (reg.waiting) {
-                                                try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
-                                                return;
-                                            }
-                                            // If installing, wait until installed then activate
-                                            if (reg.installing) {
-                                                reg.installing.addEventListener('statechange', () => {
-                                                    try {
-                                                        if (reg.installing.state === 'installed' && reg.waiting) {
-                                                            try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
-                                                        }
-                                                    } catch(e) {}
-                                                });
-                                            }
-                                            // Otherwise listen for updatefound
-                                            reg.addEventListener('updatefound', () => {
-                                                try {
-                                                    const nw = reg.installing;
-                                                    if (nw) {
-                                                        nw.addEventListener('statechange', () => {
-                                                            try {
-                                                                if (nw.state === 'installed' && reg.waiting) {
-                                                                    try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e) {}
-                                                                }
-                                                            } catch(e){}
-                                                        });
-                                                    }
-                                                } catch(e){}
-                                            });
-                                        }
-                                    } catch(e){}
-                                }).catch(()=>{});
-                            } catch(e){}
-
-                            // Reload when new SW takes control
-                            try {
-                                navigator.serviceWorker.addEventListener('controllerchange', () => {
-                                    try {
-                                        if (!window.__swReloading) {
-                                            window.__swReloading = true;
-                                            window.location.reload();
-                                        }
-                                    } catch (e) {}
-                                });
-                            } catch (e) {}
-                        });
-                    }
-                    </script>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; flex: 1; width:100%; position:relative;">
                 <img class="app-logo" src="assets/logo-192.png" alt="Refuel Assist" style="width:96px;max-width:96px;margin-top:18px;">
@@ -831,13 +772,7 @@
         var goHint = document.getElementById('go-hint');
         if(goHint) goHint.style.display = 'none';
     });
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-                .then(reg => { try { reg.update(); } catch (e) {} })
-                .catch(() => {});
-        });
-    }
+    // Service worker registration handled centrally in the bottom script block to avoid duplicate registrations.
 
     // İlk girişte (kurulu değilse) yükleme sayfasına yönlendir
     (function redirectToInstallIfNeeded(){

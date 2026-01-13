@@ -19,7 +19,4 @@ jobs:
         with:
           path: .
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        with:
-          # v4 supports implicit artifact selection
-          # no extra inputs required here
+        uses: actions/deploy-pages@v1
