@@ -1,4 +1,4 @@
-const CACHE_NAME = 'refuel-assist-v7.3.49';
+const CACHE_NAME = 'refuel-assist-v7.3.48';
 const urlsToCache = [
   './',
   './index.html',
@@ -15,7 +15,6 @@ const urlsToCache = [
   './assets/logo.svg',
   './assets/pdf_calc_mapping.json',
   './assets/fuel-slip-blank-u.pdf',
-  './assets/fuel-slip-blank.pdf',
   './assets/pdfjs/pdf.min.js',
   './assets/pdfjs/pdf.worker.min.js',
 ];

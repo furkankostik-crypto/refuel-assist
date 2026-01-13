@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Viewer</title>
+    <style>
+html,body{height:100%;margin:0;background:#111;color:#fff}
+#toolbar{position:absolute;right:8px;top:8px;z-index:9999}
+button{background:#fff;color:#000;border-radius:6px;padding:6px 10px;border:0;font-weight:700}
+.pdf-overlay-item{
+    border: 0;
+    background: transparent; /* şeffaf arka plan, PDF ile aynı görünüm için */
+    box-shadow: none;
+    border-radius:4px;
+    transition:box-shadow .12s ease, transform .12s ease;
+}
+.pdf-overlay-item:hover{ box-shadow: none; transform: none; }
+</style>
+    <!-- Hammer.js for improved mobile pinch/pan gestures -->
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+</head>
+<body>
+    <div id="toolbar" style="display:flex;gap:8px;align-items:center;padding:8px;position:absolute;left:8px;top:8px;z-index:9999;">
+    <div style="flex:1"></div>
+    <button id="close">Kapat</button>
+</div>
+<div id="holder" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;background:transparent;">
+    <div id="loading" style="color:#ccc;font-weight:700">Yükleniyor…</div>
+    <!-- pageContainer: her sayfa için canvas ve overlay katmanını barındırır -->
+    <div id="pageContainer" style="position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+        <!-- canvas ve overlay dinamik olarak eklenir -->
+    </div>
+</div>
+<script>
+(function(){
+    // Minimal, modern viewer using PDF.js if available.
+    // Supports messages: {type:'pdf-bytes', buffer:ArrayBuffer, filename?:string} or {type:'pdf-url', url:string, filename?:string}
+
+    const holder = document.getElementById('holder');
+    const loading = document.getElementById('loading');
+    const pageInd = document.getElementById('page-ind');
+    let pdfDoc = null, currentPage = 1, scale = 1.0, lastBlobUrl = null, lastFilename = null;
+
+    // Global pan/pinch state so it survives re-renders
+    let __panX = 0, __panY = 0;
+    let __panStartX = 0, __panStartY = 0;
+    let __isPanning = false;
+    let __lastTouchDistanceLocal = 0;
+    let __pinchChanged = false;
+
+    // Touch / gesture helpers
+    let lastTouchDistance = 0;
+    function getTouchDistance(e){
+        if (!e.touches || e.touches.length < 2) return 0;
+        const a = e.touches[0], b = e.touches[1];
+        const dx = a.clientX - b.clientX; const dy = a.clientY - b.clientY; return Math.sqrt(dx*dx + dy*dy);
+    }
+
+    function setLoading(msg){ if(loading) loading.textContent = msg || 'Yükleniyor…'; }
+
+    function clearHolder(){
+        // preserve pageContainer element if present so overlays remain manageable
+        const pageContainer = document.getElementById('pageContainer');
+        holder.innerHTML = '';
+        holder.appendChild(loading);
+        if (pageContainer) holder.appendChild(pageContainer);
+    }
+
+    async function ensurePdfJs(){
+        if (window.pdfjsLib) return window.pdfjsLib;
+        // try to load local copy
+        return new Promise((res, rej)=>{
+            const s = document.createElement('script');
+                // pdf-viewer.html zaten `assets/` içinde; pdfjs klasörü göreli olarak ./pdfjs içindedir
+                s.src = './pdfjs/pdf.min.js';
+                s.onload = () => res(window.pdfjsLib || window['pdfjs-dist/build/pdf']);
+                s.onerror = () => { setLoading('pdf.js yüklenemedi'); rej(new Error('pdf.js yüklenemedi')); };
+            document.head.appendChild(s);
+        });
+    }
+
+    async function renderArrayBuffer(ab){
+        clearHolder();
+        setLoading('PDF işleniyor...');
+        try {
+            const pdfjs = await ensurePdfJs();
+            // worker dosyası da pdfjs klasöründe
+            pdfjs.GlobalWorkerOptions.workerSrc = './pdfjs/pdf.worker.min.js';
+            const loadingTask = pdfjs.getDocument({ data: ab });
+            pdfDoc = await loadingTask.promise;
+            currentPage = 1;
+            // mobile-first: choose a smaller base width so PDFs fit better on phones
+            scale = Math.max(1, (holder.clientWidth || window.innerWidth) / 420);
+            await renderPage(currentPage);
+            setLoading('');
+            return true;
+        } catch (e) {
+            setLoading('PDF.js ile yüklenemedi, gömme denenecek');
+            return false;
+        }
+    }
+
+    async function renderPage(pageNum){
+        if (!pdfDoc) return;
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale });
+        clearHolder();
+        const pageContainer = document.getElementById('pageContainer');
+        pageContainer.innerHTML = '';
+
+        const canvas = document.createElement('canvas');
+        // canvas pixel size matches viewport; displayed size may be scaled by CSS
+        canvas.width = Math.round(viewport.width);
+        canvas.height = Math.round(viewport.height);
+        canvas.style.width = canvas.width + 'px';
+        canvas.style.height = canvas.height + 'px';
+        canvas.style.maxWidth = '100%';
+        canvas.style.height = 'auto';
+        canvas.style.display = 'block';
+        canvas.style.pointerEvents = 'auto';
+
+        // overlay div placed on top of canvas with absolute positioning
+        const overlay = document.createElement('div');
+        overlay.id = 'pdfOverlay';
+        overlay.style.position = 'absolute';
+        overlay.style.left = '0';
+        overlay.style.top = '0';
+        overlay.style.width = canvas.style.width;
+        overlay.style.height = canvas.style.height;
+        overlay.style.pointerEvents = 'auto';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.width = canvas.style.width;
+        wrapper.style.height = canvas.style.height;
+        wrapper.appendChild(canvas);
+        wrapper.appendChild(overlay);
+        // allow pointer events for overlay interaction
+        try { pageContainer.style.pointerEvents = 'auto'; } catch(e){}
+        pageContainer.appendChild(wrapper);
+        // Gesture handling: prefer Hammer.js for smoother mobile pinch/pan, fallback to basic handlers
+        wrapper.style.touchAction = 'none';
+        holder.style.overscrollBehavior = 'none';
+        document.documentElement.style.overscrollBehavior = 'none';
+
+        function applyPan(){ wrapper.style.transform = `translate(${__panX}px, ${__panY}px) scale(${scale})`; }
+        // restore previous pan/zoom after re-render
+        applyPan();
+
+        // destroy previous Hammer instance (if any) to avoid duplicates
+        try { if (window.__hammer && typeof window.__hammer.destroy === 'function') { window.__hammer.destroy(); window.__hammer = null; } } catch(e){}
+
+        if (window.Hammer){
+            const mc = new Hammer(wrapper);
+            mc.get('pinch').set({ enable: true });
+            mc.get('pan').set({ direction: Hammer.DIRECTION_ALL, threshold: 0 });
+            mc.get('doubletap') && mc.get('doubletap').set({ taps: 2 });
+            let panStartX = __panX, panStartY = __panY, startScale = scale;
+            mc.on('panstart', function(){ panStartX = __panX; panStartY = __panY; });
+            mc.on('panmove', function(ev){ __panX = panStartX + ev.deltaX; __panY = panStartY + ev.deltaY; applyPan(); });
+            mc.on('pinchstart', function(){ startScale = scale; });
+            mc.on('pinchmove', function(ev){ scale = Math.max(0.5, Math.min(4, startScale * ev.scale)); applyPan(); });
+            mc.on('pinchend', function(){ renderPage(pageNum); });
+            mc.on('doubletap', function(){ scale = Math.min(4, scale * 1.5); renderPage(pageNum); });
+            window.__hammer = mc;
+        } else {
+            // fallback to original touch handlers when Hammer isn't available
+            function touchStartHandler(e){
+                if (!e.touches) return;
+                try{ e.preventDefault(); }catch(e){}
+                if (e.touches.length === 2){
+                    __lastTouchDistanceLocal = getTouchDistance(e);
+                    __isPanning = false;
+                    __pinchChanged = false;
+                } else if (e.touches.length === 1){
+                    const t = e.touches[0];
+                    __isPanning = true;
+                    __panStartX = t.clientX - __panX;
+                    __panStartY = t.clientY - __panY;
+                }
+            }
+            canvas.addEventListener('touchstart', touchStartHandler, {passive:false});
+            overlay.addEventListener('touchstart', touchStartHandler, {passive:false});
+            function touchMoveHandler(e){
+                if (!e.touches) return;
+                try{ e.preventDefault(); }catch(e){}
+                if (e.touches.length === 2){
+                    const d = getTouchDistance(e);
+                    if (__lastTouchDistanceLocal){
+                        const delta = d - __lastTouchDistanceLocal;
+                        if (Math.abs(delta) > 6){
+                            scale = Math.max(0.5, Math.min(4, scale + (delta>0?0.06:-0.06)));
+                            __pinchChanged = true;
+                            __lastTouchDistanceLocal = d;
+                        }
+                    } else __lastTouchDistanceLocal = d;
+                } else if (e.touches.length === 1 && __isPanning){
+                    const t = e.touches[0];
+                    __panX = t.clientX - __panStartX;
+                    __panY = t.clientY - __panStartY;
+                    applyPan();
+                }
+            }
+            canvas.addEventListener('touchmove', touchMoveHandler, {passive:false});
+            overlay.addEventListener('touchmove', touchMoveHandler, {passive:false});
+            function touchEndHandler(e){
+                if (!e.touches || e.touches.length === 0){
+                    __lastTouchDistanceLocal = 0; __isPanning = false;
+                    if (__pinchChanged){ __pinchChanged = false; renderPage(pageNum); }
+                }
+            }
+            canvas.addEventListener('touchend', touchEndHandler);
+            overlay.addEventListener('touchend', touchEndHandler);
+        }
+
+        // Desktop mouse drag handlers removed — mobile (touch/Hammer.js) prioritized.
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        // render overlay (annotations or external markers)
+        renderOverlay(page, viewport, canvas, overlay).catch(()=>{});
+        if (pageInd) pageInd.textContent = pageNum + ' / ' + pdfDoc.numPages;
+    }
+
+    // Overlay storage for re-rendering on resize/zoom
+    let __overlay_last = { page: null, anns: null, boxes: null };
+
+    // Render overlay elements matching PDF page coordinates or provided boxes.
+    // If `annsOrBoxes` is omitted, will try to read PDF annotations via page.getAnnotations().
+    async function renderOverlay(page, viewport, canvas, overlayEl, annsOrBoxes){
+        try{
+            overlayEl.innerHTML = '';
+
+            // compute displayed scale between canvas internal pixels and CSS pixels
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = rect.width / canvas.width;
+            const scaleY = rect.height / canvas.height;
+
+            let items = [];
+            if (Array.isArray(annsOrBoxes) && annsOrBoxes.length) {
+                // external boxes: allow two formats per item: {rect:[x1,y1,x2,y2], norm:true/false}
+                items = annsOrBoxes.map(i => ({ rect: i.rect || i, norm: !!i.norm }));
+            } else {
+                const anns = await page.getAnnotations({ intent: 'display' });
+                if (!anns || !anns.length) { __overlay_last.anns = null; return; }
+                items = anns.map(a => ({ rect: a.rect || null, rawAnn: a }));
+                __overlay_last.anns = items;
+            }
+
+            items.forEach(it => {
+                if (!it.rect) return;
+                // If item.normalized (0..1), convert using canvas size
+                let leftPx, topPx, wPx, hPx;
+                if (it.norm) {
+                    const [nx, ny, nw, nh] = it.rect; // normalized left/top/width/height
+                    leftPx = nx * rect.width;
+                    topPx = ny * rect.height;
+                    wPx = nw * rect.width;
+                    hPx = nh * rect.height;
+                } else {
+                    // treat as PDF rect [x1,y1,x2,y2] in PDF user space
+                    const r = viewport.convertToViewportRectangle(it.rect);
+                    const x = Math.min(r[0], r[2]);
+                    const y = Math.min(r[1], r[3]);
+                    const w = Math.abs(r[2] - r[0]);
+                    const h = Math.abs(r[3] - r[1]);
+                    leftPx = x * scaleX;
+                    topPx = y * scaleY;
+                    wPx = w * scaleX;
+                    hPx = h * scaleY;
+                }
+
+                const el = document.createElement('div');
+                el.className = 'pdf-overlay-item';
+                el.style.position = 'absolute';
+                el.style.left = leftPx + 'px';
+                el.style.top = topPx + 'px';
+                el.style.width = Math.max(2, wPx) + 'px';
+                el.style.height = Math.max(2, hPx) + 'px';
+                el.style.boxSizing = 'border-box';
+                // overlay öğelerinin üzerindeki dokunma/klik etkileşimlerini mümkün kıl
+                // ayrıca dokunma sırasında tarayıcı varsayılan davranışını engellemek için
+                // touch-action: none ayarlanıyor
+                el.style.pointerEvents = 'auto';
+                el.style.touchAction = 'none';
+                overlayEl.appendChild(el);
+            });
+
+            // store last overlay to support resize/zoom
+            __overlay_last.page = (page && page.pageNumber) || __overlay_last.page;
+            __overlay_last.boxes = (Array.isArray(annsOrBoxes) ? annsOrBoxes : null);
+        }catch(e){
+            // console.debug('overlay render error', e);
+        }
+    }
+
+    // Reflow overlay on resize
+    window.addEventListener('resize', function(){
+        try{
+            const pageContainer = document.getElementById('pageContainer');
+            if(!pageContainer) return;
+            const canvas = pageContainer.querySelector('canvas');
+            const overlay = pageContainer.querySelector('#pdfOverlay');
+            if(!canvas || !overlay || !pdfDoc) return;
+            // re-render using stored anns/boxes
+            const page = pdfDoc.getPage(currentPage);
+            page.then(p => renderOverlay(p, p.getViewport({ scale }), canvas, overlay, __overlay_last.boxes)).catch(()=>{});
+        }catch(e){}
+    });
+
+    function renderFallbackBlob(blob){
+        clearHolder();
+        const url = URL.createObjectURL(blob);
+        lastBlobUrl = url;
+        const embed = document.createElement('embed');
+        embed.src = url;
+        embed.type = 'application/pdf';
+        embed.style.width = '100%'; embed.style.height = '100%'; embed.style.border = '0';
+        holder.appendChild(embed);
+        setLoading('');
+    }
+
+    // Download/open buttons removed to simplify overlay UI
+
+    // toolbar buttons
+    const closeBtn = document.getElementById('close');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ try { parent.postMessage({ type: 'close-request' }, '*'); } catch(e){} });
+    const btnNext = document.getElementById('btn-next'); if (btnNext) btnNext.addEventListener('click', async ()=>{ if (pdfDoc && currentPage < pdfDoc.numPages) { currentPage++; await renderPage(currentPage); } });
+    const btnPrev = document.getElementById('btn-prev'); if (btnPrev) btnPrev.addEventListener('click', async ()=>{ if (pdfDoc && currentPage > 1) { currentPage--; await renderPage(currentPage); } });
+    const zoomIn = document.getElementById('zoom-in'); if (zoomIn) zoomIn.addEventListener('click', async ()=>{ scale = Math.min(4, scale + 0.25); if (pdfDoc) await renderPage(currentPage); });
+    const zoomOut = document.getElementById('zoom-out'); if (zoomOut) zoomOut.addEventListener('click', async ()=>{ scale = Math.max(0.5, scale - 0.25); if (pdfDoc) await renderPage(currentPage); });
+
+    window.addEventListener('message', async function(ev){
+        try{
+            const m = ev.data || {};
+            if (!m || !m.type) return;
+            if (m.type === 'overlay-terminate') {
+                try { if (pdfDoc && typeof pdfDoc.destroy === 'function') pdfDoc.destroy(); } catch(e){}
+                try { if (lastBlobUrl) { URL.revokeObjectURL(lastBlobUrl); lastBlobUrl = null; } } catch(e){}
+                // remove page container contents and stop
+                try { const pageContainer = document.getElementById('pageContainer'); if (pageContainer) pageContainer.innerHTML = ''; } catch(e){}
+                // restore any document-level touch/overscroll modifications we set earlier
+                try { document.documentElement.style.overscrollBehavior = ''; } catch(e){}
+                try { document.documentElement.style.touchAction = ''; } catch(e){}
+                try { document.body.style.overscrollBehavior = ''; } catch(e){}
+                try { document.body.style.touchAction = ''; } catch(e){}
+                try { document.body.style.webkitOverflowScrolling = 'touch'; } catch(e){}
+                // destroy Hammer instance if present
+                try { if (window.__hammer && typeof window.__hammer.destroy === 'function') { window.__hammer.destroy(); window.__hammer = null; } } catch(e){}
+                // ensure any added event listeners on canvases/overlays are removed by clearing containers
+                try { const pageContainer = document.getElementById('pageContainer'); if (pageContainer) pageContainer.innerHTML = ''; } catch(e){}
+                // notify parent that iframe has cleaned up (optional, parent already removes iframe)
+                try { parent.postMessage({ type: 'viewer-terminated' }, '*'); } catch(e){}
+                return;
+            }
+            if (m.type === 'pdf-bytes'){
+                // normalize buffer
+                let buf = m.buffer || m.data;
+                if (!buf) return;
+                let ab = null;
+                if (buf instanceof ArrayBuffer) ab = buf;
+                else if (buf.buffer && buf.buffer instanceof ArrayBuffer) ab = buf.buffer;
+                else if (Array.isArray(buf)) ab = new Uint8Array(buf).buffer;
+                else try { const arr = new Uint8Array(buf); ab = arr.buffer; } catch(e){}
+                if (!ab) return;
+                lastFilename = m.filename || lastFilename;
+                const blob = new Blob([ab], { type: 'application/pdf' });
+                // try PDF.js first
+                const did = await renderArrayBuffer(ab).catch(()=>false);
+                if (!did) renderFallbackBlob(blob);
+                try { if (lastBlobUrl) { URL.revokeObjectURL(lastBlobUrl); } } catch(e){}
+                lastBlobUrl = URL.createObjectURL(blob);
+            } else if (m.type === 'pdf-url'){
+                // fetch the pdf and render
+                try {
+                    const resp = await fetch(m.url);
+                    if (!resp.ok) return;
+                    const ab = await resp.arrayBuffer();
+                    lastFilename = m.filename || (m.url.split('/').pop() || 'document.pdf');
+                    const blob = new Blob([ab], { type: 'application/pdf' });
+                    const did = await renderArrayBuffer(ab).catch(()=>false);
+                    if (!did) renderFallbackBlob(blob);
+                    try { if (lastBlobUrl) URL.revokeObjectURL(lastBlobUrl); } catch(e){}
+                    lastBlobUrl = URL.createObjectURL(blob);
+                } catch(e){}
+            } else if (m.type === 'overlay-data'){
+                // External overlay boxes: { page?:number, boxes: [ {rect: [x1,y1,x2,y2] | [nx,ny,nw,nh], norm?:true } ] }
+                try{
+                    const boxes = m.boxes || [];
+                    const pageNum = m.page || currentPage;
+                    if (!pdfDoc) { __overlay_last.boxes = boxes; __overlay_last.page = pageNum; return; }
+                    const p = await pdfDoc.getPage(pageNum);
+                    const pageContainer = document.getElementById('pageContainer');
+                    const canvas = pageContainer ? pageContainer.querySelector('canvas') : null;
+                    const overlay = pageContainer ? pageContainer.querySelector('#pdfOverlay') : null;
+                    if (canvas && overlay) await renderOverlay(p, p.getViewport({ scale }), canvas, overlay, boxes);
+                    else { __overlay_last.boxes = boxes; __overlay_last.page = pageNum; }
+                }catch(e){}
+            } else if (m.type === 'overlay-clear'){
+                try{
+                    const pageContainer = document.getElementById('pageContainer');
+                    const overlay = pageContainer ? pageContainer.querySelector('#pdfOverlay') : null;
+                    if (overlay) overlay.innerHTML = '';
+                    __overlay_last = { page: null, anns: null, boxes: null };
+                }catch(e){}
+            }
+        }catch(e){}
+    }, false);
+
+    // initial notify
+    try { parent.postMessage({ type: 'viewer-ready' }, '*'); } catch(e){}
+})();
+</script>
+</body>
+</html>

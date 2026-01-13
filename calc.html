@@ -1789,6 +1789,7 @@ function loadPdfLib() {
     });
 }
 
+<<<<<<< HEAD
 // Try rendering PDF bytes using PDF.js (inline). Returns true if rendered.
 async function renderPdfWithPdfJs(pdfBytes) {
     if (!pdfBytes) return false;
@@ -1869,6 +1870,242 @@ async function renderPdfWithPdfJs(pdfBytes) {
     }
 }
 
+=======
+// Inline PDF.js rendering removed — use overlay-only behavior.
+async function renderPdfWithPdfJs(pdfBytes) {
+    // Disabled: prefer consistent overlay rendering for all PDFs.
+    return false;
+}
+
+// Show a generated PDF blob/url as a full-screen overlay (close revokes blob URL)
+function showPdfInOverlay(url, filename) {
+    try {
+        if (!url) return;
+        // remove existing overlay if present
+        const prev = document.getElementById('pdf-fullscreen-overlay');
+        if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+
+        const ov = document.createElement('div');
+        ov.id = 'pdf-fullscreen-overlay';
+        ov.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2147483647; display:flex; align-items:center; justify-content:center;';
+
+        const container = document.createElement('div');
+        container.style.cssText = 'position:relative; width:100%; height:100%;';
+
+        const iframe = document.createElement('iframe');
+        iframe.id = 'pdf-viewer-iframe';
+        // load the lightweight viewer which accepts pdf bytes via postMessage
+        iframe.src = './assets/pdf-viewer.html';
+        iframe.style.cssText = 'width:100%; height:100%; border:none; background:#fff;';
+
+        const close = document.createElement('button');
+        close.textContent = 'Kapat';
+        close.style.cssText = 'position:absolute; right:14px; top:14px; z-index:2147483648; background:#111; color:#fff; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:700';
+        let cleanup = function(){
+            try {
+                // ask iframe to terminate and wait briefly for confirmation so it can restore touch/overscroll state
+                let responded = false;
+                function onTerminated(ev) {
+                    try {
+                        const m = ev.data || {};
+                        if (m && m.type === 'viewer-terminated') {
+                            responded = true;
+                            try { window.removeEventListener('message', onTerminated); } catch(e){}
+                            finalize();
+                        }
+                    } catch(e){}
+                }
+                function finalize(){
+                    try { if (iframe) { iframe.src = 'about:blank'; } } catch(e){}
+                    try { if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch(e){}
+                    try { if (_lastReceiptBlobUrl) { URL.revokeObjectURL(_lastReceiptBlobUrl); } } catch(e){}
+                    _lastReceiptBlobUrl = null;
+                    try { window.removeEventListener('message', onMessage); } catch(e){}
+                    // Additional aggressive restores to help Chrome Android re-enable scrolling
+                    try { if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur(); } catch(e){}
+                    try { document.body.style.pointerEvents = ''; } catch(e){}
+                    try { document.documentElement.style.pointerEvents = ''; } catch(e){}
+                    try { document.body.style.touchAction = ''; } catch(e){}
+                    try { document.documentElement.style.touchAction = ''; } catch(e){}
+                    try { document.body.style.overscrollBehavior = ''; } catch(e){}
+                    try { document.documentElement.style.overscrollBehavior = ''; } catch(e){}
+                    try { document.body.style.webkitOverflowScrolling = 'touch'; } catch(e){}
+                    // clear inline touch/overscroll styles on elements (bounded loop for safety)
+                    try {
+                        const els = document.querySelectorAll('[style]');
+                        for (let i = 0; i < els.length && i < 500; i++) {
+                            try {
+                                const s = els[i].style;
+                                if (!s) continue;
+                                if (s.touchAction === 'none') s.touchAction = '';
+                                if (s.overscrollBehavior === 'none') s.overscrollBehavior = '';
+                                if (s.webkitOverflowScrolling === 'auto') s.webkitOverflowScrolling = 'touch';
+                            } catch(e){}
+                        }
+                    } catch(e){}
+                    // restore body position and scroll if we saved them when opening the overlay
+                    try {
+                        if (ov && ov.dataset) {
+                            const ss = ov.dataset._savedScroll ? parseInt(ov.dataset._savedScroll, 10) : NaN;
+                            if (!isNaN(ss)) {
+                                try { document.body.style.position = ov.dataset._prevBodyPosition || ''; } catch(e){}
+                                try { document.body.style.top = ov.dataset._prevBodyTop || ''; } catch(e){}
+                                try { document.body.style.left = ov.dataset._prevBodyLeft || ''; } catch(e){}
+                                try { document.body.style.width = ov.dataset._prevBodyWidth || ''; } catch(e){}
+                                try { document.body.style.overflow = ov.dataset._prevBodyOverflow || ''; } catch(e){}
+                                try { window.scrollTo(0, ss); } catch(e){}
+                            }
+                        }
+                    } catch(e){}
+                    // reflow / small scroll nudge
+                    try { void document.body.offsetHeight; } catch(e){}
+                    try { window.scrollTo(0, Math.max(0, window.scrollY - 1)); window.scrollTo(0, window.scrollY + 1); } catch(e){}
+                }
+
+                try { window.addEventListener('message', onTerminated, false); } catch(e){}
+                try { if (iframe && iframe.contentWindow) iframe.contentWindow.postMessage({ type: 'overlay-terminate' }, '*'); } catch(e){}
+
+                // fallback: if iframe does not respond within 300ms, finalize anyway
+                setTimeout(function(){ if (!responded) { try { window.removeEventListener('message', onTerminated); } catch(e){} finalize(); } }, 300);
+            } catch(e){
+                try { if (iframe) { iframe.src = 'about:blank'; } } catch(e){}
+                try { if (ov && ov.parentNode) ov.parentNode.removeChild(ov); } catch(e){}
+                try { if (_lastReceiptBlobUrl) { URL.revokeObjectURL(_lastReceiptBlobUrl); } } catch(e){}
+                _lastReceiptBlobUrl = null;
+                try { window.removeEventListener('message', onMessage); } catch(e){}
+            }
+        };
+        close.addEventListener('click', cleanup);
+
+
+        // message handler to send pdf bytes when viewer is ready and handle close requests
+        function onMessage(ev){
+            try {
+                const m = ev.data || {};
+                if (!m) return;
+                if (m.type === 'viewer-ready') {
+                    // fetch blob URL as arrayBuffer and send as transferable
+                    (async function(){
+                        try {
+                            const resp = await fetch(url);
+                            if (!resp.ok) return;
+                            const ab = await resp.arrayBuffer();
+                            try {
+                                iframe.contentWindow.postMessage({ type: 'pdf-bytes', buffer: ab }, '*', [ab]);
+                            } catch (e2) {
+                                // fallback without transfer
+                                try { iframe.contentWindow.postMessage({ type: 'pdf-bytes', buffer: ab }, '*'); } catch(e3){}
+                            }
+                        } catch(e){}
+                    })();
+                } else if (m.type === 'close-request') {
+                    cleanup();
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('message', onMessage, false);
+
+        // prevent background scrolling while overlay open
+        let _prevBodyOverflow = document.body.style.overflow;
+        let _prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+        let _prevHtmlTouchAction = document.documentElement.style.touchAction;
+        // Use position:fixed freeze which is more reliable on mobile browsers
+        try {
+            const scrollY = window.scrollY || window.pageYOffset || 0;
+            // save previous body styles on overlay element
+            ov.dataset._savedScroll = String(scrollY || 0);
+            ov.dataset._prevBodyPosition = document.body.style.position || '';
+            ov.dataset._prevBodyTop = document.body.style.top || '';
+            ov.dataset._prevBodyLeft = document.body.style.left || '';
+            ov.dataset._prevBodyWidth = document.body.style.width || '';
+            ov.dataset._prevBodyOverflow = _prevBodyOverflow || '';
+
+            document.body.style.position = 'fixed';
+            document.body.style.top = '-' + (scrollY || 0) + 'px';
+            document.body.style.left = '0';
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+
+            // also set html overscroll/touch-action to avoid scroll chaining on mobile
+            document.documentElement.style.overscrollBehavior = 'none';
+            document.documentElement.style.touchAction = 'none';
+        } catch(e){}
+
+        container.appendChild(iframe);
+        container.appendChild(close);
+        ov.appendChild(container);
+        document.body.appendChild(ov);
+
+        // ensure cleanup restores scrolling and touch-related styles
+        const originalCleanup = cleanup;
+        cleanup = function(){
+            try { document.body.style.overflow = _prevBodyOverflow || ''; } catch(e){}
+            try { document.documentElement.style.overscrollBehavior = _prevHtmlOverscroll || ''; } catch(e){}
+            try { document.documentElement.style.touchAction = _prevHtmlTouchAction || ''; } catch(e){}
+            // small reflow/scroll nudge to help mobile browsers re-evaluate scrollability
+            try { window.scrollTo(0, Math.max(0, window.scrollY - 1)); window.scrollTo(0, window.scrollY + 1); } catch(e){}
+            try { originalCleanup(); } catch(e){}
+        };
+
+        // Extra safety: ensure body touch/scroll smoothing properties preserved/restored
+        try {
+            const prevBodyTouch = document.body.style.touchAction;
+            const prevBodyWebkit = document.body.style.webkitOverflowScrolling;
+            // store them on overlay element so they survive closure scope
+            ov.dataset._prevBodyTouch = prevBodyTouch || '';
+            ov.dataset._prevBodyWebkit = prevBodyWebkit || '';
+        } catch(e){}
+    } catch (e) {}
+}
+
+// Intercept clicks on anchors that point to blob: or .pdf URLs and show overlay instead of opening a new tab
+document.addEventListener('click', function(ev){
+    try {
+        const a = ev.target.closest && ev.target.closest('a');
+        if (!a) return;
+        const href = a.getAttribute && a.getAttribute('href');
+        if (!href || typeof href !== 'string') return;
+
+        // blob: URLs -> show overlay directly
+        if (href.indexOf('blob:') === 0) {
+            ev.preventDefault(); ev.stopPropagation();
+            try { showPdfInOverlay(href, a.getAttribute('download') || 'yakit-fisi.pdf'); } catch(e){}
+            return;
+        }
+
+        // If link targets a PDF file (local or absolute), fetch it and show overlay
+        const isPdfLink = /\.pdf(?:\?|#|$)/i.test(href);
+        if (isPdfLink) {
+            ev.preventDefault(); ev.stopPropagation();
+            (async function(){
+                try {
+                    // Resolve relative URLs against location
+                    const resolved = new URL(href, window.location.href).toString();
+                    const resp = await fetch(resolved);
+                    if (!resp.ok) {
+                        // cannot fetch the PDF; show a notice instead of opening a new tab
+                        setNotice(["PDF indirilemedi veya bulunamadı."],'error');
+                        return;
+                    }
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    // revoke previous blob if any
+                    try { if (_lastReceiptBlobUrl) { URL.revokeObjectURL(_lastReceiptBlobUrl); } } catch(e){}
+                    _lastReceiptBlobUrl = url;
+                    const filename = a.getAttribute('download') || (resolved.split('/').pop() || 'form.pdf');
+                    try { showPdfInOverlay(url, filename); } catch (e) {
+                        setNotice(["PDF görüntülenemedi."],'error');
+                    }
+                } catch (e) {
+                    setNotice(["PDF alınırken hata oluştu."],'error');
+                }
+            })();
+        }
+    } catch (e) {}
+}, true);
+
+>>>>>>> 007becc (chore: prepare release v7.3.48)
 async function openPdfReceipt(log, debugForceMode) {
     await loadPdfLib();
     const pdfDebugMode = (function(){
@@ -2168,10 +2405,15 @@ async function openPdfReceipt(log, debugForceMode) {
     const details = document.getElementById('r-details');
 
     // Try inline render with PDF.js first; if it fails, fall back to Open/Download button.
+<<<<<<< HEAD
     let didRender = false;
     try {
         didRender = await renderPdfWithPdfJs(pdfBytes);
     } catch (e) { didRender = false; }
+=======
+    // Inline rendering disabled — always use overlay to display generated PDF
+    let didRender = false;
+>>>>>>> 007becc (chore: prepare release v7.3.48)
 
     if (!didRender) {
         try {
@@ -2183,6 +2425,7 @@ async function openPdfReceipt(log, debugForceMode) {
                 b.textContent = 'Aç / İndir PDF';
                 b.style.cssText = 'width:100%; background:#5b9bff; color:#fff; border:none; padding:12px; margin-top:12px; font-weight:800; border-radius:6px; cursor:pointer';
                 b.addEventListener('click', function(){
+<<<<<<< HEAD
                     try { window.open(_lastReceiptBlobUrl, '_blank'); }
                     catch (e) {
                         const a = document.createElement('a');
@@ -2191,6 +2434,19 @@ async function openPdfReceipt(log, debugForceMode) {
                         document.body.appendChild(a);
                         a.click();
                         a.remove();
+=======
+                    try {
+                        showPdfInOverlay(_lastReceiptBlobUrl, 'yakit-fisi.pdf');
+                    } catch (e) {
+                        try {
+                            const a = document.createElement('a');
+                            a.href = _lastReceiptBlobUrl;
+                            a.download = 'yakit-fisi.pdf';
+                            document.body.appendChild(a);
+                            a.click();
+                            a.remove();
+                        } catch (e2) {}
+>>>>>>> 007becc (chore: prepare release v7.3.48)
                     }
                 });
                 return b;
@@ -3247,6 +3503,7 @@ window.addEventListener('resize', updateAllUnits);
             _lastReceiptBlobUrl = url;
             // Open generated PDF in a new tab. If popup blocked, fall back to creating a temporary anchor.
             try {
+<<<<<<< HEAD
                 const newWin = window.open(_lastReceiptBlobUrl, '_blank', 'noopener,noreferrer');
                 if (!newWin) {
                     const a = document.createElement('a');
@@ -3263,6 +3520,18 @@ window.addEventListener('resize', updateAllUnits);
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
+=======
+                showPdfInOverlay(_lastReceiptBlobUrl, 'yakit-fisi.pdf');
+            } catch (e) {
+                try {
+                    const a = document.createElement('a');
+                    a.href = _lastReceiptBlobUrl;
+                    a.download = 'yakit-fisi.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } catch (e2) {}
+>>>>>>> 007becc (chore: prepare release v7.3.48)
             }
             // Ensure modal/iframe remain hidden when opening in new tab
             try { const iframe = document.getElementById('receipt-iframe'); if (iframe) { iframe.style.display = 'none'; iframe.src = ''; } } catch(e){}
