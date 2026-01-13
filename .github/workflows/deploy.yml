@@ -14,9 +14,17 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare `public/` directory with site files
+        run: |
+          set -e
+          mkdir -p public
+          for f in index.html calc.html mel-calc.html install.html manifest.json sw.js; do
+            if [ -f "$f" ]; then cp "$f" public/; fi
+          done
+          if [ -d assets ]; then cp -r assets public/; fi
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v2
         with:
-          path: .
+          path: public
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
