@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+	<title>Refuel Assist v7.4.2 — MEL Süre Hesaplayıcı</title>
+	<meta name="theme-color" content="#0f172a">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self' data:">
+	<link rel="icon" type="image/png" href="assets/logo-192.png">
+	<style>
+		:root { --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; --muted:#64748b; --amber:#f59e0b; --brand-font: 'Segoe UI', Arial, sans-serif; }
+		html,body{height:100%;margin:0;font-family:var(--brand-font);background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff}
+		.page{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;min-height:100dvh}
+		.hero{text-align:center;margin-bottom:18px}
+		.logo-text{font-size:20px;font-weight:800;color:var(--primary);margin:6px 0}
+		.card{background:rgba(30,41,59,0.6);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:18px;padding:14px}
+			/* section divider between fields */
+			.section-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0;border-radius:2px}
+		.group-label{font-size:14px;color:#fff;font-weight:900;text-transform:uppercase;margin-bottom:12px;text-align:center;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.45)}
+		.cat-summary{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+		.cat-item{font-weight:900;font-size:14px;color:#fff;display:inline-block;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.02)}
+			.cat-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+					.cat-label{flex:0 0 40px;font-weight:900;font-size:14px;color:var(--muted);width:40px;text-align:center}
+			.cat-input{flex:0 0 56px;max-width:56px;box-sizing:border-box}
+			.cat-comb{flex:1 1 auto;min-width:120px;box-sizing:border-box}
+		.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+		input[type="text"], input[type="number"], input[type="datetime-local"], select{background:#0f172a;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:10px 12px;border-radius:12px;font-weight:700;font-size:15px}
+		.row{display:flex;gap:8px}
+		.small{flex:0 0 120px}
+		.btn{width:100%;background:rgba(56,189,248,0.18);border:2px solid rgba(56,189,248,0.28);color:white;padding:10px;border-radius:12px;font-weight:900;cursor:pointer}
+		.result{margin-top:12px;padding:12px;border-radius:12px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.04);font-weight:800}
+		.result-summary{white-space:nowrap;overflow-x:auto;font-size:13px;color:var(--muted);font-weight:800;padding:8px 6px;border-radius:10px;background:rgba(15,23,42,0.04);border:1px solid rgba(255,255,255,0.02)}
+		/* Birleştirilmiş sonuç listesi (kompakt) */
+		.result-list{padding:0;border-radius:10px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.04);overflow:hidden}
+		.result-item{padding:8px;border-top:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;gap:6px}
+		.result-item:first-child{border-top:0}
+			.result-row{display:flex;align-items:center;gap:10px}
+			/* daha kompakt rozet */
+			.res-left{
+				flex:0 0 48px;
+				width:48px;
+				height:48px;
+				display:grid;
+				place-items:center;
+				font-size:20px;
+				font-weight:900;
+				color:#052635;
+				background:linear-gradient(180deg,#67d9ff 0%,var(--primary) 100%);
+				border-radius:10px;
+				box-shadow:0 6px 14px rgba(2,8,20,0.35), inset 0 -3px 6px rgba(0,0,0,0.05);
+				border:1px solid rgba(255,255,255,0.08);
+				text-align:center;
+				padding:0;
+				transition:transform .12s ease,box-shadow .12s ease;
+			}
+			.res-left:active{transform:translateY(1px) scale(.997);box-shadow:0 4px 10px rgba(2,8,20,0.32)}
+			.res-right{flex:1 1 auto;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+			.due-text{font-size:13px;color:var(--muted);font-weight:700;display:flex;gap:8px;align-items:center}
+			.due-text strong{color:var(--muted);font-weight:800;font-size:12px}
+				.due-value{color:#ffffff;font-weight:900;font-size:18px}
+			.remaining-text{font-size:12px;color:var(--muted);font-weight:700}
+			.note-amber{margin-top:8px;font-size:13px;color:var(--amber);font-weight:800;background:rgba(245,158,11,0.06);padding:6px;border-radius:8px;border:1px solid rgba(245,158,11,0.08)}
+			.cat-info-btn{flex:0 0 34px;width:34px;height:34px;border-radius:10px;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.18);color:var(--amber);font-weight:900;cursor:pointer}
+			/* Flash button removed for web builds */
+			/* Modal for A info */
+			.modal-overlay{position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999}
+			.modal-card{background:var(--card);padding:16px;border-radius:12px;max-width:420px;color:#fff;box-shadow:0 8px 30px rgba(2,6,23,0.6);box-sizing:border-box;margin:16px}
+			.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+			.modal-body{font-size:14px;color:var(--muted);line-height:1.45}
+			.modal-close{background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+		.muted{color:var(--muted);font-weight:700;font-size:13px;text-align:center}
+		.link-back{display:inline-block;margin-top:12px;color:var(--primary);font-weight:800;text-decoration:none}
+	</style>
+		<style>
+			/* Touch / modal helpers */
+			.no-scroll{overflow:hidden;height:100%;}
+			button, .cat-info-btn{touch-action:manipulation;-webkit-tap-highlight-color: rgba(0,0,0,0.12);}
+		</style>
+</head>
+<body>
+	<div class="page">
+		<div class="hero">
+			<div style="text-align:center;margin-bottom:10px;">
+				<img src="assets/logo-192.png" alt="logo" style="width:64px;height:auto;border-radius:12px;display:inline-block;">
+			</div>
+			<div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+				<button onclick="window.location.href='index.html'" aria-label="Back" style="width:44px; height:44px; padding:0; border-radius:14px; background: rgba(56,189,248,0.12); border: 1.5px solid rgba(56,189,248,0.22); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+					<svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+				<div style="flex:1; text-align:center">
+					<div class="logo-text">MEL Süre Hesaplayıcı</div>
+					<div class="muted">Tüm MEL kategorileri için bitiş (due) tarihlerini hesaplayın</div>
+				</div>
+				<!-- Fener butonu kaldırıldı (web-only) -->
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="field">
+				<label class="group-label">Tespit zamanı</label>
+				<input id="detectedAt" type="datetime-local" title="GMT/UTC zamanı seçin" />
+				<div class="muted" style="margin-top:6px">Arızanın tespit edildiği zaman (GMT/UTC olarak giriniz). Varsayılan: şimdi (GMT)</div>
+			</div>
+			<div class="section-divider" aria-hidden="true"></div>
+			<div class="field">
+				<label class="group-label">Kategoriler</label>
+				<div id="categories"></div>
+			</div>
+
+			<!-- Hesaplama otomatik hale getirildi; manuel buton kaldırıldı -->
+
+			<div id="resultsWrap" style="margin-top:12px;display:none">
+				<div id="results"></div>
+			</div>
+
+
+
+			<!-- moved header back-button above; keep link for fallback but point to cover -->
+			<a class="link-back" href="index.html" style="display:none">← Hesaplayıcıya geri dön</a>
+		</div>
+	</div>
+
+	<script>
+		const defaultCategories = [
+			{ id: 'A', label: 'Kategori A', value: 0, unit: 'hours', hint: 'Kullanıcı düzenleyebilir' },
+			{ id: 'B', label: 'Kategori B', value: 72, unit: 'hours', hint: 'Standart: 3 gün' },
+			{ id: 'C', label: 'Kategori C', value: 240, unit: 'hours', hint: 'Standart: 10 gün' },
+			{ id: 'D', label: 'Kategori D', value: 2880, unit: 'hours', hint: 'Standart: 120 gün' }
+		];
+
+		function formatDisplayValue(value, unit){
+			if(unit === 'hours'){
+				if(value % 24 === 0) return (value/24) + ' gün';
+				return value + ' saat';
+			}
+			return value + ' ' + unit;
+		}
+
+		// compute due date from start by ms and normalize to 23:59 UTC (GMT)
+		function computeDueFromStart(startDate, ms){
+			const due = new Date(startDate.getTime() + ms);
+			// set to 23:59 UTC so B/C/D use GMT end-of-day
+			due.setUTCHours(23,59,0,0);
+			return due;
+		}
+
+		// Helper: format a Date into a value suitable for <input type="datetime-local"> using UTC (so input shows UTC/GMT)
+		function formatDatetimeLocalUTC(d){
+			function pad(n){return n<10? '0'+n : ''+n}
+			return d.getUTCFullYear() + '-' + pad(d.getUTCMonth()+1) + '-' + pad(d.getUTCDate()) + 'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes());
+		}
+
+		// format Date into numeric DD/MM/YYYY HH:MM GMT using UTC
+		function formatDateUTC(d){
+			if(!d) return '';
+			const date = (d instanceof Date) ? d : new Date(d);
+			function pad(n){return n<10? '0'+n : ''+n}
+			const day = pad(date.getUTCDate());
+			const mon = pad(date.getUTCMonth()+1);
+			const year = date.getUTCFullYear();
+			const hh = pad(date.getUTCHours());
+			const mm = pad(date.getUTCMinutes());
+			return `${day}/${mon}/${year} ${hh}:${mm} GMT`;
+		}
+
+		// isolated calculation for Category A so special rules can be applied
+		// returns { due: Date, remaining: string, specialApplied: boolean }
+		function calculateA(dates, raw, unit, mode){
+			// dates: { startDate: Date, detectedDate: Date|null }
+			// mode: 'calendar' or '24hours'
+			const startDate = dates.startDate;
+			const detectedDate = dates.detectedDate || startDate;
+
+			// normalize raw => ms
+			let ms = 0;
+			if(unit === 'days') ms = raw * 24 * 3600 * 1000;
+			else ms = raw * 3600 * 1000;
+
+			let due;
+			let startForCount;
+			let specialApplied = true; // A always follows special rules
+			if(mode === '24hours'){
+				// strict 24-hour count from detection time
+				startForCount = new Date(detectedDate.getTime());
+				due = new Date(detectedDate.getTime() + ms);
+				// keep exact time for strict 24h
+			} else {
+				// 'calendar' mode per new rule:
+				// Start = the next day's 00:01 UTC after detection
+				// Behavior:
+				// - If unit is 'days': keep previous end-of-day semantics (count full days, due at 23:59)
+				// - If unit is 'hours': compute due = start + ms so changing hours updates due immediately
+				const y = detectedDate.getUTCFullYear();
+				const m = detectedDate.getUTCMonth();
+				const day = detectedDate.getUTCDate();
+				startForCount = new Date(Date.UTC(y, m, day + 1, 0, 1, 0, 0));
+				if (unit === 'days'){
+					const daysCount = raw;
+					const dueDay = day + 1 + (daysCount - 1);
+					due = new Date(Date.UTC(y, m, dueDay, 23, 59, 0, 0));
+				} else {
+					// hours: immediate update relative to calendar start
+					due = new Date(startForCount.getTime() + ms);
+				}
+			}
+
+			// For display and remaining calculation, compute remaining from now
+			const now = new Date();
+			const diff = due.getTime() - now.getTime();
+			let remaining = '';
+			if(diff <= 0) remaining = 'Süre doldu';
+			else {
+				const secs = Math.floor(diff/1000);
+				const days = Math.floor(secs / 86400);
+				const hours = Math.floor((secs % 86400) / 3600);
+				const mins = Math.floor((secs % 3600) / 60);
+				remaining = (days?days+'g ':'') + (hours?hours+'s ':'') + (mins?mins+'dk':'');
+			}
+
+			return { start: startForCount, due, remaining, specialApplied };
+		}
+
+		function renderCategoryRows(){
+			const cont = document.getElementById('categories');
+			cont.innerHTML = '';
+			// Keep A editable, summarize others into a single-line summary
+			const summaryParts = [];
+			defaultCategories.forEach(cat => {
+				if(cat.id === 'A'){
+					// Intentionally do not render the A badge/label here (removed per request)
+				} else {
+					summaryParts.push(`${cat.id}: ${formatDisplayValue(cat.value, cat.unit)}`);
+				}
+			});
+
+			// Removed summary badges for B/C/D to simplify UI per request
+		}
+
+		function calculateAll(){
+			// Merge: use single `detectedAt` field for both detection and start
+			// NOTE: the datetime-local input is treated as GMT/UTC — we append 'Z' so the string is parsed as UTC
+			const detectedEl = document.getElementById('detectedAt');
+			let detectedDate = null;
+			if(detectedEl && detectedEl.value){
+				// parse as UTC
+				detectedDate = new Date(detectedEl.value + 'Z');
+			}
+			if(!(detectedDate instanceof Date) || isNaN(detectedDate)) detectedDate = new Date();
+			const startDate = detectedDate;
+
+			const results = [];
+			defaultCategories.forEach(cat => {
+				let raw = cat.value; let unit = cat.unit;
+				if(cat.id === 'A'){
+					const input = document.querySelector('input[data-cat="A"]');
+					const comb = document.querySelector('select[data-cat-mode="A"]') || document.querySelector('select[data-catmode="A"]');
+					// keep the raw select value (e.g. "hours:calendar" or "hours:24") so we can
+					// persist and reapply the selection to the <select> later
+					let combVal = 'hours:24';
+					if(comb) combVal = comb.value || combVal;
+					// Distinguish between empty input (user hasn't provided value) and numeric 0
+					if(input){
+						if(input.value === '') raw = null; else raw = Number(input.value);
+					} else {
+						// if no input element found (first render), keep raw as null so we don't show A result
+						raw = null;
+					}
+					let unitA = unit;
+					let modeA = 'calendar';
+					const parts = (combVal || '').split(':');
+					if(parts.length === 2){ unitA = parts[0]; modeA = parts[1] === '24' ? '24hours' : parts[1]; }
+					if(raw !== null && !isNaN(raw)){
+						const ares = calculateA({ startDate, detectedDate }, raw, unitA, modeA);
+						// store the full select value so the UI select can be set back correctly
+						results.push({ id: cat.id, start: ares.start || null, due: ares.due, remaining: ares.remaining, special: ares.specialApplied, mode: combVal, raw: raw });
+					} else {
+						// push a placeholder so we can render input/select in results but without computed due/remaining
+						results.push({ id: cat.id, due: null, remaining: null, mode: combVal, raw: null });
+					}
+				} else {
+					let ms = 0;
+					if(unit === 'days') ms = raw * 24 * 3600 * 1000;
+					else ms = raw * 3600 * 1000;
+
+					const due = computeDueFromStart(startDate, ms);
+					const now = new Date();
+					const diff = due.getTime() - now.getTime();
+					let remaining = '';
+					if(diff <= 0) remaining = 'Süre doldu';
+					else {
+						const secs = Math.floor(diff/1000);
+						const days = Math.floor(secs / 86400);
+						const hours = Math.floor((secs % 86400) / 3600);
+						const mins = Math.floor((secs % 3600) / 60);
+						remaining = (days?days+'g ':'') + (hours?hours+'s ':'') + (mins?mins+'dk':'');
+					}
+
+					results.push({ id: cat.id, due: due, remaining });
+				}
+			});
+
+			showResults(results);
+		}
+
+		function showResults(results){
+			const wrap = document.getElementById('resultsWrap');
+			const out = document.getElementById('results');
+			out.innerHTML = '';
+			const list = document.createElement('div');
+			list.className = 'result-list';
+			results.forEach(r => {
+				const item = document.createElement('div');
+				item.className = 'result-item';
+				let html = '';
+				html += `<div class="result-row"><div class="res-left">${r.id}</div><div class="res-right">`;
+				const dueText = r.due ? formatDateUTC(r.due) : '—';
+				const remainingText = r.remaining ? r.remaining : '—';
+				html += `<div class="due-text"><strong>Bitiş:</strong> <span class="due-value">${dueText}</span></div><div class="remaining-text"><strong>Kalan:</strong> ${remainingText}</div>`;
+				html += `</div></div>`;
+
+				if(r.id === 'A'){
+					const modeVal = r.mode || 'hours:calendar';
+					const rawVal = (typeof r.raw !== 'undefined' && r.raw !== null) ? r.raw : '';
+					html += `<div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+						<label style="font-weight:800;color:var(--muted);font-size:12px">A değer:</label>
+						<input type="number" data-cat="A" min="0" class="cat-input" style="width:64px;padding:6px;border-radius:6px;background:rgba(15,23,42,0.6);color:#fff;border:1px solid rgba(255,255,255,0.04);font-weight:700;font-size:13px" />
+						<label style="font-weight:800;color:var(--muted);font-size:12px">Mod:</label>
+						<select data-cat-mode="A" style="padding:6px;border-radius:6px;background:rgba(15,23,42,0.6);color:#fff;border:1px solid rgba(255,255,255,0.04);font-size:13px"><option value="hours:calendar">Takvim Günü</option><option value="hours:24">Saat</option></select>
+						<button class="cat-info-btn" type="button" title="A kategorisi hakkında" style="margin-left:auto;padding:6px;font-size:13px">!</button>
+					</div>`;
+				}
+
+
+				item.innerHTML = html;
+				list.appendChild(item);
+			});
+			out.appendChild(list);
+
+			// After DOM insertion, set select values and wire info button actions
+			const selectA = out.querySelector('select[data-cat-mode="A"]');
+			if(selectA){
+				const found = results.find(x=>x.id==='A');
+				if(found && found.mode) selectA.value = found.mode;
+				selectA.addEventListener('change', function(){ calculateAll(); });
+			}
+			// wire A numeric input inside the card
+			const inputA = out.querySelector('input[data-cat="A"]');
+			if(inputA){
+				const found = results.find(x=>x.id==='A');
+				if(found && typeof found.raw !== 'undefined' && found.raw !== null) inputA.value = found.raw; else inputA.value = '';
+				inputA.addEventListener('input', function(){ calculateAll(); });
+				inputA.addEventListener('change', function(){ calculateAll(); });
+			}
+			const infoBtns = out.querySelectorAll('.cat-info-btn');
+			infoBtns.forEach(btn=>{
+				btn.addEventListener('click', showAInfo);
+				btn.addEventListener('pointerup', showAInfo);
+			});
+			wrap.style.display = 'block';
+		}
+
+		// A category info modal controls
+		let __aInfo_lastFocused = null;
+		function showAInfo(){
+			const m = document.getElementById('aInfoModal');
+			if(!m) return;
+			__aInfo_lastFocused = document.activeElement;
+			m.style.display = 'flex';
+			document.body.classList.add('no-scroll');
+			const closeBtn = m.querySelector('.modal-close');
+			if(closeBtn) closeBtn.focus();
+			document.addEventListener('keydown', __aInfo_keydown);
+		}
+		function closeAInfo(){
+			const m = document.getElementById('aInfoModal');
+			if(!m) return;
+			m.style.display = 'none';
+			document.body.classList.remove('no-scroll');
+			document.removeEventListener('keydown', __aInfo_keydown);
+			try{ if(__aInfo_lastFocused) __aInfo_lastFocused.focus(); }catch(e){}
+		}
+		function __aInfo_keydown(e){
+			if(e.key === 'Escape' || e.key === 'Esc'){
+				closeAInfo();
+			}
+		}
+		// overlay click / touch close
+		document.addEventListener('DOMContentLoaded', function(){
+			const overlay = document.getElementById('aInfoModal');
+			if(!overlay) return;
+			overlay.addEventListener('pointerup', function(ev){ if(ev.target === overlay) closeAInfo(); });
+			overlay.addEventListener('click', function(ev){ if(ev.target === overlay) closeAInfo(); });
+		});
+
+		// Flashlight removed — button and related JS disabled for web-only build
+
+		(function init(){
+			// Prefill detectedAt with current UTC (so input shows GMT/UTC time)
+			const det = document.getElementById('detectedAt');
+			if(det) det.value = formatDatetimeLocalUTC(new Date());
+			renderCategoryRows();
+
+			// set up automatic calculation: update on inputs and periodically refresh remaining times
+			function setupAutoCalculate(){
+				const detected = document.getElementById('detectedAt');
+				if(detected){
+					detected.addEventListener('input', calculateAll);
+					detected.addEventListener('change', calculateAll);
+				}
+
+				// listen for changes inside categories (A input/select)
+				function categoryChangeHandler(e){
+					if(!e || !e.target) return;
+					if(e.target.matches && (e.target.matches('input[data-cat="A"]') || e.target.matches('select[data-cat-mode="A"]'))){
+						calculateAll();
+					}
+				}
+				document.addEventListener('input', categoryChangeHandler);
+				document.addEventListener('change', categoryChangeHandler);
+
+				// periodic refresh to update remaining times (every 30s)
+				setInterval(calculateAll, 30000);
+			}
+
+			setupAutoCalculate();
+			// initial calculation so results are visible on load
+			calculateAll();
+		})();
+	</script>
+		<script>
+		// Service Worker register helper — otomatik kayıt + console'dan hızlı unregister
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.register('./sw.js')
+				.then(reg => console.log('SW registered:', reg.scope))
+				.catch(err => console.error('SW registration failed:', err));
+		}
+
+		window.__unregisterSW = async function() {
+			if (!('serviceWorker' in navigator)) return console.log('ServiceWorker desteklenmiyor');
+			const regs = await navigator.serviceWorker.getRegistrations();
+			await Promise.all(regs.map(r => r.unregister()));
+			console.log('Service worker kayıtları kaldırıldı:', regs.map(r => r.scope));
+		};
+		</script>
+
+	<!-- A kategorisi bilgi modalı -->
+	<div id="aInfoModal" class="modal-overlay" role="dialog" aria-modal="true" style="display:none" onclick="if(event.target===this) closeAInfo();">
+		<div class="modal-card">
+			<div class="modal-header">
+				<div style="font-weight:900">Kategori A Bilgisi</div>
+				<button class="modal-close" aria-label="Kapat" type="button" onclick="closeAInfo()">×</button>
+			</div>
+			<div class="modal-body">
+				<p>Kategori A için iki farklı hesaplama modu vardır:</p>
+				<ul>
+					<li><strong>Saat (24h):</strong> Tespit anından itibaren kesin 24 saat esaslı sayım.</li>
+					<li><strong>Takvim Günü:</strong> Tespit gününü izleyen günün 00:01 UTC'sinden itibaren sayım; gün bazlı değerlerde bitiş günün 23:59 UTC'sinde olur.</li>
+				</ul>
+				<p>Buradaki "A değer" alanını boş bırakırsanız sonuç gösterilmez. Değeri girince sonuç otomatik güncellenecektir.</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
+

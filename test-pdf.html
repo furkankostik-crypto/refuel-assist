@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Refuel Assist — PDF Test</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;padding:20px}button{padding:12px 18px;margin:8px 0;font-weight:700}iframe{width:100%;height:640px;border:1px solid #ccc}</style>
+</head>
+<body>
+  <h2>Offline PDF Test</h2>
+  <p>Bu sayfa `assets/pdf-lib.min.js` ve `assets/DejaVuSans.ttf` dosyalarını kullanarak basit bir PDF oluşturur ve gömme font ile gösterir.</p>
+  <p>Kullanım: önce bu sayfayı <b>çevrimiçi</b> olarak açın, <b>"Create PDF"</b> butonuna basın. Sonra DevTools > Application > Service Workers bölümünden <i>Offline</i> seçeneğini etkinleştirip sayfayı yenileyin ve tekrar butona basarak çevrimdışı davranışı test edin.</p>
+
+  <button id="create">Create PDF</button>
+  <button id="load-font">Load font from disk</button>
+  <button id="clear">Clear iframe</button>
+  <div id="log" style="margin:12px 0;color:#333"></div>
+  <iframe id="pdf-frame"></iframe>
+
+  <script>
+    // Load local pdf-lib via <script> so the page can be opened via file:// without a server.
+    // If local load fails, fall back to CDN.
+    (function(){
+      const local = './assets/pdf-lib.min.js';
+      const cdn = 'https://unpkg.com/pdf-lib/dist/pdf-lib.min.js';
+      const logEl = () => document.getElementById('log');
+      function setLog(v){ try{ const el=logEl(); if(el) el.textContent = v; }catch(e){}
+      }
+      const s = document.createElement('script');
+      s.src = local;
+      s.onload = ()=>{ console.info('Loaded pdf-lib from local asset'); setLog('pdf-lib: local'); };
+      s.onerror = ()=>{
+        console.warn('Local pdf-lib failed, falling back to CDN');
+        const s2 = document.createElement('script'); s2.src = cdn; s2.onload = ()=>{ console.info('Loaded pdf-lib from CDN'); setLog('pdf-lib: CDN'); };
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    })();
+  </script>
+  <script>
+    const log = msg => { const el=document.getElementById('log'); el.textContent = msg; console.log(msg); };
+
+    async function ensureFontkit(pdfDoc){
+      // Ensure fontkit is available and registered on the given PDFDocument.
+      try{
+        const fk = (window.fontkit && window.fontkit) || (window.fontkit && window.fontkit.default) || (window.FontKit && window.FontKit) || null;
+        if(pdfDoc && typeof pdfDoc.registerFontkit === 'function' && fk){
+          try{ pdfDoc.registerFontkit(fk); return true; }catch(e){ console.warn('registerFontkit threw', e); }
+        }
+        // Try to dynamically load fontkit from CDN (may fail when offline)
+        if(!window._fontkitLoading){
+          window._fontkitLoading = new Promise((resolve, reject)=>{
+            try{
+              const s = document.createElement('script');
+              s.src = 'https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.js';
+              s.onload = ()=>{ if(window.fontkit) resolve(window.fontkit); else reject(new Error('fontkit not available after load')); };
+              s.onerror = ()=>reject(new Error('Failed to load fontkit script'));
+              document.head.appendChild(s);
+            }catch(err){ reject(err); }
+          });
+        }
+        await window._fontkitLoading;
+        const fk2 = (window.fontkit && window.fontkit) || (window.fontkit && window.fontkit.default) || null;
+        if(pdfDoc && typeof pdfDoc.registerFontkit === 'function' && fk2){
+          try{ pdfDoc.registerFontkit(fk2); return true; }catch(e){ console.warn('registerFontkit threw after load', e); }
+        }
+      }catch(e){ console.warn('ensureFontkit failed:', e); }
+      return false;
+    }
+
+    async function createPdf() {
+      try {
+        if (!window.PDFLib || !PDFLib.PDFDocument) {
+          log('PDFLib yüklenmedi veya bulunamadı.');
+          return;
+        }
+        log('Initializing PDF generation...');
+        const { PDFDocument } = PDFLib;
+        const pdfDoc = await PDFDocument.create();
+
+        // Load local font: Prefer a user-provided file (when opened via file://), otherwise try fetching.
+        let fontBytes = null;
+        try {
+          if (window._localFontBytes) {
+            fontBytes = window._localFontBytes;
+            log('Font loaded from disk (' + fontBytes.byteLength + ' bytes)');
+          } else {
+            const resp = await fetch('./assets/DejaVuSans.ttf');
+            if (!resp.ok) throw new Error('Font fetch failed: ' + resp.status);
+            fontBytes = await resp.arrayBuffer();
+            log('Font loaded (' + fontBytes.byteLength + ' bytes)');
+          }
+        } catch (e) {
+          log('Font load failed: ' + e.message + '. Falling back to StandardFonts.');
+        }
+
+        let font = null;
+        if (fontBytes) {
+          const ok = await ensureFontkit(pdfDoc);
+          if(!ok){
+            log('Cannot embed custom font: fontkit not available. Falling back to StandardFonts.');
+          } else {
+            font = await pdfDoc.embedFont(fontBytes);
+          }
+        }
+
+        const page = pdfDoc.addPage([595, 842]);
+        const text = 'Refuel Assist — PDF test (offline-capable)';
+        page.drawText(text, { x: 50, y: 780, size: 18, font: font || (await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica)) });
+        page.drawText('Date: ' + new Date().toLocaleString(), { x:50, y: 760, size: 10, font: font || (await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica)) });
+
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const iframe = document.getElementById('pdf-frame');
+        iframe.src = url;
+        log('PDF oluşturuldu — iframe yükleniyor.');
+      } catch (err) {
+        log('PDF oluşturma hatası: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    document.getElementById('create').addEventListener('click', createPdf);
+    document.getElementById('load-font').addEventListener('click', ()=>{
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = '.ttf,.otf';
+      inp.onchange = async (ev)=>{
+        const f = ev.target.files && ev.target.files[0];
+        if(!f){ log('No font selected'); return; }
+        try{
+          const ab = await f.arrayBuffer();
+          window._localFontBytes = ab;
+          log('Font loaded from disk via file picker (' + ab.byteLength + ' bytes)');
+        }catch(err){ log('Failed reading font file: ' + (err && err.message)); }
+      };
+      inp.click();
+    });
+    document.getElementById('clear').addEventListener('click', ()=>{ document.getElementById('pdf-frame').src='about:blank'; log('iframe temizlendi'); });
+  </script>
+  <script>
+    // Ensure service worker is registered when served over http(s) or localhost.
+    (function registerSW(){
+      if (!('serviceWorker' in navigator)) return;
+      const allowedHost = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+      if (!allowedHost) return;
+      // Try to register at site root so scope covers the app.
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.info('ServiceWorker registered:', reg.scope);
+      }).catch(err => {
+        console.warn('ServiceWorker registration failed:', err && err.message ? err.message : err);
+      });
+    })();
+  </script>
+</body>
+</html>

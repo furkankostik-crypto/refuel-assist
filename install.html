@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Refuel Assist v7.4.2 - Yükleme</title>
+    <meta name="theme-color" content="#0f172a">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self' data:">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="assets/logo-192.png">
+    <link rel="apple-touch-icon" href="assets/logo-192.png">
+    <style>
+        :root { --primary: #38bdf8; --bg: #0f172a; --amber: #f59e0b; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--bg); color: white; margin: 0; display: flex; justify-content: center; overflow-x: hidden; overflow-y: auto; min-height: 100dvh; }
+        .page { width: 100%; max-width: 420px; padding: 12px; box-sizing: border-box; min-height: 100dvh; display:flex; flex-direction:column; align-items:center; }
+        .hero-section { text-align: center; margin-bottom: 12px; position: relative; width: 100%; }
+        .app-logo { width: 96px; height: auto; display: block; margin: 0 auto 2px auto; }
+        .logo-text { font-size: 26px; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0; }
+        .logo-text .bold { font-weight: 900; letter-spacing: -1px; }
+        .logo-text .light { font-weight: 200; color: var(--primary); letter-spacing: 4px; }
+        .logo-subtitle { font-size: 10px; font-weight: 700; color: #64748b; letter-spacing: 3px; text-transform: uppercase; margin-top: 5px; }
+        .logo-line { height: 1px; width: 120px; background: linear-gradient(90deg, transparent, var(--primary), transparent); margin: 12px auto; opacity: 0.3; }
+
+        .lang-toggle {
+            display: flex;
+            position: fixed;
+            top: calc(10px + env(safe-area-inset-top, 8px));
+            left: calc(10px + env(safe-area-inset-left, 8px));
+            gap: 6px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(15, 23, 42, 0.28);
+            backdrop-filter: blur(6px);
+            padding: 4px;
+            overflow: visible;
+            margin: 0;
+            z-index: 9999;
+            transition: background 160ms ease, transform 120ms ease;
+        }
+        .lang-toggle button {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: #cbd5e1;
+            padding: 6px 8px;
+            min-width: 44px;
+            min-height: 44px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            line-height: 1;
+            border-radius: 9999px;
+            transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .lang-toggle button:hover { background: rgba(255,255,255,0.02); transform: translateY(-1px); }
+        }
+        /* Touch feedback */
+        .lang-toggle button:active { transform: translateY(0); background: rgba(255,255,255,0.03); }
+        .lang-toggle button.active {
+            color: var(--primary);
+            background: rgba(56,189,248,0.08);
+            border: 1px solid rgba(56,189,248,0.08);
+        }
+        .lang-toggle button:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(56,189,248,0.08); border-radius: 9999px; }
+        .lang-toggle button.active { color: white; background: rgba(56,189,248,0.18); }
+
+        .panel {
+            width: 100%;
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 14px;
+            box-sizing: border-box;
+        }
+        .panel-title {
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+        .desc {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1.45;
+            color: #cbd5e1;
+        }
+        .btn-primary {
+            width: 100%;
+            margin-top: 12px;
+            background: rgba(56,189,248,0.18);
+            border: 2px solid rgba(56,189,248,0.28);
+            color: white;
+            padding: 10px 0;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            min-height: 36px;
+            user-select: none;
+            touch-action: manipulation;
+            transition: background 0.2s, border 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:active { background: rgba(56,189,248,0.28); border-color: var(--primary); }
+        .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .btn-secondary {
+            width: 100%;
+            margin-top: 10px;
+            background: rgba(30, 41, 59, 0.55);
+            border: 1px solid rgba(255,255,255,0.10);
+            color: #e2e8f0;
+            padding: 10px 0;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            min-height: 36px;
+            user-select: none;
+            touch-action: manipulation;
+        }
+        .steps {
+            margin-top: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.55;
+            color: #94a3b8;
+            white-space: pre-line;
+            text-align: left;
+        }
+        .msg {
+            display:none;
+            margin-top: 10px;
+            text-align:center;
+            font-size: 12px;
+            font-weight: 900;
+            line-height: 1.35;
+            color: var(--amber);
+        }
+
+        .platform-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .p-card {
+            background: rgba(255,255,255,0.02);
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            min-height: 56px;
+        }
+        .p-icon { font-size: 20px; width:28px; text-align:center }
+        .p-title { font-weight: 900; font-size: 12px; color: #e2e8f0 }
+        .p-desc { font-size: 11px; color: #94a3b8 }
+        @media (max-width:420px) {
+            .platform-grid { grid-template-columns: 1fr; }
+        }
+
+        .footer-note {
+            margin-top: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-align: center;
+            line-height: 1.45;
+        }
+    </style>
+</head>
+<body>
+    <div class="page" style="background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);">
+        <div class="hero-section">
+            <img class="app-logo" src="assets/logo-512.png" alt="Refuel Assist">
+            <div class="logo-text"><span class="bold">REFUEL</span><span class="light">ASSIST</span></div>
+            <div id="subtitle" class="logo-subtitle">Flight Operations Support</div>
+            <div class="lang-toggle" role="group" aria-label="Language">
+                <button id="lang-tr" type="button">TR</button>
+                <button id="lang-en" type="button">EN</button>
+            </div>
+            <div class="logo-line"></div>
+        </div>
+
+        <div class="panel">
+            <div id="install-title" class="panel-title">UYGULAMAYI YÜKLE VEYA DENEME</div>
+            <div id="install-desc" class="desc">Uygulamayı yükleyerek daha hızlı erişim, çevrimdışı çalışma ve uygulama benzeri deneyim elde edersiniz. Aşağıdaki adımları cihazınıza göre izleyin.</div>
+
+            <div class="platform-grid" role="list" aria-label="Platform talimatları">
+                <div class="p-card" id="plat-android" role="listitem">
+                    <div class="p-icon">🤖</div>
+                    <div>
+                        <div class="p-title" id="plat-android-title">Android</div>
+                        <div class="p-desc" id="plat-android-desc">Android/Chrome: Menü (⋮) → "Uygulamayı yükle" veya "Ana ekrana ekle".</div>
+                    </div>
+                </div>
+                <div class="p-card" id="plat-ios" role="listitem">
+                    <div class="p-icon">🍎</div>
+                    <div>
+                        <div class="p-title" id="plat-ios-title">iPhone / iPad</div>
+                        <div class="p-desc" id="plat-ios-desc">Safari: Paylaş (⬆︎) → "Ana Ekrana Ekle".</div>
+                    </div>
+                </div>
+                <!-- Masaüstü kartı gereksiz bulundu, kaldırıldı -->
+            </div>
+
+            <button id="install-btn" type="button" class="btn-primary">YÜKLE</button>
+            <div id="install-steps" class="steps" aria-live="polite"></div>
+            <div id="install-msg" class="msg" role="alert"></div>
+
+            <div id="try-note" class="footer-note">Not: Yüklemeden de kullanabilirsiniz. Dilerseniz daha sonra yükleyebilirsiniz.</div>
+            <button id="try-btn" type="button" class="btn-secondary">YÜKLEMEDEN DENEMEK İSTİYORUM</button>
+        </div>
+
+        <div class="footer-note" style="margin-top:14px;max-width:95%;">
+            GitHub üzerinden erişiyorsanız: PWA yükleme için sayfanın HTTPS altında ve tarayıcının desteklediği şekilde açılması gerekir.
+        </div>
+    </div>
+
+
+    <script>
+    // Service worker kaydı (offline + PWA installability için) - otomatik geçiş destekli
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => {
+                    try {
+                        if (navigator.onLine) {
+                            try { reg.update(); } catch (e) {}
+                            try {
+                                if (reg.waiting) {
+                                    try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                }
+                                if (reg.installing) {
+                                    reg.installing.addEventListener('statechange', () => {
+                                        try {
+                                            if (reg.installing.state === 'installed' && reg.waiting && navigator.onLine) {
+                                                try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                            }
+                                        } catch (e) {}
+                                    });
+                                }
+                                reg.addEventListener('updatefound', () => {
+                                    try {
+                                        const nw = reg.installing;
+                                        if (nw) {
+                                            nw.addEventListener('statechange', () => {
+                                                try {
+                                                    if (nw.state === 'installed' && reg.waiting && navigator.onLine) {
+                                                        try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
+                                                    }
+                                                } catch (e) {}
+                                            });
+                                        }
+                                    } catch (e) {}
+                                });
+                            } catch (e) {}
+                        }
+                    } catch (e) {}
+                })
+                .catch(() => {});
+
+            try {
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    try {
+                        if (!window.__swReloading) {
+                            window.__swReloading = true;
+                            window.location.reload();
+                        }
+                    } catch (e) {}
+                });
+            } catch (e) {}
+        });
+    }
+
+    const STORAGE_KEY = 'refuel_assist_lang';
+    const SKIP_INSTALL_KEY = 'refuel_assist_skip_install_v1';
+
+    function isStandaloneMode() {
+        try {
+            if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+            if (typeof navigator.standalone === 'boolean' && navigator.standalone) return true;
+        } catch (e) {}
+        return false;
+    }
+
+    // Kurulu uygulama buraya gelirse kapak sayfasına al
+    if (isStandaloneMode()) {
+        window.location.replace('./index.html');
+    }
+
+    function isIOS() {
+        const ua = String(navigator.userAgent || '');
+        return /iPad|iPhone|iPod/.test(ua) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+    }
+
+    function isAndroid() {
+        const ua = String(navigator.userAgent || '');
+        return /Android/i.test(ua);
+    }
+
+    const I18N = {
+        tr: {
+            subtitle: 'Uçuş Operasyon Destek',
+            install_title: 'UYGULAMAYI YÜKLE',
+            install_desc: "Uygulamayı telefona/PC'ye yükleyerek daha hızlı ve çevrimdışı kullanabilirsiniz.",
+            install_btn: 'YÜKLE',
+            install_steps_android_ready: 'Tarayıcı destekliyorsa aşağıdaki buton ile kurulum penceresi açılır.',
+            install_steps_android_menu: 'Android/Chrome: Menü (⋮) > "Uygulamayı yükle" / "Ana ekrana ekle".',
+            install_steps_ios: 'iPhone/iPad (Safari): Paylaş (⬆︎) > "Ana Ekrana Ekle".',
+            install_click_no_prompt: 'Bu tarayıcıda otomatik "Yükle" penceresi çıkmıyor. Yukarıdaki adımları takip edin.',
+            platform_android_title: 'Android',
+            platform_android_desc: 'Android/Chrome: Menü (⋮) → "Uygulamayı yükle" veya "Ana ekrana ekle".',
+            platform_ios_title: 'iPhone / iPad',
+            platform_ios_desc: 'Safari: Paylaş (⬆︎) → "Ana Ekrana Ekle".',
+            try_btn: 'YÜKLEMEDEN DENEMEK İSTİYORUM',
+            try_note: 'Not: Yüklemeden de kullanabilirsiniz. Dilerseniz daha sonra yükleyebilirsiniz.',
+            sw_update_ready: 'Yeni sürüm hazır.',
+            sw_update_progress: 'GÜNCELLENİYOR...',
+            sw_update_reload: 'GÜNCELLE'
+        },
+        en: {
+            subtitle: 'Flight Operations Support',
+            install_title: 'INSTALL THE APP',
+            install_desc: 'Install to your phone/PC for faster access and offline use.',
+            install_btn: 'INSTALL',
+            install_steps_android_ready: 'If supported, the install prompt will open via the button below.',
+            install_steps_android_menu: 'Android/Chrome: Menu (⋮) > "Install app" / "Add to Home screen".',
+            install_steps_ios: 'iPhone/iPad (Safari): Share (⬆︎) > "Add to Home Screen".',
+            install_click_no_prompt: 'The automatic install prompt is not available here. Please follow the steps above.',
+                platform_android_title: 'Android',
+                platform_android_desc: 'Android/Chrome: Menu (⋮) → "Install app" or "Add to Home screen".',
+                platform_ios_title: 'iPhone / iPad',
+                platform_ios_desc: 'Safari: Share (⬆︎) → "Add to Home Screen".',
+            try_btn: 'TRY WITHOUT INSTALLING',
+            try_note: 'Note: You can use it without installing. You can install later if you want.',
+            sw_update_ready: 'A new version is ready.',
+            sw_update_progress: 'UPDATING...',
+            sw_update_reload: 'RELOAD'
+        }
+    };
+
+    function getLang() {
+        const raw = (localStorage.getItem(STORAGE_KEY) || '').toLowerCase();
+        return raw === 'en' ? 'en' : 'tr';
+    }
+
+    function setLang(lang) {
+        const next = lang === 'en' ? 'en' : 'tr';
+        localStorage.setItem(STORAGE_KEY, next);
+        applyLang(next);
+        setInstallUIState();
+    }
+
+    function applyLang(lang) {
+        document.documentElement.lang = lang;
+        const dict = I18N[lang] || I18N.tr;
+        const subtitle = document.getElementById('subtitle');
+        const tTitle = document.getElementById('install-title');
+        const tDesc = document.getElementById('install-desc');
+        const installBtn = document.getElementById('install-btn');
+        const tryBtn = document.getElementById('try-btn');
+        const tryNote = document.getElementById('try-note');
+        if (subtitle) subtitle.textContent = dict.subtitle;
+        if (tTitle) tTitle.textContent = dict.install_title;
+        if (tDesc) tDesc.textContent = dict.install_desc;
+        if (installBtn) installBtn.textContent = dict.install_btn;
+        if (tryBtn) tryBtn.textContent = dict.try_btn;
+        if (tryNote) tryNote.textContent = dict.try_note;
+
+        // sw-update banner removed; no DOM elements to update
+
+        const platAndroidTitle = document.getElementById('plat-android-title');
+        const platAndroidDesc = document.getElementById('plat-android-desc');
+        const platIosTitle = document.getElementById('plat-ios-title');
+        const platIosDesc = document.getElementById('plat-ios-desc');
+        if (platAndroidTitle) platAndroidTitle.textContent = dict.platform_android_title;
+        if (platAndroidDesc) platAndroidDesc.textContent = dict.platform_android_desc;
+        if (platIosTitle) platIosTitle.textContent = dict.platform_ios_title;
+        if (platIosDesc) platIosDesc.textContent = dict.platform_ios_desc;
+
+        const btnTr = document.getElementById('lang-tr');
+        const btnEn = document.getElementById('lang-en');
+        if (btnTr && btnEn) {
+            btnTr.classList.toggle('active', lang === 'tr');
+            btnEn.classList.toggle('active', lang === 'en');
+        }
+    }
+
+    document.getElementById('lang-tr')?.addEventListener('click', () => setLang('tr'));
+    document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'));
+
+    let deferredPrompt = null;
+
+    function setInstallUIState() {
+        const lang = getLang();
+        const dict = I18N[lang] || I18N.tr;
+
+        const installBtn = document.getElementById('install-btn');
+        const installSteps = document.getElementById('install-steps');
+        const installMsg = document.getElementById('install-msg');
+        if (!installBtn || !installSteps) return;
+        if (installMsg) installMsg.style.display = 'none';
+        // Butonu her zaman etkin bırak: tıklayınca yükleme denenir, başarısızsa yönergeler gösterilir.
+        installBtn.disabled = false;
+        installBtn.style.opacity = '1';
+
+        const lines = [];
+        const pushIf = (key) => { const v = dict[key]; if (v) lines.push('• ' + v); };
+        if (isIOS()) {
+            pushIf('install_steps_ios');
+        } else if (deferredPrompt) {
+            pushIf('install_steps_android_ready');
+        } else if (isAndroid()) {
+            pushIf('install_steps_android_menu');
+        } else {
+            // non-mobile: show mobile-only hint if present
+            pushIf('install_only_mobile');
+        }
+
+        installSteps.textContent = lines.length ? lines.join('\n') : '';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        setInstallUIState();
+    });
+
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        // Yüklendiyse direkt uygulamaya geçebilir
+        window.location.replace('./index.html');
+    });
+
+    document.getElementById('install-btn')?.addEventListener('click', async () => {
+        const lang = getLang();
+        const dict = I18N[lang] || I18N.tr;
+        const installMsg = document.getElementById('install-msg');
+        const installSteps = document.getElementById('install-steps');
+
+        const showInstructions = () => {
+            if (installSteps) {
+                // ensure platform steps shown (setInstallUIState already populates them)
+                setInstallUIState();
+            }
+            if (installMsg) {
+                installMsg.textContent = dict.install_click_no_prompt || 'Yükleme otomatik olarak başlatılamadı. Lütfen yukarıdaki adımları izleyin.';
+                installMsg.style.display = 'block';
+                setTimeout(() => { try { installMsg.style.display = 'none'; } catch (e) {} }, 6000);
+            }
+        };
+
+        try {
+            if (deferredPrompt) {
+                // Try the native install prompt
+                try {
+                    deferredPrompt.prompt();
+                    const choice = await deferredPrompt.userChoice;
+                    if (choice && choice.outcome === 'accepted') {
+                        if (installMsg) {
+                            installMsg.textContent = dict.sw_update_ready || 'Yükleme kabul edildi.';
+                            installMsg.style.display = 'block';
+                            setTimeout(() => { try { installMsg.style.display = 'none'; } catch (e) {} }, 2500);
+                        }
+                    } else {
+                        // dismissed by user -> show manual instructions
+                        showInstructions();
+                    }
+                } catch (err) {
+                    // prompt failed -> show instructions
+                    showInstructions();
+                }
+                deferredPrompt = null;
+                setInstallUIState();
+            } else {
+                // No deferredPrompt available -> show manual instructions
+                showInstructions();
+            }
+        } catch (e) {
+            showInstructions();
+        }
+    });
+
+    document.getElementById('try-btn')?.addEventListener('click', () => {
+        try { localStorage.setItem(SKIP_INSTALL_KEY, '1'); } catch (e) {}
+        window.location.href = './index.html?skipInstall=1';
+    });
+
+    applyLang(getLang());
+
+    // Remove stray single/double quote text nodes in the hero section (fix: lone "." appearing)
+    (function removeStrayQuote(){
+        try {
+            const hero = document.querySelector('.hero-section');
+            if (!hero) return;
+            for (const node of Array.from(hero.childNodes)) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const s = (node.textContent || '').trim();
+                    if (s === '"' || s === "'" || s === '“' || s === '”') node.remove();
+                }
+            }
+        } catch (e) {}
+    })();
+
+    setInstallUIState();
+    </script>
+</body>
+</html>
