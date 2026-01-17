@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Refuel Assist v7.4.2</title>
+    <title>Refuel Assist v7.4.3</title>
     <meta name="theme-color" content="#0f172a">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self' data:">
     <link rel="manifest" href="manifest.json">
@@ -1250,6 +1250,28 @@
                 const vU = v.toUpperCase();
                 if (vU.includes('MAX')) return 'B737MAX8/MAX9';
                 return 'B737-700/800/900ER';
+            }
+            // Widebody: try to return canonical tank keys for known families so
+            // they match entries in assets/tailCapacity.json.
+            // B777/B787/A330 have specific canonical keys in the loader data.
+            if (famU.startsWith('B777')) {
+                const vU = rawVariant.toUpperCase();
+                if (vU.includes('300') || vU.includes('300ER') || vU.includes('300-ER')) return 'B777-300ER';
+                if (vU.includes('200')) return 'B777-200';
+                // fallback to most common
+                return 'B777-300ER';
+            }
+            if (famU.startsWith('B787')) {
+                const vU = rawVariant.toUpperCase();
+                if (vU.includes('9') || vU.includes('-9')) return 'B787-9';
+                if (vU.includes('8')) return 'B787-8';
+                return 'B787-9';
+            }
+            if (famU === 'A330') {
+                const vU = rawVariant.toUpperCase();
+                if (vU.startsWith('200') || vU === '243') return 'A330-200';
+                if (vU.startsWith('300')) return 'A330-300';
+                return 'A330-300';
             }
 
             // Widebody: try combined (e.g. "A350 900" -> loader will normalize/partial match)

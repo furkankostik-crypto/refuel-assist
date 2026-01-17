@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Refuel Assist v7.4.2 - Hesaplama</title>
+    <title>Refuel Assist v7.4.3 - Hesaplama</title>
     <meta name="theme-color" content="#0f172a">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self' data:">
     <link rel="manifest" href="manifest.json">
@@ -611,7 +611,7 @@ let warnListTrHtml = '';
 
 const I18N = {
     tr: {
-        title: 'Refuel Assist v7.4.2 - Hesaplama',
+        title: 'Refuel Assist v7.4.3 - Hesaplama',
         logs_title: 'KAYITLAR',
         btn_logs: 'KAYITLAR',
         btn_warn: '⚠️ UYARILAR & ÖNLEMLER',
@@ -667,7 +667,7 @@ const I18N = {
         sw_update_reload: 'GÜNCELLE'
     },
     en: {
-        title: 'Refuel Assist v7.4.2 - Calculator',
+        title: 'Refuel Assist v7.4.3 - Calculator',
         logs_title: 'LOGS',
         btn_logs: 'LOGS',
         btn_warn: '⚠️ WARNINGS & PRECAUTIONS',
@@ -1798,6 +1798,44 @@ async function openPdfReceipt(log, debugForceMode) {
 function openReceipt(log) {
     lastReceiptLog = log;
     // Use the legacy HTML receipt view instead of PDF output
+    // Populate DOM inputs used by PDF-filler with values from the log so
+    // export (which reads DOM elements) produces a fully filled PDF.
+    // Backup previous values to allow restore when modal closed.
+    try {
+        window._pdfRestoreState = window._pdfRestoreState || {};
+        const ids = {
+            block_fuel: 'block', density: 'dens', temp_c: 'tempC', total_actual: 'act_total',
+            la: 'act_l', ca: 'act_c', ra: 'act_r', lt: 'tgt_l', ct: 'tgt_c', rt: 'tgt_r',
+            res_kg: 'kg', res_lit: 'lt'
+        };
+        for (const elId of Object.keys(ids)) {
+            try {
+                const mapKey = ids[elId];
+                const val = (log && log[mapKey] !== undefined && log[mapKey] !== null) ? String(log[mapKey]) : '';
+                const el = document.getElementById(elId);
+                if (!window._pdfRestoreState[elId]) {
+                    if (el) {
+                        window._pdfRestoreState[elId] = (el.value !== undefined) ? el.value : el.innerText;
+                    } else {
+                        window._pdfRestoreState[elId] = null;
+                    }
+                }
+                if (el) {
+                    if (el.value !== undefined) el.value = val;
+                    else el.innerText = val;
+                } else {
+                    // create hidden input so PDF filler can find it by id
+                    try {
+                        const h = document.createElement('input');
+                        h.type = 'hidden';
+                        h.id = elId;
+                        h.value = val;
+                        document.body.appendChild(h);
+                    } catch (e) {}
+                }
+            } catch (e) {}
+        }
+    } catch (e) {}
     const date = escapeHtml(log.date);
     const time = escapeHtml(log.time);
     const fleetText = escapeHtml(log.fleet);
@@ -1824,6 +1862,37 @@ function openReceipt(log) {
     const receiptModalEl = document.getElementById('receipt-modal');
     if (receiptModalEl) { receiptModalEl.style.display = 'flex'; receiptModalEl.style.pointerEvents = 'auto'; }
 }
+
+// Restore any DOM changes made for PDF export when receipt modal is closed
+function restorePdfDomState() {
+    try {
+        const s = window._pdfRestoreState || {};
+        for (const k of Object.keys(s)) {
+            try {
+                const el = document.getElementById(k);
+                if (s[k] === null) {
+                    // element didn't exist originally: remove any hidden input we created
+                    if (el && el.tagName && el.tagName.toLowerCase() === 'input' && el.type === 'hidden') {
+                        try { el.parentNode && el.parentNode.removeChild(el); } catch(e){}
+                    }
+                    continue;
+                }
+                if (!el) continue;
+                if (el.value !== undefined) el.value = s[k]; else el.innerText = s[k];
+            } catch (e) {}
+        }
+        // Clear backup
+        try { window._pdfRestoreState = null; } catch (e) {}
+    } catch (e) {}
+}
+
+// Hook receipt close button to restore state
+try {
+    const rc = document.getElementById('receipt-close');
+    if (rc) {
+        rc.addEventListener('click', function(){ try{ restorePdfDomState(); }catch(e){} }, { once: true });
+    }
+} catch (e) {}
 // Service worker kaydı (offline desteği için)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -2014,7 +2083,16 @@ window.addEventListener('resize', updateAllUnits);
 <script>
 // Floating export button + PDF fill logic (uses assets/pdf_field_map.json)
 (function(){
-    function normalize(name){ return (name||'').toString().toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,''); }
+    function normalize(name){
+        if(!name && name !== 0) return '';
+        let s = String(name);
+        // transliterate common Turkish characters to ASCII equivalents
+        const tmap = {
+            'İ':'I','ı':'i','Ş':'S','ş':'s','Ğ':'G','ğ':'g','Ç':'C','ç':'c','Ö':'O','ö':'o','Ü':'U','ü':'u'
+        };
+        s = s.replace(/[İıŞşĞğÇçÖöÜü]/g, ch => (tmap[ch] !== undefined) ? tmap[ch] : ch);
+        return s.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    }
 
     async function loadMap(){
         try{
@@ -2090,6 +2168,11 @@ window.addEventListener('resize', updateAllUnits);
         if(key === '__day') return String(d.getDate()).padStart(2,'0');
         if(key === '__month') return String(d.getMonth()+1).padStart(2,'0');
         if(key === '__now') return d.toLocaleDateString('tr-TR');
+        if(key === '__time') {
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mm = String(d.getMinutes()).padStart(2,'0');
+            return `${hh}:${mm}`;
+        }
         return '';
     }
 
@@ -2354,7 +2437,9 @@ window.addEventListener('resize', updateAllUnits);
 
                     // Special formatting for SICAKLIK C: first char is sign (+/-), then two digits (pad with 0 if needed)
                     try {
-                        if((name && String(name).toUpperCase() === 'SICAKLIK C') || normalize(name) === normalize('SICAKLIK C')){
+                        // Special formatting for temperature fields: support original Turkish name
+                        // and mapped fields that point to `temp_c` (like new PDF templates).
+                        if((name && String(name).toUpperCase() === 'SICAKLIK C') || normalize(name) === normalize('SICAKLIK C') || (mapped && String(mapped) === 'temp_c')){
                             // Use only temp_c (ignore any temp_f). Format: sign + two digits.
                             const tempCEl = document.getElementById('temp_c');
                             let cVal = null;
@@ -2371,8 +2456,10 @@ window.addEventListener('resize', updateAllUnits);
                             } else {
                                 const sign = (cVal < 0) ? '-' : '+';
                                 const absn = Math.abs(Math.round(cVal));
-                                const digits = String(absn).padStart(2, '0').slice(-2);
-                                setVal = sign + digits;
+                                // Do NOT add leading zeros. Keep the number as-is and left-align
+                                // by adding a trailing space if needed so the field occupies three chars.
+                                const digits = String(absn);
+                                setVal = (sign + digits).padEnd(3, ' ');
                             }
                         }
                     } catch (e) { /* ignore and continue */ }
@@ -2483,12 +2570,20 @@ window.addEventListener('resize', updateAllUnits);
                     let finalVal = setVal;
                     try{
                         if(fieldMaxLen !== null){
+                            // Detect temperature fields (mapped or by name) — handle left-alignment specially
+                            const isTempFieldForPad = (mapped === 'temp_c') || (name && String(name).toLowerCase().includes('sicaklik')) || (String(name).toLowerCase().trim() === 'temp');
                             let raw = String(setVal || '');
                             // Special case: KUYRUK KODU should be exactly the tail characters, no padding
                             if((name && String(name).toUpperCase() === 'KUYRUK KODU') || normalize(name) === normalize('KUYRUK KODU')){
                                 let cleaned = raw.toString().trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
                                 if(cleaned.length > fieldMaxLen) cleaned = cleaned.slice(-fieldMaxLen);
                                 finalVal = cleaned;
+                            } else if(isTempFieldForPad) {
+                                // For temperature: keep sign and digits, do NOT left-pad; instead right-pad (left-align)
+                                const m = String(raw).match(/([+-]?)(\d+)/);
+                                const sign = (m && m[1]) ? m[1] : (raw && raw.trim() ? '+' : '+');
+                                const digits = (m && m[2]) ? m[2] : (raw.match(/\d+/) ? raw.match(/\d+/)[0] : '');
+                                finalVal = (sign + digits).padEnd(Number(fieldMaxLen), ' ');
                             } else {
                                 // remove punctuation for numeric/text and then decide
                                 const cleanedRaw = raw.replace(/[.,]/g,'').trim();
@@ -2506,7 +2601,78 @@ window.addEventListener('resize', updateAllUnits);
                         }
                     }catch(e){ finalVal = setVal; }
 
-                    try{ const drawn = await drawTextIntoWidget(f, finalVal); if(drawn){ makeFieldBackgroundTransparent(f); continue; } }catch(e){}
+                    try{
+                        // Special-case: left-align temperature fields (mapped to `temp_c` or named 'SICAKLIK C' or 'temp')
+                        const isTempField = (mapped === 'temp_c') || (name && String(name).toLowerCase().includes('sicaklik')) || (String(name).toLowerCase().trim() === 'temp');
+                        if(isTempField){
+                            try{
+                                const acroField = f.acroField;
+                                let rect = null;
+                                try{
+                                    const widgets = acroField.getWidgets ? acroField.getWidgets() : (acroField.dict.get ? acroField.dict.get(PDFLib.PDFName.of('Kids')) : null);
+                                    if(widgets && widgets.length){
+                                        const w = widgets[0];
+                                        if(typeof w.getRectangle === 'function') rect = w.getRectangle();
+                                        else if(w.get('Rect')) rect = w.get('Rect');
+                                    }
+                                }catch(e){}
+                                if(rect){
+                                    const llx = rect[0];
+                                    const lly = rect[1];
+                                    const urx = rect[2];
+                                    const ury = rect[3];
+                                    const boxW = urx - llx;
+                                    const boxH = ury - lly;
+                                    // determine font/size/color similar to drawTextIntoWidget
+                                    let usedFont = null;
+                                    let fontSizeFromDA = null;
+                                    let colorFromDA = null;
+                                    try{
+                                        let da = null;
+                                        try{ da = (acroField.getDefaultAppearance && typeof acroField.getDefaultAppearance === 'function') ? acroField.getDefaultAppearance() : null; }catch(e){}
+                                        if(!da && acroField.dict && acroField.dict.get){
+                                            try{ const daObj = acroField.dict.get(PDFLib.PDFName.of('DA')); da = daObj ? String(daObj) : null; }catch(e){}
+                                        }
+                                        if(da){
+                                            const parts = String(da).trim().split(/\s+/);
+                                            for(let i=0;i<parts.length;i++){
+                                                const t = parts[i];
+                                                if(t === 'Tf' && i>=2){
+                                                    fontSizeFromDA = parseFloat(parts[i-1]) || null;
+                                                    const fn = parts[i-2] || null;
+                                                    if(fn && fn.indexOf('/') === 0){
+                                                        const fnn = fn.replace('/','');
+                                                        const map = { 'Helv':'Helvetica', 'Helvetica':'Helvetica', 'TiRo':'TimesRoman', 'Times':'TimesRoman', 'Cour':'Courier', 'Courier':'Courier' };
+                                                        let std = null;
+                                                        for(const k of Object.keys(map)) if(fnn.indexOf(k) !== -1){ std = map[k]; break; }
+                                                        if(std === 'Helvetica') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                                                        else if(std === 'TimesRoman') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.TimesRoman);
+                                                        else if(std === 'Courier') usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Courier);
+                                                    }
+                                                }
+                                                if(t === 'rg' && i>=3){
+                                                    const r = parseFloat(parts[i-3]) || 0;
+                                                    const g = parseFloat(parts[i-2]) || 0;
+                                                    const b = parseFloat(parts[i-1]) || 0;
+                                                    colorFromDA = PDFLib.rgb(r,g,b);
+                                                }
+                                            }
+                                        }
+                                    }catch(e){}
+                                    if(!usedFont) usedFont = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                                    let fontSize = Math.min(boxH * 0.85, 18);
+                                    const textWidth = usedFont.widthOfTextAtSize ? usedFont.widthOfTextAtSize(String(finalVal), fontSize) : (String(finalVal).length * fontSize * 0.5);
+                                    const drawX = llx + 2; // left-align with small padding
+                                    const drawY = lly + (boxH - (fontSizeFromDA || fontSize)) / 2;
+                                    const useColor = colorFromDA || (typeof WRITE_COLOR !== 'undefined' ? WRITE_COLOR : PDFLib.rgb(0,0,0));
+                                    page.drawText(String(finalVal).trim(), { x: drawX, y: drawY, size: fontSizeFromDA || fontSize, font: usedFont, color: useColor });
+                                    makeFieldBackgroundTransparent(f);
+                                    continue;
+                                }
+                            }catch(e){}
+                        }
+                        const drawn = await drawTextIntoWidget(f, finalVal); if(drawn){ makeFieldBackgroundTransparent(f); continue; }
+                    }catch(e){}
                     try{ form.getTextField(name).setText(finalVal); makeFieldBackgroundTransparent(f); continue; }catch(e){}
                     try{ if(typeof f.setText === 'function') { f.setText(finalVal); makeFieldBackgroundTransparent(f); } }catch(e){}
                 }catch(e){ /* ignore per-field errors */ }
