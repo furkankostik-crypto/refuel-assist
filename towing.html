@@ -731,16 +731,16 @@
                 <div class="card-body-content" onclick="event.stopPropagation()">
                     <div style="height: 10px;"></div>
                     <div class="checklist-container" id="pre-towing-list">
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-pre-battery" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Batarya ON / APU START.</div>                                                                      
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-pre-gear-pins" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">İniş takımı emniyet pinlerini tak (Landing gear pins).</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-pre-steering-pin" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Nose gear steering bypass pinini tak.</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-pre-tcas" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">ATC/TCAS Paneli ON/XPONDER.</div>
                         </div>
                     </div>
@@ -847,26 +847,26 @@
                 <div class="card-body-content" onclick="event.stopPropagation()">
                     <div style="height: 10px;"></div>
                     <div class="checklist-container" id="after-towing-list">
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-parking-brake" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Park freni ON.</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-chocks" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Uçak ana tekerleklerine takozları tak (Chocks).</div>
                         </div>
                         <div class="check-item" id="after-steering-pin-check" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Nose gear steering bypass pinini sök.</div>
                         </div>
                         <!-- Dinamik eklenecek yer: İniş takımı emniyet pinlerini sök (Landing gear pins). -->
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-tower" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Kuleye (Tower) çekim bitiş ikazı ver.</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-beacon" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Beacon ışığı OFF.</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-tcas" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">ATC/TCAS Paneli STDBY.</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-after-apu-battery" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">APU OFF / Batarya OFF.</div>
                         </div>
                     </div>
@@ -888,19 +888,19 @@
                 <div class="card-body-content" onclick="event.stopPropagation()">
                     <div style="height: 10px;"></div>
                     <div class="checklist-container" id="photo-checklist">
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-photo-fuel" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Kalan yakıt, EPDSC, CRS (AML) fotoğrafı çekildi mi?</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-photo-dil" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">DIL Sayfası (Açık arızalar) fotoğrafı çekildi mi?</div>
                         </div>
                         <div class="check-item" id="photo-check-pin" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Pin durumu ve Park Brake basıncı fotoğrafı çekildi mi?</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-photo-pressures" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">Yakıt, HYD, OIL ve Lastik basınçları fotoğrafı çekildi mi?</div>
                         </div>
-                        <div class="check-item" onclick="toggleCheck(this)">
+                        <div class="check-item" id="check-photo-cb" onclick="toggleCheck(this)">
                             <div class="check-box"></div><div class="check-label">CB, Overhead ve Kokpit Genel fotoğrafı çekildi mi?</div>
                         </div>
                     </div>
@@ -978,9 +978,9 @@
         }
 
         const checkItems = document.querySelectorAll('.check-item');
-        checkItems.forEach((el, index) => {
-            if (el.classList.contains('checked')) {
-                data.checkedItems.push(index);
+        checkItems.forEach((el) => {
+            if (el.classList.contains('checked') && el.id) {
+                data.checkedItems.push(el.id);
             }
         });
 
@@ -1019,10 +1019,29 @@
                 }
             });
 
-            const checkItems = document.querySelectorAll('.check-item');
+            // 1. Önce tamamlanan kartları ve aktif kartı yükleyelim ki dinamik elemanlar (completeCard1) DOM'a eklensin
+            if (data.completedCards && data.completedCards.length > 0) {
+                data.completedCards.forEach(num => {
+                    const card = document.getElementById(`card-${num}`);
+                    if (card) card.classList.add('completed');
+                });
+                
+                if (data.completedCards.includes(1)) {
+                    const actualActive = data.activeCard;
+                    completeCard1();
+                    setActiveCard(actualActive);
+                } else {
+                    setActiveCard(data.activeCard || 1);
+                }
+            } else {
+                setActiveCard(data.activeCard || 1);
+            }
+
+            // 2. Dinamik elemanlar oluştuktan sonra, onay kutularını id bazlı geri yükleyelim
             if (data.checkedItems && data.checkedItems.length > 0) {
-                checkItems.forEach((el, index) => {
-                    if (data.checkedItems.includes(index)) {
+                data.checkedItems.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
                         el.classList.add('checked');
                     }
                 });
@@ -1040,23 +1059,6 @@
                 if (btnCont) btnCont.style.display = 'flex';
                 const btnEnd = document.getElementById('btn-time-end');
                 if (btnEnd) btnEnd.style.display = 'none';
-            }
-
-            if (data.completedCards && data.completedCards.length > 0) {
-                data.completedCards.forEach(num => {
-                    const card = document.getElementById(`card-${num}`);
-                    if (card) card.classList.add('completed');
-                });
-                
-                if (data.completedCards.includes(1)) {
-                    const actualActive = data.activeCard;
-                    completeCard1();
-                    setActiveCard(actualActive);
-                } else {
-                    setActiveCard(data.activeCard || 1);
-                }
-            } else {
-                setActiveCard(data.activeCard || 1);
             }
 
             checkCard1();
@@ -1400,6 +1402,7 @@
                 
                 validateTimeInput(inputId, infoId);
                 checkCard1();
+                inp.dispatchEvent(new Event('input'));
             }
 
             if (e.key === 'Backspace') {
@@ -1417,6 +1420,7 @@
                 
                 validateTimeInput(inputId, infoId);
                 checkCard1();
+                inp.dispatchEvent(new Event('input'));
             }
 
             if (e.key === 'Delete') {
@@ -1432,6 +1436,7 @@
                 
                 validateTimeInput(inputId, infoId);
                 checkCard1();
+                inp.dispatchEvent(new Event('input'));
             }
         });
 
@@ -1441,6 +1446,7 @@
             }
             validateTimeInput(inputId, infoId);
             checkCard1();
+            inp.dispatchEvent(new Event('input'));
         });
     }
 
@@ -1731,6 +1737,7 @@
             }
             updateCardSummaries();
             checkCard3();
+            saveDraft();
         };
 
         updateCardSummaries();
@@ -1755,6 +1762,7 @@
             document.getElementById('btn-continue-card3').style.display = 'flex';
             document.getElementById('btn-time-end').style.display = 'none';
         }
+        saveDraft();
     }
 
     function deleteTime(inputId) {
@@ -1792,6 +1800,7 @@
                 btnStart.style.opacity = '0.4';
             }
         }
+        saveDraft();
     }
 
     function checkCard4() {

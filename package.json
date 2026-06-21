@@ -1,6 +1,6 @@
 {
   "name": "refuel-assist-main",
-  "version": "8.0.1",
+  "version": "8.0.2",
   "description": "**Flight Operations Support PWA** — Uçuş operasyonları için yakıt ikmali hesaplama uygulaması.",
   "main": "sw.js",
   "dependencies": {
