@@ -1,0 +1,429 @@
+[
+  {
+    "kategori": "Terminal (Köprü / Contact) Park Pozisyonları",
+    "bloklar": [
+      {
+        "blok_adi": "A İskelesi (Pier A)",
+        "tip": "Dış Hatlar / Geniş ve Dar Gövde",
+        "pozisyonlar": [
+          {"ana_no": "A2", "alt_pozisyonlar": ["A2L", "A2R"], "tur": "Köprü"},
+          {"ana_no": "A3", "alt_pozisyonlar": ["A3L", "A3R"], "tur": "Köprü"},
+          {"ana_no": "A5", "alt_pozisyonlar": ["A5L", "A5R"], "tur": "Köprü"},
+          {"ana_no": "A6", "alt_pozisyonlar": ["A6L", "A6R"], "tur": "Köprü"},
+          {"ana_no": "A7", "alt_pozisyonlar": ["A7L", "A7R"], "tur": "Köprü"},
+          {"ana_no": "A8", "alt_pozisyonlar": ["A8L", "A8R"], "tur": "Köprü"},
+          {"ana_no": "A9", "alt_pozisyonlar": ["A9L", "A9R"], "tur": "Köprü"},
+          {"ana_no": "A10", "alt_pozisyonlar": ["A10L", "A10R"], "tur": "Köprü"},
+          {"ana_no": "A11", "alt_pozisyonlar": ["A11L", "A11R"], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "B İskelesi (Pier B)",
+        "tip": "Dış Hatlar / Geniş ve Dar Gövde",
+        "pozisyonlar": [
+          {"ana_no": "B1", "alt_pozisyonlar": ["B1L", "B1R"], "tur": "Köprü"},
+          {"ana_no": "B2", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B3", "alt_pozisyonlar": ["B3L", "B3R"], "tur": "Köprü"},
+          {"ana_no": "B4", "alt_pozisyonlar": ["B4L", "B4R"], "tur": "Köprü"},
+          {"ana_no": "B5", "alt_pozisyonlar": ["B5L", "B5R"], "tur": "Köprü"},
+          {"ana_no": "B6", "alt_pozisyonlar": ["B6L", "B6R"], "tur": "Köprü"},
+          {"ana_no": "B7", "alt_pozisyonlar": ["B7L", "B7R"], "tur": "Köprü"},
+          {"ana_no": "B8", "alt_pozisyonlar": ["B8L", "B8R"], "tur": "Köprü"},
+          {"ana_no": "B9", "alt_pozisyonlar": ["B9R"], "tur": "Köprü"},
+          {"ana_no": "B10", "alt_pozisyonlar": ["B10L", "B10R"], "tur": "Köprü"},
+          {"ana_no": "B11", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B12", "alt_pozisyonlar": ["B12R"], "tur": "Köprü"},
+          {"ana_no": "B13", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B14", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B15", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B16", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B17", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "B18", "alt_pozisyonlar": ["B18L", "B18R"], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "C İskelesi (Pier C)",
+        "tip": "Terminal Pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "C1", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "C2", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "C3", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "C4", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "D İskelesi (Pier D)",
+        "tip": "Dış Hatlar / Merkez İskele",
+        "pozisyonlar": [
+          {"ana_no": "D1", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D2", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D3", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D4", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D5", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D6", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D7", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D8", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D9", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D10", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D11", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D12", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D13", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D14", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D15", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D16", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D17", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D19", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "D20", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "E İskelesi (Pier E)",
+        "tip": "Terminal Pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "E1", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "E2", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "E3", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "E4", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "F İskelesi (Pier F)",
+        "tip": "Dış Hatlar / Yoğun Geniş Gövde",
+        "pozisyonlar": [
+          {"ana_no": "F1", "alt_pozisyonlar": ["F1L"], "tur": "Köprü"},
+          {"ana_no": "F2", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "F3", "alt_pozisyonlar": ["F3L", "F3R"], "tur": "Köprü"},
+          {"ana_no": "F4", "alt_pozisyonlar": ["F4L", "F4R"], "tur": "Köprü"},
+          {"ana_no": "F5", "alt_pozisyonlar": ["F5R"], "tur": "Köprü"},
+          {"ana_no": "F6", "alt_pozisyonlar": ["F6L", "F6R"], "tur": "Köprü"},
+          {"ana_no": "F7", "alt_pozisyonlar": ["F7R"], "tur": "Köprü"},
+          {"ana_no": "F8", "alt_pozisyonlar": ["F8L", "F8R"], "tur": "Köprü"},
+          {"ana_no": "F9", "alt_pozisyonlar": ["F9L", "F9R"], "tur": "Köprü"},
+          {"ana_no": "F12", "alt_pozisyonlar": ["F12R"], "tur": "Köprü"},
+          {"ana_no": "F13", "alt_pozisyonlar": ["F13L", "F13R"], "tur": "Köprü"},
+          {"ana_no": "F14", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "G İskelesi (Pier G)",
+        "tip": "İç Hatlar (Domestic)",
+        "pozisyonlar": [
+          {"ana_no": "G2", "alt_pozisyonlar": ["G2L", "G2R"], "tur": "Köprü"},
+          {"ana_no": "G4", "alt_pozisyonlar": ["G4L", "G4R"], "tur": "Köprü"},
+          {"ana_no": "G5", "alt_pozisyonlar": ["G5L", "G5R"], "tur": "Köprü"},
+          {"ana_no": "G6", "alt_pozisyonlar": ["G6L", "G6R"], "tur": "Köprü"},
+          {"ana_no": "G7", "alt_pozisyonlar": ["G7L", "G7R"], "tur": "Köprü"},
+          {"ana_no": "G8", "alt_pozisyonlar": ["G8L", "G8R"], "tur": "Köprü"},
+          {"ana_no": "G9", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "G10", "alt_pozisyonlar": ["G10L"], "tur": "Köprü"},
+          {"ana_no": "G11", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      },
+      {
+        "blok_adi": "K İskelesi (Pier K)",
+        "tip": "Terminal Pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "K1", "alt_pozisyonlar": ["K1L", "K1R"], "tur": "Köprü"},
+          {"ana_no": "K3", "alt_pozisyonlar": ["K3R"], "tur": "Köprü"},
+          {"ana_no": "K4", "alt_pozisyonlar": ["K4L"], "tur": "Köprü"},
+          {"ana_no": "K5", "alt_pozisyonlar": ["K5L"], "tur": "Köprü"},
+          {"ana_no": "K6", "alt_pozisyonlar": ["K6R"], "tur": "Köprü"},
+          {"ana_no": "K7", "alt_pozisyonlar": ["K7L", "K7R"], "tur": "Köprü"},
+          {"ana_no": "K11", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K12", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K13", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K14", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K15", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K16", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K17", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K18", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K19", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K20", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K21", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K25", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K26", "alt_pozisyonlar": [], "tur": "Köprü"},
+          {"ana_no": "K27", "alt_pozisyonlar": [], "tur": "Köprü"}
+        ]
+      }
+    ]
+  },
+  {
+    "kategori": "Açık Park Pozisyonları (Remote Stands)",
+    "bloklar": [
+      {
+        "blok_adi": "100'lü Blok (Apron 1)",
+        "tanim": "Terminal yakın çevresi ve iç apronda bulunan açık pozisyonlar",
+        "pozisyonlar": [
+          {"ana_no": "100", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "101", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "102", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "103", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "104", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "105", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "106", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "107", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "108", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "109", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "110", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "111", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "112", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "113", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "114", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "115", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "116", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "117", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "118", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "119", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "120", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "121", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "122", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "123", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "124", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "125", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "126", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "127", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "128", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "129", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "130", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "131", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "132", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "133", "alt_pozisyonlar": ["133R"], "tur": "Açık"},
+          {"ana_no": "134", "alt_pozisyonlar": ["134R"], "tur": "Açık"},
+          {"ana_no": "135", "alt_pozisyonlar": ["135R"], "tur": "Açık"},
+          {"ana_no": "136", "alt_pozisyonlar": ["136L", "136R"], "tur": "Açık"},
+          {"ana_no": "137", "alt_pozisyonlar": ["137L", "137R"], "tur": "Açık"},
+          {"ana_no": "138", "alt_pozisyonlar": ["138L", "138R"], "tur": "Açık"},
+          {"ana_no": "139", "alt_pozisyonlar": ["139L", "139R"], "tur": "Açık"},
+          {"ana_no": "140", "alt_pozisyonlar": ["140L", "140R"], "tur": "Açık"},
+          {"ana_no": "141", "alt_pozisyonlar": ["141R"], "tur": "Açık"},
+          {"ana_no": "142", "alt_pozisyonlar": ["142L", "142R"], "tur": "Açık"},
+          {"ana_no": "143", "alt_pozisyonlar": ["143R"], "tur": "Açık"},
+          {"ana_no": "144", "alt_pozisyonlar": ["144L", "144R"], "tur": "Açık"},
+          {"ana_no": "145", "alt_pozisyonlar": ["145L", "145R"], "tur": "Açık"},
+          {"ana_no": "146", "alt_pozisyonlar": ["146L", "146R"], "tur": "Açık"},
+          {"ana_no": "147", "alt_pozisyonlar": ["147L", "147R"], "tur": "Açık"},
+          {"ana_no": "148", "alt_pozisyonlar": ["148R"], "tur": "Açık"},
+          {"ana_no": "149", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "200'lü Blok (Apron 2)",
+        "tanim": "Batı ve Kuzeybatı açık park sahaları",
+        "pozisyonlar": [
+          {"ana_no": "200", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "201", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "202", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "203", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "204", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "205", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "206", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "207", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "208", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "209", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "210", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "211", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "212", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "213", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "214", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "215", "alt_pozisyonlar": ["215R"], "tur": "Açık"},
+          {"ana_no": "216", "alt_pozisyonlar": ["216L", "216R"], "tur": "Açık"},
+          {"ana_no": "217", "alt_pozisyonlar": ["217L", "217R"], "tur": "Açık"},
+          {"ana_no": "218", "alt_pozisyonlar": ["218L", "218R"], "tur": "Açık"},
+          {"ana_no": "219", "alt_pozisyonlar": ["219L", "219R"], "tur": "Açık"},
+          {"ana_no": "220", "alt_pozisyonlar": ["220L", "220R"], "tur": "Açık"},
+          {"ana_no": "221", "alt_pozisyonlar": ["221L"], "tur": "Açık"},
+          {"ana_no": "222", "alt_pozisyonlar": ["222L", "222R"], "tur": "Açık"},
+          {"ana_no": "223", "alt_pozisyonlar": ["223L"], "tur": "Açık"},
+          {"ana_no": "224", "alt_pozisyonlar": ["224L"], "tur": "Açık"},
+          {"ana_no": "225", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "226", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "300'lü Blok (Apron 3)",
+        "tanim": "Kuzey ve Doğu açık park sahaları",
+        "pozisyonlar": [
+          {"ana_no": "300", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "301", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "302", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "303", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "304", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "305", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "306", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "307", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "308", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "309", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "310", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "311", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "312", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "313", "alt_pozisyonlar": ["313L"], "tur": "Açık"},
+          {"ana_no": "314", "alt_pozisyonlar": ["314R"], "tur": "Açık"},
+          {"ana_no": "315", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "316", "alt_pozisyonlar": ["316L"], "tur": "Açık"},
+          {"ana_no": "317", "alt_pozisyonlar": ["317L", "317R"], "tur": "Açık"},
+          {"ana_no": "318", "alt_pozisyonlar": ["318L"], "tur": "Açık"},
+          {"ana_no": "319", "alt_pozisyonlar": ["319R"], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "400'lü Blok (Apron 4)",
+        "tanim": "Açık park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "401", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "402", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "403", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "404", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "405", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "406", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "407", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "408", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "409", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "500'lü Blok (Apron 5)",
+        "tanim": "Açık park pozisyonları (501-505, 506-509 Hangar)",
+        "pozisyonlar": [
+          {"ana_no": "501", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "502", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "503", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "504", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "505", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "600-700'lü Blok",
+        "tanim": "Açık park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "601", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "602", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "603", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "604", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "701", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "702", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "703", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "704", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      }
+    ]
+  },
+  {
+    "kategori": "H Serisi Park Pozisyonları",
+    "bloklar": [
+      {
+        "blok_adi": "H10 Serisi",
+        "tanim": "H serisi park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "H10R", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "H11", "alt_pozisyonlar": ["H11L", "H11R"], "tur": "Açık"},
+          {"ana_no": "H12", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "H20 Serisi",
+        "tanim": "H serisi park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "H20", "alt_pozisyonlar": ["H20L", "H20R"], "tur": "Açık"},
+          {"ana_no": "H21", "alt_pozisyonlar": ["H21L"], "tur": "Açık"},
+          {"ana_no": "H22", "alt_pozisyonlar": ["H22L", "H22R"], "tur": "Açık"},
+          {"ana_no": "H23", "alt_pozisyonlar": ["H23L"], "tur": "Açık"},
+          {"ana_no": "H24", "alt_pozisyonlar": ["H24L", "H24R"], "tur": "Açık"},
+          {"ana_no": "H25", "alt_pozisyonlar": ["H25L", "H25R"], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "H30 Serisi",
+        "tanim": "H serisi park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "H30", "alt_pozisyonlar": ["H30L", "H30R"], "tur": "Açık"},
+          {"ana_no": "H31", "alt_pozisyonlar": ["H31L", "H31R"], "tur": "Açık"},
+          {"ana_no": "H32", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "H33", "alt_pozisyonlar": ["H33L", "H33R"], "tur": "Açık"},
+          {"ana_no": "H35", "alt_pozisyonlar": ["H35L", "H35R"], "tur": "Açık"},
+          {"ana_no": "H36", "alt_pozisyonlar": ["H36L"], "tur": "Açık"},
+          {"ana_no": "H40", "alt_pozisyonlar": ["H40L"], "tur": "Açık"},
+          {"ana_no": "H41", "alt_pozisyonlar": ["H41L"], "tur": "Açık"},
+          {"ana_no": "H44", "alt_pozisyonlar": ["H44R"], "tur": "Açık"},
+          {"ana_no": "H45", "alt_pozisyonlar": ["H45R"], "tur": "Açık"},
+          {"ana_no": "H46", "alt_pozisyonlar": ["H46L", "H46R"], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "H50 Serisi",
+        "tanim": "H serisi park pozisyonları",
+        "pozisyonlar": [
+          {"ana_no": "H50", "alt_pozisyonlar": ["H50L", "H50R"], "tur": "Açık"},
+          {"ana_no": "H51", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      }
+    ]
+  },
+  {
+    "kategori": "De-Icing Park Pozisyonları",
+    "bloklar": [
+      {
+        "blok_adi": "De-Icing Apron (K50-K57)",
+        "tanim": "Pist başlarına yakın konumlandırılmış buz çözme istasyonları",
+        "pozisyonlar": [
+          {"ana_no": "K50", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K51", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K52", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K53", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K54", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K55", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K56", "alt_pozisyonlar": [], "tur": "De-icing"},
+          {"ana_no": "K57", "alt_pozisyonlar": [], "tur": "De-icing"}
+        ]
+      }
+    ]
+  },
+  {
+    "kategori": "Hangar Önü Park Pozisyonları",
+    "bloklar": [
+      {
+        "blok_adi": "C Hangar Önü",
+        "pozisyonlar": [
+          {"ana_no": "506", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "507", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "D Hangar Önü",
+        "pozisyonlar": [
+          {"ana_no": "508", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "509", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "LMH Hangar Önü",
+        "pozisyonlar": [
+          {"ana_no": "218", "alt_pozisyonlar": [], "tur": "Açık"},
+          {"ana_no": "219", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      }
+    ]
+  },
+  {
+    "kategori": "Bremze-Motor Test Alanı",
+    "bloklar": [
+      {
+        "blok_adi": "Güney Bremze",
+        "pozisyonlar": [
+          {"ana_no": "H13", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "Kuzey Bremze 1",
+        "pozisyonlar": [
+          {"ana_no": "H14", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      },
+      {
+        "blok_adi": "Kuzey Bremze 2",
+        "pozisyonlar": [
+          {"ana_no": "H15", "alt_pozisyonlar": [], "tur": "Açık"}
+        ]
+      }
+    ]
+  }
+]

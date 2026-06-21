@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+	<title>Refuel Assist v8.0.0 — Blok Saat Hesaplama</title>
+	<meta name="theme-color" content="#0f172a">
+	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https:; font-src 'self' data:">
+	<link rel="icon" type="image/png" href="assets/logo-192.png">
+	<script src="assets/db.js"></script>
+	<style>
+		* {
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		}
+		input, textarea, [contenteditable="true"] {
+			-webkit-user-select: text;
+			-moz-user-select: text;
+			-ms-user-select: text;
+			user-select: text;
+		}
+		:root { --primary: #38bdf8; --bg: #0f172a; --card: #1e293b; --muted:#64748b; --amber:#f59e0b; --success:#22c55e; --error:#ef4444; --brand-font: 'Segoe UI', Arial, sans-serif; }
+		html,body{margin:0;padding:0;box-sizing:border-box;min-height:100dvh;min-height:-webkit-fill-available;height:100%;font-family:var(--brand-font);background:radial-gradient(circle at center,#1e293b 0%,#0f172a 100%);color:#fff}
+		body{padding-top:env(safe-area-inset-top,16px);padding-bottom:env(safe-area-inset-bottom,16px);padding-left:env(safe-area-inset-left,12px);padding-right:env(safe-area-inset-right,12px);min-height:100dvh;}
+		
+		.page{
+			width:100%;
+			max-width:420px;
+			margin:0 auto;
+			padding:constant(safe-area-inset-top) constant(safe-area-inset-right) constant(safe-area-inset-bottom) constant(safe-area-inset-left);
+			padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+			padding-top:calc(max(env(safe-area-inset-top,16px),16px));
+			padding-bottom:calc(max(env(safe-area-inset-bottom,16px),16px));
+			padding-left:calc(max(env(safe-area-inset-left,12px),12px));
+			padding-right:calc(max(env(safe-area-inset-right,12px),12px));
+			box-sizing:border-box;
+			min-height:100dvh;
+		}
+		.hero{text-align:center;margin-bottom:18px}
+		.logo-text{font-size:20px;font-weight:800;color:var(--primary);margin:6px 0}
+		.card{background:rgba(30,41,59,0.6);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:12px;margin-bottom:10px}
+		.section-divider{height:1px;background:rgba(255,255,255,0.06);margin:12px 0;border-radius:2px}
+		.group-label{font-size:14px;color:#fff;font-weight:900;text-transform:uppercase;margin-bottom:12px;text-align:center;letter-spacing:1px;text-shadow:0 1px 0 rgba(0,0,0,0.45)}
+		.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+		.field label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
+		input[type="text"], input[type="date"], input[type="time"]{background:#0f172a;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px 14px;border-radius:12px;font-weight:700;font-size:15px;width:100%;box-sizing:border-box;transition:border-color 0.2s, box-shadow 0.2s}
+		input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(56,189,248,0.15)}
+		input::placeholder{color:var(--muted);font-weight:600}
+		.row{display:flex;gap:10px}
+		.row > *{flex:1}
+		.btn{width:100%;background:linear-gradient(90deg,rgba(56,189,248,1) 0%,rgba(6,182,212,1) 100%);border:none;color:#04212a;padding:14px;border-radius:14px;font-weight:900;font-size:15px;cursor:pointer;text-transform:uppercase;letter-spacing:0.8px;transition:transform 0.15s, box-shadow 0.15s;box-shadow:0 6px 20px rgba(56,189,248,0.2)}
+		.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(56,189,248,0.25)}
+		.btn:active{transform:translateY(0);box-shadow:0 4px 12px rgba(56,189,248,0.15)}
+		.btn-secondary{background:rgba(100,116,139,0.2);border:1.5px solid rgba(100,116,139,0.3);color:#94a3b8}
+		.btn-secondary:hover{background:rgba(100,116,139,0.3)}
+		.btn-danger{background:rgba(239,68,68,0.15);border:1.5px solid rgba(239,68,68,0.3);color:var(--error);box-shadow:none}
+		.btn-danger:hover{background:rgba(239,68,68,0.25)}
+		
+		/* Toplam saat kartı */
+		.total-card{background:linear-gradient(135deg,rgba(56,189,248,0.12) 0%,rgba(6,182,212,0.08) 100%);border:1.5px solid rgba(56,189,248,0.25);border-radius:14px;padding:12px;text-align:center;margin-bottom:10px}
+		.total-label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+		.total-value{font-size:28px;font-weight:900;color:var(--primary);letter-spacing:-1px}
+		.total-sub{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+		
+		/* Uçuş listesi */
+		.flight-list{display:flex;flex-direction:column;gap:0;max-height:400px;overflow-y:auto;padding-right:4px;background:rgba(15,23,42,0.4);border-radius:10px;overflow:hidden}
+		.flight-list::-webkit-scrollbar{width:5px}
+		.flight-list::-webkit-scrollbar-track{background:transparent}
+		.flight-list::-webkit-scrollbar-thumb{background:rgba(148,163,184,0.3);border-radius:10px}
+		
+		.flight-item{background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.06);border-radius:0;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:background 0.2s;cursor:pointer}
+		.flight-item:last-child{border-bottom:none}
+		.flight-item:hover{background:rgba(56,189,248,0.06)}
+		.flight-item:active{background:rgba(56,189,248,0.1)}
+		.flight-info{flex:1;min-width:0}
+		.flight-code{font-size:14px;font-weight:800;color:#fff;margin-bottom:1px}
+		.flight-date{font-size:10px;color:var(--muted);font-weight:600}
+		.flight-times{font-size:10px;color:var(--muted);font-weight:600;margin-top:1px}
+		.flight-duration{text-align:right}
+		.flight-duration-value{font-size:16px;font-weight:900;color:var(--success)}
+		.flight-duration-label{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase}
+		
+		/* Seçim modu */
+		.list-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+		.list-header .group-label{margin-bottom:0;font-size:12px}
+		.btn-select-mode{background:rgba(245,158,11,0.15);border:1.5px solid rgba(245,158,11,0.4);color:var(--amber);padding:10px;border-radius:10px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;justify-content:center}
+		.btn-select-mode:hover{background:rgba(245,158,11,0.25);border-color:rgba(245,158,11,0.6)}
+		.btn-select-mode.active{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.4);color:var(--error)}
+		.btn-select-mode svg{width:18px;height:18px}
+		.selection-bar{display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px}
+		.selection-bar.show{display:flex}
+		.selection-info{font-size:12px;font-weight:700;color:var(--muted)}
+		.selection-info strong{color:#fff}
+		.selection-actions{display:flex;gap:8px}
+		.btn-select-all{background:rgba(100,116,139,0.15);border:1px solid rgba(100,116,139,0.25);color:var(--muted);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s}
+		.btn-select-all:hover{background:rgba(100,116,139,0.25);color:#fff}
+		.btn-delete-selected{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--error);padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s}
+		.btn-delete-selected:hover{background:rgba(239,68,68,0.25)}
+		.btn-delete-selected:disabled{opacity:0.4;cursor:not-allowed}
+		.flight-item.selected{background:rgba(239,68,68,0.1)}
+		.flight-item .select-check{display:none;width:22px;height:22px;border-radius:6px;background:rgba(100,116,139,0.2);border:2px solid rgba(100,116,139,0.4);flex-shrink:0;align-items:center;justify-content:center}
+		.selection-mode .flight-item .select-check{display:flex}
+		.selection-mode .flight-item.selected .select-check{background:var(--error);border-color:var(--error)}
+		.selection-mode .flight-item .select-check svg{opacity:0}
+		.selection-mode .flight-item.selected .select-check svg{opacity:1}
+		
+		.empty-state{text-align:center;padding:32px 16px;color:var(--muted)}
+		.empty-state svg{width:48px;height:48px;margin-bottom:12px;opacity:0.4}
+		.empty-state p{font-size:13px;font-weight:600}
+		
+		.muted{color:var(--muted);font-weight:700;font-size:13px;text-align:center}
+
+		/* Top bar (Card style matching calc.html) */
+		.topbar {
+			background: rgba(30, 41, 59, 0.6);
+			backdrop-filter: blur(10px);
+			-webkit-backdrop-filter: blur(10px);
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			width: 100%;
+			padding: 14px 16px;
+			border-radius: 18px;
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			box-sizing: border-box;
+			margin-bottom: 18px;
+			transition: transform 0.2s, background 0.2s;
+		}
+		.topbar-back {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 46px;
+			height: 46px;
+			border-radius: 14px;
+			background: rgba(56, 189, 248, 0.12);
+			border: 1px solid rgba(255, 255, 255, 0.05);
+			cursor: pointer;
+			flex-shrink: 0;
+			transition: transform 0.15s, background 0.2s;
+			padding: 0;
+		}
+		.topbar-back:active {
+			transform: scale(0.95);
+			background: rgba(56, 189, 248, 0.22);
+			border-color: var(--primary);
+		}
+		.topbar-center {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex-grow: 1;
+			min-width: 0;
+			padding-left: 4px;
+		}
+		.topbar-logo {
+			width: 40px;
+			height: 40px;
+			object-fit: contain;
+			flex-shrink: 0;
+		}
+		.topbar-text {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			flex-grow: 1;
+		}
+		.topbar-title {
+			font-size: 17px;
+			font-weight: 800;
+			color: #38bdf8;
+			margin: 0;
+			line-height: 1.2;
+			letter-spacing: 0.5px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		.topbar-subtitle {
+			font-size: 10px;
+			color: #64748b;
+			font-weight: 600;
+			margin-top: 3px;
+			line-height: 1.2;
+			letter-spacing: 0.3px;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+		
+		/* Swipe Navigation */
+		.page-indicator{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:20px;z-index:100;padding:10px 16px;background:rgba(15,23,42,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:24px}
+		.page-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.25);transition:all 200ms ease;position:relative;cursor:pointer}
+		.page-dot.active{background:var(--primary);box-shadow:0 0 8px rgba(56,189,248,0.5)}
+		.page-dot-label{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;color:#64748b;white-space:nowrap;opacity:0;transition:opacity 150ms ease;pointer-events:none}
+		.page-indicator:hover .page-dot-label,.page-dot.active .page-dot-label{opacity:1}
+		.page-transitioning{transition:transform 300ms ease,opacity 300ms ease}
+		.page-slide-left{transform:translateX(-30px);opacity:0}
+		.page-slide-right{transform:translateX(30px);opacity:0}
+		
+		/* Error state for inputs */
+		input.error{border-color:var(--error);box-shadow:0 0 0 3px rgba(239,68,68,0.15)}
+		.error-msg{font-size:11px;color:var(--error);font-weight:600;margin-top:4px;display:none}
+		.error-msg.show{display:block}
+		
+		/* Input with prefix */
+		.input-prefix-wrap{display:flex;align-items:stretch;background:#0f172a;border:1px solid rgba(255,255,255,0.08);border-radius:12px;transition:border-color 0.2s,box-shadow 0.2s;overflow:hidden}
+		.input-prefix-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(56,189,248,0.15)}
+		.input-prefix-wrap.error{border-color:var(--error);box-shadow:0 0 0 3px rgba(239,68,68,0.15)}
+		.input-prefix{background:rgba(56,189,248,0.15);color:var(--primary);font-weight:900;font-size:15px;padding:12px 14px;display:flex;align-items:center;border-right:1px solid rgba(255,255,255,0.08);user-select:none}
+		.input-prefix-wrap input{border:none;background:transparent;flex:1;padding:12px 14px;font-weight:700;font-size:15px;color:#fff;outline:none;width:100%;min-width:0}
+		.input-prefix-wrap input::placeholder{color:var(--muted);font-weight:600}
+		
+		
+		/* Modal Overlay */
+		.modal-overlay{position:fixed;inset:0;background:rgba(2,6,23,0.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+		.modal-overlay.show{display:flex}
+		.modal-card{background:linear-gradient(180deg,rgba(30,41,59,0.98) 0%,rgba(15,23,42,0.99) 100%);border:1px solid rgba(255,255,255,0.08);border-radius:22px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:modalSlideIn 0.25s ease-out}
+		@keyframes modalSlideIn{from{opacity:0;transform:translateY(20px) scale(0.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+		.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.06)}
+		.modal-title{font-size:16px;font-weight:900;color:#fff;text-transform:uppercase;letter-spacing:0.5px}
+		.modal-close{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,0.05);border:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;transition:background 0.2s,color 0.2s}
+		.modal-close:hover{background:rgba(255,255,255,0.1);color:#fff}
+		.modal-body{padding:18px}
+		body.modal-open{overflow:hidden}
+		
+		/* Arama kutusu */
+		.search-wrap{position:relative;flex:1;max-width:160px}
+		input.search-input{width:100%;height:34px;padding:0 28px 0 28px;border-radius:8px;background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);color:#fff;font-size:12px;font-weight:600;box-sizing:border-box;transition:border-color 0.2s,background 0.2s}
+		input.search-input:focus{outline:none;border-color:rgba(56,189,248,0.4);background:rgba(15,23,42,0.8)}
+		input.search-input::placeholder{color:var(--muted);font-weight:500}
+		.search-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--muted);pointer-events:none}
+		.search-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:18px;height:18px;border-radius:4px;background:rgba(255,255,255,0.08);border:none;color:var(--muted);cursor:pointer;display:none;align-items:center;justify-content:center;transition:background 0.2s,color 0.2s;padding:0}
+		.search-clear:hover{background:rgba(255,255,255,0.15);color:#fff}
+		.search-clear.show{display:flex}
+		.no-results{text-align:center;padding:24px;color:var(--muted);font-size:13px;font-weight:600}
+		
+		/* İçe aktarma */
+		.btn-import{background:rgba(34,197,94,0.15);border:1.5px solid rgba(34,197,94,0.3);color:var(--success);box-shadow:none}
+		.btn-import:hover{background:rgba(34,197,94,0.25);transform:translateY(-1px)}
+		.import-textarea{width:100%;min-height:150px;background:#0f172a;border:1px solid rgba(255,255,255,0.08);color:#fff;padding:12px;border-radius:12px;font-family:monospace;font-size:12px;resize:vertical;box-sizing:border-box}
+		.import-textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(56,189,248,0.15)}
+		.import-textarea::placeholder{color:var(--muted)}
+		.import-info{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5}
+		.import-info code{background:rgba(255,255,255,0.1);padding:2px 6px;border-radius:4px;font-size:10px}
+		.import-result{margin-top:12px;padding:10px;border-radius:8px;font-size:12px;font-weight:600}
+		.import-result.success{background:rgba(34,197,94,0.15);color:var(--success)}
+		.import-result.error{background:rgba(239,68,68,0.15);color:var(--error)}
+		.import-result.warning{background:rgba(245,158,11,0.15);color:var(--amber)}
+		.btn-row{display:flex;gap:8px}
+		.btn-row .btn{flex:1}
+		
+		/* Import tabs */
+		.import-tabs{display:flex;gap:4px;margin-bottom:12px}
+		.import-tab{flex:1;padding:10px 8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:var(--muted);font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;transition:all 0.2s}
+		.import-tab:hover{background:rgba(255,255,255,0.06)}
+		.import-tab.active{background:rgba(56,189,248,0.15);border-color:rgba(56,189,248,0.3);color:var(--primary)}
+		.import-tab-content{display:none}
+		.import-tab-content.active{display:block}
+		.bookmarklet-btn{display:inline-block;background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:#fff;padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;text-decoration:none;margin:8px 0;cursor:grab;box-shadow:0 4px 12px rgba(34,197,94,0.3);transition:transform 0.2s,box-shadow 0.2s}
+		.bookmarklet-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(34,197,94,0.4)}
+		.bookmarklet-btn:active{cursor:grabbing}
+		
+		/* Ana tab menüsü */
+		.main-tabs{display:flex;gap:4px;margin-bottom:12px;background:rgba(15,23,42,0.5);padding:4px;border-radius:12px}
+		.main-tab{flex:1;padding:10px 12px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;border-radius:10px;cursor:pointer;transition:all 0.2s}
+		.main-tab:hover{color:#fff}
+		.main-tab.active{background:rgba(56,189,248,0.15);color:var(--primary)}
+		.main-tab-content{display:none}
+		.main-tab-content.active{display:block}
+		
+		/* Planlanan uçuşlar */
+		.planned-count{font-size:11px;color:var(--muted);font-weight:600}
+		.planned-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.06)}
+		.planned-item:last-child{border-bottom:none}
+		.planned-item .flight-code{color:var(--amber)}
+		.planned-item .flight-status{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700}
+		.planned-item .status-pending{background:rgba(245,158,11,0.15);color:var(--amber)}
+		.planned-item .status-ready{background:rgba(34,197,94,0.15);color:var(--success)}
+		.planned-delete{width:28px;height:28px;border-radius:6px;background:rgba(239,68,68,0.1);border:none;color:var(--error);cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0.6;transition:all 0.2s}
+		.planned-delete:hover{opacity:1;background:rgba(239,68,68,0.2)}
+		.info-box{background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.15);border-radius:10px;padding:12px;margin-top:12px;font-size:11px;color:var(--muted);line-height:1.6}
+		.info-box strong{color:var(--primary)}
+		.pending-flights-preview{margin-top:8px;padding:8px;background:rgba(0,0,0,0.2);border-radius:6px;font-family:monospace;font-size:11px;max-height:80px;overflow-y:auto}
+		
+		.info-text{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
+		
+		/* Pending flight indicator */
+		.flight-item.pending{opacity:0.7;border-left:3px solid var(--amber)}
+		.flight-item.pending .flight-duration{display:none}
+		.flight-item .pending-badge{display:none;font-size:10px;padding:4px 8px;border-radius:6px;font-weight:700;background:rgba(245,158,11,0.15);color:var(--amber)}
+		.flight-item.pending .pending-badge{display:inline-block}
+
+		/* Switch styles */
+		.switch-container {
+			display: flex;
+			background: rgba(15, 23, 42, 0.6);
+			padding: 4px;
+			border-radius: 12px;
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			margin-bottom: 12px;
+		}
+		.switch-btn {
+			flex: 1;
+			background: transparent;
+			border: none;
+			color: var(--muted);
+			padding: 10px 12px;
+			font-size: 13px;
+			font-weight: 700;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+		.switch-btn.active {
+			background: rgba(56, 189, 248, 0.15);
+			color: var(--primary);
+		}
+		
+		/* Calculated Duration Preview Badge */
+		.duration-preview-badge {
+			display: none;
+			background: rgba(34, 197, 94, 0.12);
+			border: 1px solid rgba(34, 197, 94, 0.25);
+			border-radius: 10px;
+			padding: 8px 12px;
+			color: var(--success);
+			font-size: 12px;
+			font-weight: 700;
+			margin-top: 10px;
+			text-align: center;
+			animation: fadeIn 0.2s ease-out;
+		}
+		@keyframes fadeIn {
+			from { opacity: 0; transform: translateY(-4px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+	</style>
+</head>
+<body>
+	<div class="page">
+		<div class="card" style="margin-bottom: 24px;">
+			<div class="topbar">
+				<button onclick="window.location.href='index.html'" aria-label="Geri" class="topbar-back">
+					<svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+				</button>
+				<div class="topbar-center">
+					<img src="assets/logo-192.png" alt="logo" class="topbar-logo">
+					<div class="topbar-text">
+						<div class="topbar-title">Blok Saat Hesaplama</div>
+						<div class="topbar-subtitle">Uçuş sürelerini kaydet ve toplamı gör</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Toplam Saat Kartı (Bütünleşik panel) -->
+			<div class="total-card">
+				<div class="total-label">Toplam Uçuş Süresi</div>
+				<div class="total-value" id="total-time">00:00</div>
+				<div class="total-sub" id="total-flights">0 uçuş kaydedildi</div>
+			</div>
+
+			<!-- Tek Buton: Uçuş Ekle -->
+			<div class="btn-row" style="margin-bottom:16px;">
+				<button class="btn" id="open-modal-btn" style="padding:14px;font-size:14px;flex:1;">
+					<span style="display:flex;align-items:center;justify-content:center;gap:8px;">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+						Uçuş Ekle
+					</span>
+				</button>
+			</div>
+
+			<!-- Uçuş Listesi (Ana karta yedirilmiş iç bölüm) -->
+			<div id="flights-card" style="background: transparent; border: none; padding: 0;">
+				<div class="list-header" style="margin-bottom: 8px;">
+					<div class="group-label" style="text-align: left; margin-bottom: 0;">Uçuşlarım</div>
+					<div class="search-wrap" id="search-wrap" style="display:none;">
+						<svg class="search-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+						<input type="text" class="search-input" id="search-input" placeholder="Ara...">
+						<button class="search-clear" id="search-clear" type="button">
+							<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+						</button>
+					</div>
+					<button class="btn-select-mode" id="select-mode-btn" style="display:none;" title="Seçim modu">
+						<svg id="select-mode-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+					</button>
+				</div>
+				
+				<div class="selection-bar" id="selection-bar">
+					<div class="selection-info"><strong id="selected-count">0</strong> seçildi</div>
+					<div class="selection-actions">
+						<button class="btn-select-all" id="select-all-btn">Tümünü Seç</button>
+						<button class="btn-delete-selected" id="delete-selected-btn" disabled>Sil</button>
+					</div>
+				</div>
+			
+				<div class="flight-list" id="flight-list" style="background: rgba(15, 23, 42, 0.4); border-radius: 14px;">
+					<div class="empty-state" id="empty-state">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+							<polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+							<line x1="12" y1="22.08" x2="12" y2="12"/>
+						</svg>
+						<p>Henüz uçuş yok.<br>Yukarıdan uçuş ekleyin.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Uçuş Ekleme Modalı -->
+		<div class="modal-overlay" id="flight-modal">
+			<div class="modal-card">
+				<div class="modal-header">
+					<span class="modal-title" id="modal-title">Uçuş Ekle</span>
+					<button class="modal-close" id="close-modal-btn" title="Kapat">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="field">
+						<label for="flight-code">Uçuş Kodu</label>
+						<div class="input-prefix-wrap" id="flight-code-wrap">
+							<span class="input-prefix">TK</span>
+							<input type="text" id="flight-code" inputmode="numeric" pattern="[0-9]*" placeholder="1234" maxlength="4" autocomplete="off" spellcheck="false">
+						</div>
+						<div class="error-msg" id="flight-code-error"></div>
+					</div>
+					
+					<div class="field">
+						<label for="flight-date">Tarih</label>
+						<input type="date" id="flight-date">
+						<div class="error-msg" id="flight-date-error"></div>
+					</div>
+
+					<!-- Giriş Tipi Switch -->
+					<div class="field">
+						<label id="entry-type-label">Giriş Tipi</label>
+						<div class="switch-container">
+							<button class="switch-btn active" id="switch-off-on" type="button">Off-On Block</button>
+							<button class="switch-btn" id="switch-duration" type="button">Süre (Duration)</button>
+						</div>
+					</div>
+					
+					<!-- Off-On Block Giriş Alanları -->
+					<div class="row" id="block-inputs-row">
+						<div class="field">
+							<label for="off-block">Off Block (GMT)</label>
+							<input type="text" id="off-block" inputmode="numeric" placeholder="00:00" maxlength="5" autocomplete="off" required>
+							<div class="error-msg" id="off-block-range-error"></div>
+						</div>
+						<div class="field">
+							<label for="on-block">On Block (GMT)</label>
+							<input type="text" id="on-block" inputmode="numeric" placeholder="00:00" maxlength="5" autocomplete="off" required>
+							<div class="error-msg" id="on-block-range-error"></div>
+						</div>
+					</div>
+
+					<!-- Doğrudan Süre Giriş Alanı -->
+					<div class="field" id="duration-input-field" style="display: none;">
+						<label for="flight-duration-input" id="duration-input-label">Uçuş Süresi</label>
+						<input type="text" id="flight-duration-input" inputmode="numeric" placeholder="00:00" maxlength="5" autocomplete="off" required>
+						<div class="error-msg" id="flight-duration-input-range-error"></div>
+					</div>
+
+					<div class="info-text" id="gmt-info-text">Blok saatleri GMT (UTC+0) olarak girilmelidir</div>
+					
+					<!-- Anlık Hesaplanan Süre Göstergesi -->
+					<div class="duration-preview-badge" id="calculated-duration-preview">
+						Hesaplanan Süre: <span id="calculated-duration-value">--:--</span>
+					</div>
+					
+					<div class="error-msg" id="time-error">On block saati off block saatinden sonra olmalıdır</div>
+					<div class="error-msg" id="duration-error">Uçuş süresi 20 dakika ile 18 saat arasında olmalıdır</div>
+					<div class="error-msg" id="duration-invalid-error">Geçersiz süre formatı (Örn: 02:30 veya 150)</div>
+					<div class="error-msg" id="overlap-error">Bu zaman aralığı mevcut bir uçuşla çakışıyor</div>
+					<div class="error-msg" id="duplicate-error">Bu kayıt zaten mevcut</div>
+					<div class="error-msg" id="turnaround-error">Uçuşlar arası en az 30 dakika olmalıdır</div>
+					
+					<button class="btn" id="add-flight" style="margin-top:8px">
+						<span style="display:flex;align-items:center;justify-content:center;gap:8px;">
+							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+							Kaydet
+						</span>
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		// LocalStorage key
+		const STORAGE_KEY = 'refuel_block_time_flights';
+		const LANG_STORAGE_KEY = 'refuel_lang';
+		
+		// I18N
+		const I18N = {
+			tr: {
+				page_title: 'Blok Saat Hesaplama',
+				page_subtitle: 'Uçuş sürelerini kaydet ve toplamı gör',
+				total_label: 'Toplam Uçuş Süresi',
+				total_flights: '{n} uçuş kaydedildi',
+				add_flight: 'Uçuş Ekle',
+				my_flights: 'Uçuşlarım',
+				search_placeholder: 'Ara...',
+				select_mode: 'Seçim modu',
+				selected: 'seçildi',
+				select_all: 'Tümünü Seç',
+				delete: 'Sil',
+				empty_title: 'Henüz uçuş yok.',
+				empty_desc: 'Yukarıdan uçuş ekleyin.',
+				back_home: '← Ana Sayfaya Dön',
+				modal_title: 'Uçuş Ekle',
+				close: 'Kapat',
+				flight_code: 'Uçuş Kodu',
+				date: 'Tarih',
+				off_block: 'Off Block (GMT)',
+				on_block: 'On Block (GMT)',
+				gmt_info: 'Blok saatleri GMT (UTC+0) olarak girilmelidir',
+				error_time: 'On block saati off block saatinden sonra olmalıdır',
+				error_duration: 'Uçuş süresi 20 dakika ile 18 saat arasında olmalıdır',
+				error_overlap: 'Bu zaman aralığı mevcut bir uçuşla çakışıyor',
+				error_duplicate: 'Bu kayıt zaten mevcut',
+				error_turnaround: 'Uçuşlar arası en az 30 dakika olmalıdır',
+				save: 'Kaydet',
+				page_home: 'Ana Sayfa',
+				page_block_time: 'Blok Saat',
+				page_mel: 'MEL',
+				entry_type: 'Giriş Tipi',
+				duration_label: 'Uçuş Süresi',
+				duration_placeholder: 'Örn: 02:30',
+				error_duration_invalid: 'Geçersiz süre formatı (Örn: 02:30)',
+				manual_entry: 'Manuel Giriş',
+				calculated_duration: 'Hesaplanan Süre: ',
+				error_time_range: 'Saat 23:59\'dan büyük olamaz',
+				error_duration_range: 'Süre 18:00\'dan büyük olamaz',
+				error_incomplete: 'Lütfen saati tam girin (Örn: 12:30)',
+				error_hour_range: 'Saat 23\'ten büyük olamaz',
+				error_minute_range: 'Dakika 59\'dan büyük olamaz',
+				error_duration_hour_range: 'Süre saati 18\'den büyük olamaz',
+				error_flight_code: 'Uçuş kodu 3 veya 4 haneli olmalıdır',
+				error_flight_date: 'Lütfen geçerli bir tarih seçin'
+			},
+			en: {
+				page_title: 'Block Time Calculator',
+				page_subtitle: 'Record flight times and view total',
+				total_label: 'Total Flight Time',
+				total_flights: '{n} flight(s) recorded',
+				add_flight: 'Add Flight',
+				my_flights: 'My Flights',
+				search_placeholder: 'Search...',
+				select_mode: 'Selection mode',
+				selected: 'selected',
+				select_all: 'Select All',
+				delete: 'Delete',
+				empty_title: 'No flights yet.',
+				empty_desc: 'Add a flight above.',
+				back_home: '← Back to Home',
+				modal_title: 'Add Flight',
+				close: 'Close',
+				flight_code: 'Flight Code',
+				date: 'Date',
+				off_block: 'Off Block (GMT)',
+				on_block: 'On Block (GMT)',
+				gmt_info: 'Block times must be entered in GMT (UTC+0)',
+				error_time: 'On block time must be after off block time',
+				error_duration: 'Flight duration must be between 20 minutes and 18 hours',
+				error_overlap: 'This time range overlaps with an existing flight',
+				error_duplicate: 'This record already exists',
+				error_turnaround: 'At least 30 minutes required between flights',
+				save: 'Save',
+				page_home: 'Home',
+				page_block_time: 'Block Time',
+				page_mel: 'MEL',
+				entry_type: 'Entry Type',
+				duration_label: 'Flight Duration',
+				duration_placeholder: 'e.g. 02:30',
+				error_duration_invalid: 'Invalid duration format (e.g. 02:30)',
+				manual_entry: 'Manual Entry',
+				calculated_duration: 'Calculated Duration: ',
+				error_time_range: 'Time cannot be greater than 23:59',
+				error_duration_range: 'Duration cannot be greater than 18:00',
+				error_incomplete: 'Please enter a complete time (e.g. 12:30)',
+				error_hour_range: 'Hour cannot be greater than 23',
+				error_minute_range: 'Minute cannot be greater than 59',
+				error_duration_hour_range: 'Duration hour cannot be greater than 18',
+				error_flight_code: 'Flight code must be 3 or 4 digits',
+				error_flight_date: 'Please select a valid date'
+			}
+		};
+		
+		function getLang() {
+			const raw = (localStorage.getItem('refuel_assist_lang') || localStorage.getItem(LANG_STORAGE_KEY) || '').toLowerCase();
+			return raw === 'en' ? 'en' : 'tr';
+		}
+		
+		function t(key) {
+			const dict = I18N[getLang()] || I18N.tr;
+			return dict[key] ?? (I18N.tr[key] ?? key);
+		}
+		
+		function applyLang() {
+			const lang = getLang();
+			const dict = I18N[lang] || I18N.tr;
+			document.documentElement.lang = lang;
+			
+			// Topbar
+			const topbarTitle = document.querySelector('.topbar-title');
+			const topbarSubtitle = document.querySelector('.topbar-subtitle');
+			if (topbarTitle) topbarTitle.textContent = dict.page_title;
+			if (topbarSubtitle) topbarSubtitle.textContent = dict.page_subtitle;
+			
+			// Toplam kart
+			const totalLabel = document.querySelector('.total-label');
+			if (totalLabel) totalLabel.textContent = dict.total_label;
+			
+			// Uçuş ekle butonu
+			const addBtnText = document.querySelector('#open-modal-btn span');
+			if (addBtnText) {
+				const svg = addBtnText.querySelector('svg');
+				addBtnText.innerHTML = '';
+				if (svg) addBtnText.appendChild(svg);
+				addBtnText.appendChild(document.createTextNode(' ' + dict.add_flight));
+			}
+			
+			// Liste başlığı
+			const groupLabel = document.querySelector('.list-header .group-label');
+			if (groupLabel) groupLabel.textContent = dict.my_flights;
+			
+			// Arama
+			const searchInput = document.getElementById('search-input');
+			if (searchInput) searchInput.placeholder = dict.search_placeholder;
+			
+			// Seçim modu
+			const selectModeBtn = document.getElementById('select-mode-btn');
+			if (selectModeBtn) selectModeBtn.title = dict.select_mode;
+			
+			// Seçim butonları
+			const selectAllBtn = document.getElementById('select-all-btn');
+			const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+			if (selectAllBtn) selectAllBtn.textContent = dict.select_all;
+			if (deleteSelectedBtn) deleteSelectedBtn.textContent = dict.delete;
+			
+			// Boş durum
+			const emptyStateEl = document.querySelector('#empty-state p');
+			if (emptyStateEl) emptyStateEl.innerHTML = dict.empty_title + '<br>' + dict.empty_desc;
+			
+			// Modal
+			const modalTitle = document.getElementById('modal-title');
+			const closeBtn = document.getElementById('close-modal-btn');
+			if (modalTitle) modalTitle.textContent = dict.modal_title;
+			if (closeBtn) closeBtn.title = dict.close;
+			
+			// Modal alanları
+			const flightCodeLabel = document.querySelector('label[for="flight-code"]');
+			const dateLabel = document.querySelector('label[for="flight-date"]');
+			const offBlockLabel = document.querySelector('label[for="off-block"]');
+			const onBlockLabel = document.querySelector('label[for="on-block"]');
+			const gmtInfo = document.querySelector('.info-text');
+			if (flightCodeLabel) flightCodeLabel.textContent = dict.flight_code;
+			if (dateLabel) dateLabel.textContent = dict.date;
+			if (offBlockLabel) offBlockLabel.textContent = dict.off_block;
+			if (onBlockLabel) onBlockLabel.textContent = dict.on_block;
+			if (gmtInfo) gmtInfo.textContent = dict.gmt_info;
+			
+			// Giriş tipi & süre etiketleri
+			const entryTypeLabel = document.getElementById('entry-type-label');
+			const durationInputLabel = document.getElementById('duration-input-label');
+			const durationInput = document.getElementById('flight-duration-input');
+			if (entryTypeLabel) entryTypeLabel.textContent = dict.entry_type;
+			if (durationInputLabel) durationInputLabel.textContent = dict.duration_label;
+			if (durationInput) durationInput.placeholder = dict.duration_placeholder;
+
+			// Hata mesajları
+			document.getElementById('time-error').textContent = dict.error_time;
+			document.getElementById('duration-error').textContent = dict.error_duration;
+			document.getElementById('duration-invalid-error').textContent = dict.error_duration_invalid;
+			document.getElementById('overlap-error').textContent = dict.error_overlap;
+			document.getElementById('duplicate-error').textContent = dict.error_duplicate;
+			document.getElementById('turnaround-error').textContent = dict.error_turnaround;
+			
+			// Kaydet butonu
+			const saveBtnText = document.querySelector('#add-flight span');
+			if (saveBtnText) {
+				const svg = saveBtnText.querySelector('svg');
+				saveBtnText.innerHTML = '';
+				if (svg) saveBtnText.appendChild(svg);
+				saveBtnText.appendChild(document.createTextNode(' ' + dict.save));
+			}
+			
+			// Sayfa göstergesi
+			const pageDotHome = document.querySelector('.page-dot[data-page="index.html"] .page-dot-label');
+			const pageDotBlockTime = document.querySelector('.page-dot[data-page="block-time.html"] .page-dot-label');
+			const pageDotMel = document.querySelector('.page-dot[data-page="mel-calc.html"] .page-dot-label');
+			if (pageDotHome) pageDotHome.textContent = dict.page_home;
+			if (pageDotBlockTime) pageDotBlockTime.textContent = dict.page_block_time;
+			if (pageDotMel) pageDotMel.textContent = dict.page_mel;
+		}
+		
+		// DOM elements
+		const flightCodeInput = document.getElementById('flight-code');
+		const flightDateInput = document.getElementById('flight-date');
+		const offBlockInput = document.getElementById('off-block');
+		const onBlockInput = document.getElementById('on-block');
+		const addFlightBtn = document.getElementById('add-flight');
+		const flightList = document.getElementById('flight-list');
+		const emptyState = document.getElementById('empty-state');
+		const totalTimeEl = document.getElementById('total-time');
+		const totalFlightsEl = document.getElementById('total-flights');
+		const timeError = document.getElementById('time-error');
+		const durationError = document.getElementById('duration-error');
+		const overlapError = document.getElementById('overlap-error');
+		const duplicateError = document.getElementById('duplicate-error');
+		const turnaroundError = document.getElementById('turnaround-error');
+
+		// New entry mode elements
+		const switchOffOn = document.getElementById('switch-off-on');
+		const switchDuration = document.getElementById('switch-duration');
+		const blockInputsRow = document.getElementById('block-inputs-row');
+		const durationInputField = document.getElementById('duration-input-field');
+		const flightDurationInput = document.getElementById('flight-duration-input');
+		const durationInvalidError = document.getElementById('duration-invalid-error');
+		const calculatedDurationPreview = document.getElementById('calculated-duration-preview');
+		const calculatedDurationValue = document.getElementById('calculated-duration-value');
+		const gmtInfoText = document.getElementById('gmt-info-text');
+		
+		let currentEntryMode = 'block'; // 'block' or 'duration'
+
+		function setEntryMode(mode) {
+			currentEntryMode = mode;
+			if (mode === 'block') {
+				switchOffOn.classList.add('active');
+				switchDuration.classList.remove('active');
+				blockInputsRow.style.display = 'flex';
+				durationInputField.style.display = 'none';
+				gmtInfoText.style.display = 'block';
+				// Reset duration input
+				flightDurationInput.value = '';
+				flightDurationInput.classList.remove('error');
+				durationInvalidError.classList.remove('show');
+				updateCalculatedDurationPreview();
+			} else {
+				switchOffOn.classList.remove('active');
+				switchDuration.classList.add('active');
+				blockInputsRow.style.display = 'none';
+				durationInputField.style.display = 'block';
+				gmtInfoText.style.display = 'none';
+				calculatedDurationPreview.style.display = 'none';
+				// Reset block inputs
+				offBlockInput.value = '';
+				onBlockInput.value = '';
+				offBlockInput.classList.remove('error');
+				onBlockInput.classList.remove('error');
+				timeError.classList.remove('show');
+				durationError.classList.remove('show');
+			}
+		}
+		
+		switchOffOn.addEventListener('click', () => setEntryMode('block'));
+		switchDuration.addEventListener('click', () => setEntryMode('duration'));
+
+		function updateCalculatedDurationPreview() {
+			if (currentEntryMode !== 'block') {
+				calculatedDurationPreview.style.display = 'none';
+				return;
+			}
+			const offVal = offBlockInput.value;
+			const onVal = onBlockInput.value;
+			if (offVal && onVal) {
+				const duration = calculateDuration(offVal, onVal);
+				if (duration > 0) {
+					calculatedDurationValue.textContent = formatDuration(duration);
+					calculatedDurationPreview.style.display = 'block';
+				} else {
+					calculatedDurationPreview.style.display = 'none';
+				}
+			} else {
+				calculatedDurationPreview.style.display = 'none';
+			}
+		}
+
+		[offBlockInput, onBlockInput].forEach(input => {
+			input.addEventListener('input', updateCalculatedDurationPreview);
+		});
+		
+		// Search elements
+		const searchWrap = document.getElementById('search-wrap');
+		const searchInput = document.getElementById('search-input');
+		const searchClear = document.getElementById('search-clear');
+		
+		// Modal elements
+		const flightModal = document.getElementById('flight-modal');
+		const openModalBtn = document.getElementById('open-modal-btn');
+		const closeModalBtn = document.getElementById('close-modal-btn');
+		
+		// Open modal for new flight
+		function openModal() {
+			editingFlightId = null;
+			modalTitle.textContent = 'Uçuş Ekle';
+			
+			// Set default date to today
+			flightDateInput.value = getTodayLocalISODate();
+			flightCodeInput.value = '';
+			offBlockInput.value = '';
+			onBlockInput.value = '';
+			
+			addFlightBtn.innerHTML = `<span style="display:flex;align-items:center;justify-content:center;gap:8px;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+				Kaydet
+			</span>`;
+			
+			flightModal.classList.add('show');
+			document.body.classList.add('modal-open');
+			
+			// Focus on first input
+			setTimeout(() => flightCodeInput.focus(), 100);
+		}
+		
+		// Close modal
+		function closeModal() {
+			flightModal.classList.remove('show');
+			document.body.classList.remove('modal-open');
+			editingFlightId = null;
+			
+			// Reset form
+			flightCodeInput.value = '';
+			offBlockInput.value = '';
+			onBlockInput.value = '';
+			flightDurationInput.value = '';
+			
+			[flightDateInput, offBlockInput, onBlockInput, flightDurationInput].forEach(input => {
+				input.classList.remove('error');
+			});
+			document.getElementById('flight-code-wrap').classList.remove('error');
+			
+			const flightCodeError = document.getElementById('flight-code-error');
+			const flightDateError = document.getElementById('flight-date-error');
+			if (flightCodeError) { flightCodeError.classList.remove('show'); flightCodeError.textContent = ''; }
+			if (flightDateError) { flightDateError.classList.remove('show'); flightDateError.textContent = ''; }
+			
+			const offBlockRangeError = document.getElementById('off-block-range-error');
+			const onBlockRangeError = document.getElementById('on-block-range-error');
+			const durationRangeError = document.getElementById('flight-duration-input-range-error');
+			if (offBlockRangeError) { offBlockRangeError.classList.remove('show'); offBlockRangeError.textContent = ''; }
+			if (onBlockRangeError) { onBlockRangeError.classList.remove('show'); onBlockRangeError.textContent = ''; }
+			if (durationRangeError) { durationRangeError.classList.remove('show'); durationRangeError.textContent = ''; }
+
+			timeError.classList.remove('show');
+			durationError.classList.remove('show');
+			durationInvalidError.classList.remove('show');
+			overlapError.classList.remove('show');
+			duplicateError.classList.remove('show');
+			turnaroundError.classList.remove('show');
+			
+			// Reset entry mode to default (block)
+			setEntryMode('block');
+		}
+		
+		// Modal event listeners
+		openModalBtn.addEventListener('click', openModal);
+		closeModalBtn.addEventListener('click', closeModal);
+		
+		// Close modal on backdrop click
+		flightModal.addEventListener('click', (e) => {
+			if (e.target === flightModal) {
+				closeModal();
+			}
+		});
+		
+		// Search functionality
+		searchInput.addEventListener('input', () => {
+			const hasValue = searchInput.value.trim().length > 0;
+			searchClear.classList.toggle('show', hasValue);
+			renderFlights();
+		});
+		
+		searchClear.addEventListener('click', () => {
+			searchInput.value = '';
+			searchClear.classList.remove('show');
+			renderFlights();
+			searchInput.focus();
+		});
+		
+		let cachedFlights = [];
+
+		// Load flights from local cache
+		function loadFlights() {
+			return cachedFlights;
+		}
+		
+		// Save flights to local cache and IndexedDB
+		function saveFlights(flights) {
+			cachedFlights = flights;
+			db.saveAll('block_logs', flights);
+		}
+		
+		// Calculate duration in minutes between two time strings (HH:MM)
+		function calculateDuration(offBlock, onBlock) {
+			const [offH, offM] = offBlock.split(':').map(Number);
+			const [onH, onM] = onBlock.split(':').map(Number);
+			
+			let offMinutes = offH * 60 + offM;
+			let onMinutes = onH * 60 + onM;
+			
+			// Handle midnight crossing (e.g., off: 23:00, on: 01:00)
+			if (onMinutes < offMinutes) {
+				onMinutes += 24 * 60;
+			}
+			
+			return onMinutes - offMinutes;
+		}
+		
+		// Format minutes to HH:MM string
+		function formatDuration(minutes) {
+			const h = Math.floor(minutes / 60);
+			const m = minutes % 60;
+			return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+		}
+		
+		// Format date for display
+		function formatDate(dateStr) {
+			if (!dateStr) return '';
+			const parts = dateStr.split('-');
+			if (parts.length !== 3) return dateStr;
+			const [year, month, day] = parts;
+			if (!year || !month || !day) return dateStr;
+			return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+		}
+
+		function getTodayLocalISODate() {
+			const now = new Date();
+			const y = now.getFullYear();
+			const m = String(now.getMonth() + 1).padStart(2, '0');
+			const d = String(now.getDate()).padStart(2, '0');
+			return `${y}-${m}-${d}`;
+		}
+		
+		// Selection mode state
+		let selectionMode = false;
+		let selectedFlights = new Set();
+		let editingFlightId = null;
+		
+		const selectModeBtn = document.getElementById('select-mode-btn');
+		const selectionBar = document.getElementById('selection-bar');
+		const selectedCountEl = document.getElementById('selected-count');
+		const selectAllBtn = document.getElementById('select-all-btn');
+		const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+		const flightsCard = document.getElementById('flights-card');
+		const modalTitle = document.getElementById('modal-title');
+		
+		// Parse "HH:MM" format to minutes.
+		function parseDurationString(str) {
+			if (!str) return null;
+			const cleanStr = str.trim();
+			if (!cleanStr.includes(':')) return null;
+			const parts = cleanStr.split(':');
+			if (parts.length !== 2) return null;
+			const h = parseInt(parts[0], 10);
+			const m = parseInt(parts[1], 10);
+			if (isNaN(h) || isNaN(m)) return null;
+			return h * 60 + m;
+		}
+
+		// Render flight list
+		function renderFlights() {
+			const flights = loadFlights();
+			
+			// Clear list except empty state
+			const items = flightList.querySelectorAll('.flight-item, .no-results');
+			items.forEach(item => item.remove());
+			
+			if (flights.length === 0) {
+				emptyState.style.display = 'block';
+				selectModeBtn.style.display = 'none';
+				searchWrap.style.display = 'none';
+				exitSelectionMode();
+			} else {
+				emptyState.style.display = 'none';
+				selectModeBtn.style.display = 'block';
+				searchWrap.style.display = 'block';
+				
+				// Sort by date (newest first), then by off block time
+				flights.sort((a, b) => {
+					const dateCompare = (b.date || '').localeCompare(a.date || '');
+					if (dateCompare !== 0) return dateCompare;
+					// If same date, sort by off block time / duration
+					if (!a.offBlock && b.offBlock) return 1;
+					if (a.offBlock && !b.offBlock) return -1;
+					if (!a.offBlock && !b.offBlock) return 0;
+					return b.offBlock.localeCompare(a.offBlock);
+				});
+				
+				// Apply search filter
+				const searchQuery = searchInput.value.trim().toLowerCase();
+				let filteredFlights = flights;
+				if (searchQuery) {
+					filteredFlights = flights.filter(flight => {
+						const codeMatch = flight.code.toLowerCase().includes(searchQuery);
+						const dateMatch = formatDate(flight.date).toLowerCase().includes(searchQuery);
+						const rawDateMatch = flight.date.includes(searchQuery);
+						return codeMatch || dateMatch || rawDateMatch;
+					});
+				}
+				
+				if (filteredFlights.length === 0 && searchQuery) {
+					flightList.innerHTML = '<div class="no-results">Aramayla eşleşen uçuş bulunamadı</div>';
+				} else {
+					filteredFlights.forEach((flight) => {
+						const isPending = !flight.duration && (!flight.offBlock || !flight.onBlock);
+						const duration = flight.duration ? flight.duration : (isPending ? 0 : calculateDuration(flight.offBlock, flight.onBlock));
+						const item = document.createElement('div');
+						item.className = 'flight-item' + (isPending ? ' pending' : '');
+						item.dataset.id = flight.id;
+						if (selectedFlights.has(flight.id)) {
+							item.classList.add('selected');
+						}
+						
+						// Render differently based on pending status / duration-only
+						if (isPending) {
+							item.innerHTML = `
+								<div class="select-check">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+								</div>
+								<div class="flight-info">
+									<div class="flight-code">${escapeHtml(flight.code)} <span class="pending-badge">Bekliyor</span></div>
+									<div class="flight-date">${formatDate(flight.date)}</div>
+									<div class="flight-times" style="color: var(--text-secondary);">Blok saatleri eksik</div>
+								</div>
+								<div class="flight-duration">
+									<div class="flight-duration-value" style="color: var(--text-secondary);">--:--</div>
+									<div class="flight-duration-label">Süre</div>
+								</div>
+							`;
+						} else if (flight.duration && !flight.offBlock) {
+							// Duration only flight
+							const manualLabel = getLang() === 'en' ? 'Manual Entry' : 'Manuel Giriş';
+							item.innerHTML = `
+								<div class="select-check">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+								</div>
+								<div class="flight-info">
+									<div class="flight-code">${escapeHtml(flight.code)}</div>
+									<div class="flight-date">${formatDate(flight.date)}</div>
+									<div class="flight-times">${manualLabel}</div>
+								</div>
+								<div class="flight-duration">
+									<div class="flight-duration-value">${formatDuration(duration)}</div>
+									<div class="flight-duration-label">Süre</div>
+								</div>
+							`;
+						} else {
+							// Regular flight
+							item.innerHTML = `
+								<div class="select-check">
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+								</div>
+								<div class="flight-info">
+									<div class="flight-code">${escapeHtml(flight.code)}</div>
+									<div class="flight-date">${formatDate(flight.date)}</div>
+									<div class="flight-times">OFF: ${flight.offBlock}Z → ON: ${flight.onBlock}Z</div>
+								</div>
+								<div class="flight-duration">
+									<div class="flight-duration-value">${formatDuration(duration)}</div>
+									<div class="flight-duration-label">Süre</div>
+								</div>
+							`;
+						}
+						flightList.appendChild(item);
+					});
+				}
+			}
+			
+			// Update total (including manually entered duration flights)
+			updateTotal(flights.filter(f => f.duration || (f.offBlock && f.onBlock)));
+			updateSelectionUI();
+		}
+		
+		// Update total time display
+		function updateTotal(flights) {
+			let totalMinutes = 0;
+			flights.forEach(flight => {
+				totalMinutes += flight.duration ? flight.duration : calculateDuration(flight.offBlock, flight.onBlock);
+			});
+			
+			totalTimeEl.textContent = formatDuration(totalMinutes);
+			totalFlightsEl.textContent = t('total_flights').replace('{n}', flights.length);
+		}
+		
+		// Escape HTML to prevent XSS
+		function escapeHtml(text) {
+			const div = document.createElement('div');
+			div.textContent = text;
+			return div.innerHTML;
+		}
+		
+		// Helper to validate a single time input range
+		function validateTimeInputRange(inputElement, maxHours, isInstant = false) {
+			const errorEl = document.getElementById(inputElement.id + '-range-error');
+			if (errorEl) {
+				errorEl.textContent = '';
+				errorEl.classList.remove('show');
+			}
+			inputElement.classList.remove('error');
+
+			let val = inputElement.value.trim();
+			if (val === '' || val === '__:__') {
+				return true; // Empty value, handled by required checks later
+			}
+
+			// Split by ':' to check hour and minute parts separately
+			const parts = val.split(':');
+			const hStr = parts[0] || '';
+			const mStr = parts[1] || '';
+
+			const hClean = hStr.replace(/_/g, '').trim();
+			const mClean = mStr.replace(/_/g, '').trim();
+
+			// 1. Validate Hour Range
+			if (hClean.length > 0) {
+				const h = parseInt(hClean, 10);
+				if (h > maxHours) {
+					inputElement.classList.add('error');
+					if (errorEl) {
+						errorEl.textContent = maxHours === 23 ? t('error_hour_range') : t('error_duration_hour_range');
+						errorEl.classList.add('show');
+					}
+					return false;
+				}
+			}
+
+			// 2. Validate Minute Range
+			if (mClean.length > 0) {
+				const mFirstDigit = parseInt(mClean[0], 10);
+				const m = parseInt(mClean, 10);
+				if (mFirstDigit > 5 || m > 59) {
+					inputElement.classList.add('error');
+					if (errorEl) {
+						errorEl.textContent = t('error_minute_range');
+						errorEl.classList.add('show');
+					}
+					return false;
+				}
+			}
+
+			// 3. Incomplete check (only on blur or submit)
+			if (!isInstant) {
+				const clean = val.replace(/[^0-9]/g, '');
+				if (clean.length > 0 && clean.length < 4) {
+					inputElement.classList.add('error');
+					if (errorEl) {
+						errorEl.textContent = t('error_incomplete');
+						errorEl.classList.add('show');
+					}
+					return false;
+				}
+			}
+
+			const cleanAll = val.replace(/[^0-9]/g, '');
+			if (cleanAll.length === 4) {
+				let h = parseInt(cleanAll.slice(0, 2), 10);
+				let m = parseInt(cleanAll.slice(2, 4), 10);
+				inputElement.value = h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
+				updateCalculatedDurationPreview();
+			}
+			return true;
+		}
+
+		function validateLogicalTimeErrors() {
+			// Clear logical errors first
+			timeError.classList.remove('show');
+			durationError.classList.remove('show');
+
+			if (currentEntryMode === 'block') {
+				const offVal = offBlockInput.value.trim();
+				const onVal = onBlockInput.value.trim();
+
+				// Only calculate if both are complete and have no format errors
+				const offClean = offVal.replace(/[^0-9]/g, '');
+				const onClean = onVal.replace(/[^0-9]/g, '');
+
+				const hasOffError = offBlockInput.classList.contains('error');
+				const hasOnError = onBlockInput.classList.contains('error');
+
+				if (offClean.length === 4 && onClean.length === 4 && !hasOffError && !hasOnError) {
+					const duration = calculateDuration(offVal, onVal);
+					if (duration <= 0) {
+						timeError.classList.add('show');
+						offBlockInput.classList.add('error');
+						onBlockInput.classList.add('error');
+					} else if (duration < 20 || duration > 1080) {
+						durationError.classList.add('show');
+						offBlockInput.classList.add('error');
+						onBlockInput.classList.add('error');
+					} else {
+						// Clean state
+						offBlockInput.classList.remove('error');
+						onBlockInput.classList.remove('error');
+					}
+				}
+			} else {
+				const durationVal = flightDurationInput.value.trim();
+				const clean = durationVal.replace(/[^0-9]/g, '');
+				const hasError = flightDurationInput.classList.contains('error');
+
+				if (clean.length === 4 && !hasError) {
+					const duration = parseDurationString(durationVal);
+					if (duration !== null && !isNaN(duration)) {
+						if (duration < 20 || duration > 1080) {
+							durationError.classList.add('show');
+							flightDurationInput.classList.add('error');
+						} else {
+							flightDurationInput.classList.remove('error');
+						}
+					}
+				}
+			}
+		}
+
+		// Validate inputs
+		function validateInputs() {
+			let isValid = true;
+			
+			// Reset error states
+			flightDateInput.classList.remove('error');
+			document.getElementById('flight-code-wrap').classList.remove('error');
+			timeError.classList.remove('show');
+			durationError.classList.remove('show');
+			durationInvalidError.classList.remove('show');
+			overlapError.classList.remove('show');
+			duplicateError.classList.remove('show');
+			turnaroundError.classList.remove('show');
+
+			// Range validations (doesn\'t auto-correct, keeps incorrect value and shows border/msg)
+			let isRangesValid = true;
+			if (currentEntryMode === 'block') {
+				if (!validateTimeInputRange(offBlockInput, 23)) isRangesValid = false;
+				if (!validateTimeInputRange(onBlockInput, 23)) isRangesValid = false;
+			} else {
+				if (!validateTimeInputRange(flightDurationInput, 18)) isRangesValid = false;
+			}
+			if (!isRangesValid) {
+				isValid = false;
+			}
+			
+			// Check required fields
+			const flightCodeWrap = document.getElementById('flight-code-wrap');
+			const codeValue = flightCodeInput.value.trim();
+			const codeErrorEl = document.getElementById('flight-code-error');
+			if (!codeValue || codeValue.length < 3 || codeValue.length > 4) {
+				flightCodeWrap.classList.add('error');
+				if (codeErrorEl) {
+					codeErrorEl.textContent = t('error_flight_code');
+					codeErrorEl.classList.add('show');
+				}
+				isValid = false;
+			} else {
+				if (codeErrorEl) {
+					codeErrorEl.classList.remove('show');
+					codeErrorEl.textContent = '';
+				}
+			}
+			
+			const dateErrorEl = document.getElementById('flight-date-error');
+			if (!flightDateInput.value) {
+				flightDateInput.classList.add('error');
+				if (dateErrorEl) {
+					dateErrorEl.textContent = t('error_flight_date');
+					dateErrorEl.classList.add('show');
+				}
+				isValid = false;
+			} else {
+				if (dateErrorEl) {
+					dateErrorEl.classList.remove('show');
+					dateErrorEl.textContent = '';
+				}
+			}
+			
+			if (currentEntryMode === 'block') {
+				// Block times are REQUIRED
+				const hasOffBlock = offBlockInput.value.trim() !== '';
+				const hasOnBlock = onBlockInput.value.trim() !== '';
+				if (!hasOffBlock) {
+					offBlockInput.classList.add('error');
+					isValid = false;
+				}
+				if (!hasOnBlock) {
+					onBlockInput.classList.add('error');
+					isValid = false;
+				}
+				
+				if (isValid) {
+					const duration = calculateDuration(offBlockInput.value, onBlockInput.value);
+					if (duration <= 0) {
+						timeError.classList.add('show');
+						offBlockInput.classList.add('error');
+						onBlockInput.classList.add('error');
+						isValid = false;
+					} else if (duration < 20 || duration > 1080) {
+						durationError.classList.add('show');
+						offBlockInput.classList.add('error');
+						onBlockInput.classList.add('error');
+						isValid = false;
+					}
+				}
+			} else {
+				// Duration is REQUIRED in duration mode
+				const durationVal = flightDurationInput.value.trim();
+				if (!durationVal) {
+					flightDurationInput.classList.add('error');
+					isValid = false;
+				} else {
+					const duration = parseDurationString(durationVal);
+					if (duration === null || isNaN(duration)) {
+						durationInvalidError.classList.add('show');
+						flightDurationInput.classList.add('error');
+						isValid = false;
+					} else if (duration < 20 || duration > 1080) {
+						durationError.classList.add('show');
+						flightDurationInput.classList.add('error');
+						isValid = false;
+					}
+				}
+			}
+			
+			// Advanced validations only if basic fields are valid
+			if (isValid && flightDateInput.value) {
+				const flights = loadFlights();
+				const newDate = flightDateInput.value;
+				
+				if (currentEntryMode === 'block') {
+					const newOffBlock = offBlockInput.value;
+					const newOnBlock = onBlockInput.value;
+					
+					// Check for exact duplicate
+					const exactDuplicate = flights.find(f => 
+						f.id !== editingFlightId &&
+						f.date === newDate && 
+						f.offBlock === newOffBlock && 
+						f.onBlock === newOnBlock
+					);
+					
+					if (exactDuplicate) {
+						duplicateError.classList.add('show');
+						flightDateInput.classList.add('error');
+						offBlockInput.classList.add('error');
+						onBlockInput.classList.add('error');
+						isValid = false;
+					}
+					
+					// Check for time overlap on same date (only for flights with block times)
+					if (isValid) {
+						const sameDayFlights = flights.filter(f => 
+							f.date === newDate && 
+							f.id !== editingFlightId && 
+							f.offBlock && f.onBlock // Only check against flights with block times
+						);
+						
+						// Convert new flight times to minutes
+						const newStart = timeToMinutes(newOffBlock);
+						let newEnd = timeToMinutes(newOnBlock);
+						// Handle midnight crossing
+						if (newEnd <= newStart) newEnd += 24 * 60;
+						
+						for (const flight of sameDayFlights) {
+							const existingStart = timeToMinutes(flight.offBlock);
+							let existingEnd = timeToMinutes(flight.onBlock);
+							// Handle midnight crossing for existing flight
+							if (existingEnd <= existingStart) existingEnd += 24 * 60;
+							
+							// Overlap check: Two intervals [A,B] and [C,D] overlap if A < D AND B > C
+							const hasOverlap = (newStart < existingEnd) && (newEnd > existingStart);
+							
+							if (hasOverlap) {
+								overlapError.textContent = `${flight.code} (${flight.offBlock}Z-${flight.onBlock}Z) ile çakışıyor`;
+								overlapError.classList.add('show');
+								offBlockInput.classList.add('error');
+								onBlockInput.classList.add('error');
+								isValid = false;
+								break;
+							}
+							
+							// Check minimum turnaround time (at least 30 minutes gap between flights)
+							const MIN_TURNAROUND = 30; // minutes
+							const gapAfterNew = existingStart - newEnd;    // Gap if new flight is before existing
+							const gapBeforeNew = newStart - existingEnd;   // Gap if new flight is after existing
+							
+							const insufficientGapAfter = gapAfterNew > 0 && gapAfterNew < MIN_TURNAROUND;
+							const insufficientGapBefore = gapBeforeNew > 0 && gapBeforeNew < MIN_TURNAROUND;
+							
+							if (insufficientGapAfter || insufficientGapBefore) {
+								const actualGap = insufficientGapAfter ? gapAfterNew : gapBeforeNew;
+								turnaroundError.textContent = `${flight.code} ile arası en az 30 dk olmalı (şu an: ${actualGap} dk)`;
+								turnaroundError.classList.add('show');
+								offBlockInput.classList.add('error');
+								onBlockInput.classList.add('error');
+								isValid = false;
+								break;
+							}
+						}
+					}
+				} else {
+					// In duration mode, check duplicate based on code, date and duration
+					const duration = parseDurationString(flightDurationInput.value);
+					const exactDuplicate = flights.find(f => 
+						f.id !== editingFlightId &&
+						f.date === newDate && 
+						f.code === 'TK' + flightCodeInput.value.trim() &&
+						f.duration === duration &&
+						!f.offBlock && !f.onBlock
+					);
+					if (exactDuplicate) {
+						duplicateError.classList.add('show');
+						flightDateInput.classList.add('error');
+						flightDurationInput.classList.add('error');
+						isValid = false;
+					}
+				}
+			}
+			
+			return isValid;
+		}
+		
+		// Helper: convert time string to minutes
+		function timeToMinutes(timeStr) {
+			const [h, m] = timeStr.split(':').map(Number);
+			return h * 60 + m;
+		}
+		
+		// Add/Edit flight handler
+		addFlightBtn.addEventListener('click', () => {
+			if (!validateInputs()) return;
+			
+			let flights = loadFlights();
+			
+			let newFlightData = {};
+			if (currentEntryMode === 'block') {
+				newFlightData = {
+					code: 'TK' + flightCodeInput.value.trim(),
+					date: flightDateInput.value,
+					offBlock: offBlockInput.value.trim(),
+					onBlock: onBlockInput.value.trim(),
+					duration: null
+				};
+			} else {
+				const durationMinutes = parseDurationString(flightDurationInput.value);
+				newFlightData = {
+					code: 'TK' + flightCodeInput.value.trim(),
+					date: flightDateInput.value,
+					offBlock: null,
+					onBlock: null,
+					duration: durationMinutes
+				};
+			}
+			
+			if (editingFlightId) {
+				// Update existing flight
+				const index = flights.findIndex(f => f.id === editingFlightId);
+				if (index !== -1) {
+					flights[index] = {
+						...flights[index],
+						...newFlightData
+					};
+				}
+			} else {
+				// Add new flight
+				const newFlight = {
+					id: Date.now(),
+					...newFlightData
+				};
+				flights.push(newFlight);
+			}
+			
+			saveFlights(flights);
+			
+			// Clear form (keep date)
+			flightCodeInput.value = '';
+			offBlockInput.value = '';
+			onBlockInput.value = '';
+			flightDurationInput.value = '';
+			
+			// Re-render
+			renderFlights();
+			
+			// Close modal
+			closeModal();
+			
+			// Visual feedback
+			openModalBtn.style.transform = 'scale(0.9)';
+			setTimeout(() => {
+				openModalBtn.style.transform = '';
+			}, 150);
+		});
+		
+		// Flight item click handler (edit or select)
+		flightList.addEventListener('click', (e) => {
+			const item = e.target.closest('.flight-item');
+			if (!item) return;
+			
+			const flightId = parseInt(item.dataset.id);
+			
+			if (selectionMode) {
+				// Toggle selection
+				if (selectedFlights.has(flightId)) {
+					selectedFlights.delete(flightId);
+					item.classList.remove('selected');
+				} else {
+					selectedFlights.add(flightId);
+					item.classList.add('selected');
+				}
+				updateSelectionUI();
+			} else {
+				// Open edit modal
+				openEditModal(flightId);
+			}
+		});
+		
+		// Selection mode toggle
+		selectModeBtn.addEventListener('click', () => {
+			if (selectionMode) {
+				exitSelectionMode();
+			} else {
+				enterSelectionMode();
+			}
+		});
+		
+		function enterSelectionMode() {
+			selectionMode = true;
+			selectedFlights.clear();
+			document.getElementById('select-mode-icon').innerHTML = '<path d="M18 6L6 18M6 6l12 12"/>';
+			selectModeBtn.classList.add('active');
+			selectionBar.classList.add('show');
+			flightsCard.classList.add('selection-mode');
+			updateSelectionUI();
+		}
+		
+		function exitSelectionMode() {
+			selectionMode = false;
+			selectedFlights.clear();
+			document.getElementById('select-mode-icon').innerHTML = '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>';
+			selectModeBtn.classList.remove('active');
+			selectionBar.classList.remove('show');
+			flightsCard.classList.remove('selection-mode');
+			// Remove selected class from all items
+			flightList.querySelectorAll('.flight-item.selected').forEach(item => {
+				item.classList.remove('selected');
+			});
+		}
+		
+		function updateSelectionUI() {
+			selectedCountEl.textContent = selectedFlights.size;
+			deleteSelectedBtn.disabled = selectedFlights.size === 0;
+			
+			const flights = loadFlights();
+			if (selectedFlights.size === flights.length && flights.length > 0) {
+				selectAllBtn.textContent = 'Seçimi Kaldır';
+			} else {
+				selectAllBtn.textContent = 'Tümünü Seç';
+			}
+		}
+		
+		// Select all toggle
+		selectAllBtn.addEventListener('click', () => {
+			const flights = loadFlights();
+			if (selectedFlights.size === flights.length) {
+				// Deselect all
+				selectedFlights.clear();
+				flightList.querySelectorAll('.flight-item').forEach(item => {
+					item.classList.remove('selected');
+				});
+			} else {
+				// Select all
+				flights.forEach(f => selectedFlights.add(f.id));
+				flightList.querySelectorAll('.flight-item').forEach(item => {
+					item.classList.add('selected');
+				});
+			}
+			updateSelectionUI();
+		});
+		
+		// Delete selected flights
+		deleteSelectedBtn.addEventListener('click', () => {
+			if (selectedFlights.size === 0) return;
+			
+			const count = selectedFlights.size;
+			if (confirm(`${count} uçuşu silmek istediğinize emin misiniz?`)) {
+				let flights = loadFlights();
+				flights = flights.filter(f => !selectedFlights.has(f.id));
+				saveFlights(flights);
+				exitSelectionMode();
+				renderFlights();
+			}
+		});
+		
+		// Open edit modal
+		function openEditModal(flightId) {
+			const flights = loadFlights();
+			const flight = flights.find(f => f.id === flightId);
+			if (!flight) return;
+			
+			editingFlightId = flightId;
+			modalTitle.textContent = 'Uçuşu Düzenle';
+			
+			// Extract number from flight code (remove TK prefix)
+			const codeNumber = flight.code.replace(/^TK/i, '');
+			flightCodeInput.value = codeNumber;
+			flightDateInput.value = flight.date;
+			
+			if (flight.duration && !flight.offBlock) {
+				setEntryMode('duration');
+				flightDurationInput.value = formatDuration(flight.duration);
+			} else {
+				setEntryMode('block');
+				offBlockInput.value = flight.offBlock || '';
+				onBlockInput.value = flight.onBlock || '';
+				updateCalculatedDurationPreview();
+			}
+			
+			addFlightBtn.innerHTML = `<span style="display:flex;align-items:center;justify-content:center;gap:8px;">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+				Kaydet
+			</span>`;
+			
+			flightModal.classList.add('show');
+			document.body.classList.add('modal-open');
+		}
+		
+		// Only allow numbers for flight code
+		flightCodeInput.addEventListener('input', () => {
+			flightCodeInput.value = flightCodeInput.value.replace(/[^0-9]/g, '');
+			document.getElementById('flight-code-wrap').classList.remove('error');
+			const codeErrorEl = document.getElementById('flight-code-error');
+			if (codeErrorEl) {
+				codeErrorEl.classList.remove('show');
+				codeErrorEl.textContent = '';
+			}
+		});
+		
+		// Clear error on input and perform real-time validation
+		[flightDateInput, offBlockInput, onBlockInput, flightDurationInput].forEach(input => {
+			input.addEventListener('input', () => {
+				input.classList.remove('error');
+				const rangeErrorEl = document.getElementById(input.id + '-range-error');
+				if (rangeErrorEl) {
+					rangeErrorEl.classList.remove('show');
+				}
+				if (input === offBlockInput || input === onBlockInput) {
+					validateTimeInputRange(input, 23, true);
+					overlapError.classList.remove('show');
+					duplicateError.classList.remove('show');
+					turnaroundError.classList.remove('show');
+					validateLogicalTimeErrors();
+				}
+				if (input === flightDurationInput) {
+					validateTimeInputRange(input, 18, true);
+					durationInvalidError.classList.remove('show');
+					duplicateError.classList.remove('show');
+					validateLogicalTimeErrors();
+				}
+				if (input === flightDateInput) {
+					overlapError.classList.remove('show');
+					duplicateError.classList.remove('show');
+					turnaroundError.classList.remove('show');
+					const dateErrorEl = document.getElementById('flight-date-error');
+					if (dateErrorEl) {
+						dateErrorEl.classList.remove('show');
+						dateErrorEl.textContent = '';
+					}
+				}
+			});
+		});
+		
+		// Escape handler
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape' && flightModal.classList.contains('show')) {
+				closeModal();
+			}
+		});
+		
+		// Time inputs formatting and masking with guide template (__:__)
+		function setupTimeMask(inputElement, maxHours) {
+			inputElement.addEventListener('focus', () => {
+				if (inputElement.value === '') {
+					inputElement.value = '__:__';
+					// Set caret to start
+					setTimeout(() => inputElement.setSelectionRange(0, 0), 0);
+				}
+			});
+
+			inputElement.addEventListener('blur', () => {
+				validateTimeInputRange(inputElement, maxHours);
+			});
+
+			inputElement.addEventListener('keydown', (e) => {
+				const key = e.key;
+				const isDigit = /^[0-9]$/.test(key);
+				const isBackspace = key === 'Backspace';
+				const isDelete = key === 'Delete';
+				const isArrow = key.startsWith('Arrow');
+				
+				if (!isDigit && !isBackspace && !isDelete && !isArrow && key !== 'Tab' && key !== 'Enter') {
+					e.preventDefault();
+					return;
+				}
+
+				if (isDigit) {
+					e.preventDefault();
+					let val = inputElement.value;
+					if (val === '') {
+						val = '__:__';
+					}
+					let caret = inputElement.selectionStart;
+					
+					if (caret === 2) caret = 3;
+					
+					if (caret < 5) {
+						let chars = val.split('');
+						chars[caret] = key;
+						inputElement.value = chars.join('');
+						let nextCaret = caret + 1;
+						if (nextCaret === 2) nextCaret = 3;
+						inputElement.setSelectionRange(nextCaret, nextCaret);
+					}
+				} else if (isBackspace) {
+					e.preventDefault();
+					let caret = inputElement.selectionStart;
+					let prevCaret = caret - 1;
+					if (prevCaret === 2) prevCaret = 1;
+					
+					if (prevCaret >= 0) {
+						let chars = inputElement.value.split('');
+						chars[prevCaret] = '_';
+						inputElement.value = chars.join('');
+						inputElement.setSelectionRange(prevCaret, prevCaret);
+					}
+				} else if (isDelete) {
+					e.preventDefault();
+					let caret = inputElement.selectionStart;
+					if (caret === 2) caret = 3;
+					if (caret < 5) {
+						let chars = inputElement.value.split('');
+						chars[caret] = '_';
+						inputElement.value = chars.join('');
+						inputElement.setSelectionRange(caret, caret);
+					}
+				}
+				
+				// Trigger input event for calculation updates and validation clearing
+				inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+			});
+
+			inputElement.addEventListener('click', () => {
+				let val = inputElement.value;
+				if (val === '__:__') {
+					inputElement.setSelectionRange(0, 0);
+				} else {
+					let firstUnderscore = val.indexOf('_');
+					if (firstUnderscore !== -1) {
+						inputElement.setSelectionRange(firstUnderscore, firstUnderscore);
+					}
+				}
+			});
+		}
+		
+		setupTimeMask(offBlockInput, 23);
+		setupTimeMask(onBlockInput, 23);
+		setupTimeMask(flightDurationInput, 18);
+		
+		// Sayfa yüklendiğinde
+		applyLang();
+		db.getAll('block_logs').then(flights => {
+			cachedFlights = flights;
+			renderFlights();
+		}).catch(() => {
+			cachedFlights = [];
+			renderFlights();
+		});
+	</script>
+	
+	<!-- Page Indicator -->
+	<div class="page-indicator" id="page-indicator">
+		<div class="page-dot" data-page="mel-calc.html"><span class="page-dot-label">MEL</span></div>
+		<div class="page-dot" data-page="index.html"><span class="page-dot-label">Ana Sayfa</span></div>
+		<div class="page-dot active" data-page="block-time.html"><span class="page-dot-label">Blok Saat</span></div>
+	</div>
+	
+	<script>
+	// Swipe Navigation
+	(function() {
+		const pages = ['mel-calc.html', 'index.html', 'block-time.html'];
+		const currentPage = 'block-time.html';
+		const currentIndex = pages.indexOf(currentPage);
+		
+		let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+		const minSwipeDistance = 80, maxVerticalDistance = 100;
+		
+		function handleSwipe() {
+			const deltaX = touchEndX - touchStartX;
+			const deltaY = Math.abs(touchEndY - touchStartY);
+			if (deltaY > maxVerticalDistance || Math.abs(deltaX) < minSwipeDistance) return;
+			
+			const page = document.querySelector('.page');
+			if (deltaX < 0 && currentIndex < pages.length - 1) {
+				page.classList.add('page-transitioning', 'page-slide-left');
+				setTimeout(() => { window.location.href = pages[currentIndex + 1]; }, 200);
+			} else if (deltaX > 0 && currentIndex > 0) {
+				page.classList.add('page-transitioning', 'page-slide-right');
+				setTimeout(() => { window.location.href = pages[currentIndex - 1]; }, 200);
+			}
+		}
+		
+		document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: true });
+		document.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; touchEndY = e.changedTouches[0].screenY; handleSwipe(); }, { passive: true });
+		
+		document.querySelectorAll('.page-dot').forEach(dot => {
+			dot.addEventListener('click', function() {
+				const targetPage = this.dataset.page;
+				if (targetPage && targetPage !== currentPage) {
+					const page = document.querySelector('.page');
+					const targetIndex = pages.indexOf(targetPage);
+					const direction = targetIndex > currentIndex ? 'left' : 'right';
+					page.classList.add('page-transitioning', 'page-slide-' + direction);
+					setTimeout(() => { window.location.href = targetPage; }, 200);
+				}
+			});
+		});
+	})();
+	</script>
+</body>
+</html>

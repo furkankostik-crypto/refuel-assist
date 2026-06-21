@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Refuel Assist — Towing Assist</title>
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/png" href="assets/logo-192.png">
+    <script src="assets/db.js"></script>
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        :root {
+            --primary: #38bdf8;
+            --primary-rgb: 56,189,248;
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.45);
+            --card-active: rgba(30, 41, 59, 0.85);
+            --muted: #64748b;
+            --amber: #f59e0b;
+            --success: #22c55e;
+            --error: #ef4444;
+            --brand-font: 'Segoe UI', Arial, sans-serif;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            min-height: 100dvh;
+            font-family: var(--brand-font);
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%);
+            color: #fff;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(30px + env(safe-area-inset-bottom, 0px)) 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100dvh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .content-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-sizing: border-box;
+            margin-bottom: 24px;
+        }
+        .topbar-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            color: var(--primary);
+            text-decoration: none;
+            transition: transform 0.15s, background 0.2s;
+        }
+        .topbar-back:active { transform: scale(0.95); background: rgba(56, 189, 248, 0.22); }
+        .topbar-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1.2;
+        }
+        .topbar-subtitle {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+        .logs-btn {
+            margin-left: auto;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--primary);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* Sticky Summary Bar */
+        .summary-sticky-bar {
+            position: sticky;
+            top: calc(12px + env(safe-area-inset-top, 0px));
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 2px solid var(--primary);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 100;
+            animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Timeline Layout */
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            bottom: 0;
+            left: 12px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        /* Cards */
+        .card-wrap {
+            position: relative;
+            margin-bottom: 8px;
+            z-index: 1;
+            opacity: 0.35;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+        }
+        .card-wrap.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+            z-index: 10;
+        }
+        .card-wrap.completed {
+            opacity: 0.85;
+            pointer-events: auto;
+        }
+        
+        .card-dot {
+            position: absolute;
+            left: -32px;
+            top: 11px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #1e293b;
+            border: 2px solid rgba(100, 116, 139, 0.5); /* Made softer for non-active */
+            z-index: 2;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px; /* Slightly larger */
+            font-weight: 900;
+            color: #94a3b8; /* Brighter for better visibility */
+        }
+        /* Yatay Bağlantı Çizgisi */
+        .card-dot::after {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            width: 10px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-50%);
+            transition: all 0.3s;
+        }
+        .card-wrap.active .card-dot {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: #0f172a;
+            box-shadow: 0 0 15px rgba(56,189,248,0.6);
+        }
+        .card-wrap.active .card-dot::after {
+            background: var(--primary);
+            width: 12px;
+        }
+        .card-wrap.completed .card-dot {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+        .card-wrap.completed .card-dot::after {
+            background: var(--success);
+            width: 12px;
+        }
+
+        .card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 8px 12px; /* Minimal padding for non-active */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: visible;
+            cursor: pointer;
+        }
+        .card-wrap.active .card {
+            background: var(--card-active);
+            border-color: rgba(56, 189, 248, 0.25);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            padding: 14px; /* Normal padding for active card */
+            cursor: default;
+            overflow: visible;
+        }
+
+        .card-title {
+            font-size: 13px; /* Slightly smaller for non-active */
+            font-weight: 700;
+            color: #94a3b8;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 20px;
+        }
+        .card-wrap.active .card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        .card-body-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, margin-top 0.3s ease;
+        }
+        .card-wrap.active .card-body-content {
+            max-height: 1000px; /* Genişleyebilmesi için yüksek değer */
+            opacity: 1;
+            overflow: visible;
+        }
+        
+        /* Compact Card Summaries when collapsed */
+        .card-summary {
+            display: none !important;
+        }
+        .card-title .status-icon { display: none; color: var(--success); }
+        .card-wrap.completed .status-icon { display: block; }
+        
+        /* Form Inputs */
+        .form-group { margin-bottom: 12px; position: relative; }
+        .form-label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2); }
+        .form-input.valid { border-color: var(--success) !important; }
+        .form-input.invalid { border-color: var(--error) !important; }
+        
+        /* Autocomplete Suggestions */
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 12px;
+            margin-top: 4px;
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+            text-align: left;
+        }
+        .suggestion-item {
+            padding: 10px 14px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: rgba(56,189,248,0.1); }
+        .suggestion-item small { color: #94a3b8; display: block; font-size: 10px; margin-top: 2px; }
+
+        /* Checklists */
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(15,23,42,0.4);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .check-item.checked {
+            background: rgba(34,197,94,0.1);
+            border-color: rgba(34,197,94,0.3);
+        }
+        .check-box {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid #64748b;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .check-item.checked .check-box {
+            background: var(--success);
+            border-color: var(--success);
+        }
+        .check-box::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: 900;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s;
+        }
+        .check-item.checked .check-box::after { opacity: 1; transform: scale(1); }
+        .check-label { font-size: 13px; font-weight: 600; color: #e2e8f0; line-height: 1.4; flex-grow: 1; }
+
+        /* Timeline Items (Time recording) */
+        .time-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .time-row:last-child { border-bottom: none; }
+        .time-label { font-size: 14px; font-weight: 600; }
+        .time-action {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-time {
+            background: rgba(56,189,248,0.15);
+            border: 1px solid rgba(56,189,248,0.3);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-time:active { transform: scale(0.95); }
+        .btn-time.recorded {
+            background: rgba(34,197,94,0.15);
+            border-color: rgba(34,197,94,0.3);
+            color: var(--success);
+            display: none; /* Hide when input is shown */
+        }
+        .time-input {
+            background: rgba(15,23,42,0.8);
+            border: 1px solid rgba(34,197,94,0.5);
+            color: var(--success);
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+            width: 80px;
+            text-align: center;
+            outline: none;
+            display: none; /* Hidden by default, shown when recorded */
+            font-family: monospace;
+        }
+        .btn-time-delete {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: none; /* Hidden by default, shown when time is recorded */
+        }
+        .btn-time-delete:active { transform: scale(0.95); background: rgba(239, 68, 68, 0.25); }
+        
+        .sub-check { margin-top: 10px; margin-left: 20px; display: none; }
+
+        /* Photos */
+        .photo-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .photo-card {
+            background: rgba(15,23,42,0.5);
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 90px;
+        }
+        .photo-card:active { transform: scale(0.98); background: rgba(56,189,248,0.1); }
+        .photo-card.has-photo { border-style: solid; border-color: var(--primary); padding: 0; }
+        .photo-desc { font-size: 12px; font-weight: 600; color: #cbd5e1; margin-top: 8px; }
+        .photo-icon { width: 28px; height: 28px; color: #94a3b8; }
+        .photo-preview { width: 100%; height: 120px; object-fit: cover; display: none; }
+        .photo-card.has-photo .photo-preview { display: block; }
+        .photo-card.has-photo .photo-icon, .photo-card.has-photo .photo-desc { display: none; }
+        .photo-input { display: none; }
+
+        /* Action Buttons */
+        .btn-main {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, #0ea5e9 100%);
+            color: #0f172a;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(56,189,248,0.3);
+            transition: all 0.2s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-main:active { transform: translateY(2px); box-shadow: 0 2px 10px rgba(56,189,248,0.2); }
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            box-shadow: 0 6px 20px rgba(37,211,102,0.3);
+            color: white;
+        }
+
+        /* Helpers */
+        .hidden { display: none !important; }
+        
+        /* Modal for logs */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 20px;
+            width: 100%; max-width: 420px; max-height: 80vh; display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .modal-header { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-weight: 800; font-size: 16px; }
+        .modal-close { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 16px; overflow-y: auto; flex-grow: 1; }
+        
+        .log-item {
+            background: rgba(15,23,42,0.6);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .log-item:hover {
+            background: rgba(30, 41, 59, 0.5);
+            border-color: rgba(56, 189, 248, 0.2);
+        }
+        .log-header { display: flex; justify-content: space-between; font-weight: 800; color: var(--primary); margin-bottom: 6px; font-size: 13px; }
+        .log-detail { font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Log item expandable details */
+        .log-expandable {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.25s ease, margin-top 0.25s;
+        }
+        .log-item.expanded .log-expandable {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .log-times-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+        .log-time-badge {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 6px 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+        }
+        .log-time-badge span:last-child {
+            color: var(--primary);
+            font-weight: 800;
+        }
+        .log-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .btn-log-action {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .btn-log-action:active { transform: scale(0.97); }
+        .btn-log-wa {
+            background: rgba(37, 211, 102, 0.15);
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            color: #25D366;
+        }
+        .btn-log-delete {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            max-width: 40px;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid var(--primary);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            padding: 12px 24px;
+            border-radius: 12px;
+            z-index: 2000;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .toast-success { border-color: var(--success); color: var(--success); }
+        .toast-error { border-color: var(--error); color: var(--error); }
+        .toast-info { border-color: var(--primary); color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Topbar -->
+    <div class="topbar">
+        <a href="index.html" class="topbar-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+        <div>
+            <h1 class="topbar-title">Towing Assist</h1>
+            <div class="topbar-subtitle">Operasyon Zaman Tüneli</div>
+        </div>
+        <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+            <button class="logs-btn" style="background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); color: #ef4444;" onclick="resetForm()">Sıfırla</button>
+            <button class="logs-btn" onclick="openLogs()">Geçmiş</button>
+        </div>
+    </div>
+
+    <div class="content-wrap">
+        <div id="sticky-summary-bar" class="summary-sticky-bar"></div>
+
+        <div class="timeline">
+        
+        <!-- KART 1: Başlangıç (Uçak ve Park) -->
+        <div class="card-wrap active" id="card-1">
+            <div class="card-dot">1</div>
+            <div class="card" onclick="handleCardClick(1)">
+                <div class="card-title">
+                    <span>Uçak ve Konum Bilgileri</span>
+                    <span class="status-icon">✓</span>
+                </div>
+                <div class="card-summary" id="card-1-summary"></div>
+                
+                <div class="card-body-content" onclick="event.stopPropagation()">
+                    <div style="height: 10px;"></div>
+                    <div class="form-group" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
+                        <label class="form-label" style="text-align: center; font-size: 13px; color: var(--primary);">Uçak Kuyruk Kodu</label>
+                        <input type="text" id="tail-input" class="form-input" placeholder="TC-" value="TC-" maxlength="6" autocomplete="off" style="text-transform: uppercase; width: 160px; text-align: center; font-size: 18px; font-weight: 800; letter-spacing: 1px; border-width: 2px;">
+                        <div id="tail-suggestions" class="suggestions" style="max-width: 160px; left: 50%; transform: translateX(-50%);"></div>
+                        <div id="tail-info" style="font-size: 11px; color: var(--success); margin-top: 8px; font-weight: 700; text-align: center; min-height: 14px;"></div>
+                    </div>
+                    
+                    <!-- Park Pozisyonları Satırı (Başlangıç ve Varış) -->
+                    <div style="display: flex; gap: 12px; justify-content: center; align-items: flex-start; margin-bottom: 20px; width: 100%;">
+                        <!-- Başlangıç Park -->
+                        <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; align-items: center; width: 110px;">
+                            <label class="form-label" style="text-align: center; font-size: 11px; white-space: nowrap;">Başlangıç Park</label>
+                            <input type="text" id="from-pos-input" class="form-input" placeholder="301" autocomplete="off" style="width: 100%; text-align: center; text-transform: uppercase;">
+                            <div id="from-pos-suggestions" class="suggestions" style="width: max-content; min-width: 180px; max-width: 240px; left: 50%; transform: translateX(-50%);"></div>
+                            <div id="from-pos-info" style="font-size: 10px; color: var(--primary); margin-top: 4px; font-weight: 600; line-height: 1.2; text-align: center; width: 100%;"></div>
+                        </div>
+
+                        <div style="color: var(--primary); font-weight: bold; margin-top: 24px; font-size: 20px;">→</div>
+                        
+                        <!-- Varış Park -->
+                        <div class="form-group" style="margin-bottom: 0; display: flex; flex-direction: column; align-items: center; width: 110px;">
+                            <label class="form-label" style="text-align: center; font-size: 11px; white-space: nowrap;">Varış Park</label>
+                            <input type="text" id="to-pos-input" class="form-input" placeholder="A3L" autocomplete="off" style="width: 100%; text-align: center; text-transform: uppercase;">
+                            <div id="to-pos-suggestions" class="suggestions" style="width: max-content; min-width: 180px; max-width: 240px; left: 50%; transform: translateX(-50%);"></div>
+                            <div id="to-pos-info" style="font-size: 10px; color: var(--primary); margin-top: 4px; font-weight: 600; line-height: 1.2; text-align: center; width: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Planlı Çekim Saati Satırı -->
+                    <div class="form-group" style="display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; width: 100%;">
+                        <label class="form-label" style="text-align: center; font-size: 11px; color: var(--muted); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.5px;">Planlı Çekim Saati</label>
+                        <input type="text" id="time-plan-input" class="form-input" placeholder="00:00" inputmode="numeric" maxlength="5" autocomplete="off" style="width: 160px; text-align: center; font-family: monospace; font-size: 15px; font-weight: 800; padding: 8px 12px; height: auto;">
+                        <div id="time-plan-info" style="font-size: 10px; color: var(--success); margin-top: 4px; font-weight: 600; line-height: 1.2; text-align: center; width: 160px; min-height: 12px;"></div>
+                    </div>
+
+                    <button class="btn-main" id="btn-start" style="display:none;" onclick="completeCard1()">Devam Et</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KART 2: Pre-Towing Checklist -->
+        <div class="card-wrap" id="card-2">
+            <div class="card-dot">2</div>
+            <div class="card" onclick="handleCardClick(2)">
+                <div class="card-title">
+                    <span>Pre-Towing Checklist</span>
+                    <span class="status-icon">✓</span>
+                </div>
+                <div class="card-summary" id="card-2-summary"></div>
+                
+                <div class="card-body-content" onclick="event.stopPropagation()">
+                    <div style="height: 10px;"></div>
+                    <div class="checklist-container" id="pre-towing-list">
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Batarya ON / APU START.</div>                                                                      
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">İniş takımı emniyet pinlerini tak (Landing gear pins).</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Nose gear steering bypass pinini tak.</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">ATC/TCAS Paneli ON/XPONDER.</div>
+                        </div>
+                    </div>
+                    <button class="btn-main" id="btn-pre-towing" style="display:none;" onclick="completeCard2()">Zaman Kaydına Geç</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KART 3: Zaman Kayıtları -->
+        <div class="card-wrap" id="card-3">
+            <div class="card-dot">3</div>
+            <div class="card" onclick="handleCardClick(3)">
+                <div class="card-title">
+                    <span>Çekim Süreci (Saatler)</span>
+                    <span class="status-icon">✓</span>
+                </div>
+                <div class="card-summary" id="card-3-summary"></div>
+                
+                <div class="card-body-content" onclick="event.stopPropagation()">
+                    <div style="height: 10px;"></div>
+                    <div class="time-container">
+                        <div class="time-row">
+                            <span class="time-label">Harekat</span>
+                            <div class="time-action">
+                                <button class="btn-time-delete" id="delete-time-harekat" onclick="deleteTime('time-harekat')">✕</button>
+                                <input type="time" class="time-input" id="time-harekat">
+                                <button class="btn-time" onclick="recordTime('time-harekat')">Saat Al</button>
+                            </div>
+                        </div>
+                        <div class="time-row">
+                            <span class="time-label">Pushback / Towcar Bağlandı</span>
+                            <div class="time-action">
+                                <button class="btn-time-delete" id="delete-time-pb" onclick="deleteTime('time-pb')">✕</button>
+                                <input type="time" class="time-input" id="time-pb">
+                                <button class="btn-time" onclick="recordTime('time-pb')">Saat Al</button>
+                            </div>
+                        </div>
+                        <div class="time-row">
+                            <span class="time-label" style="display: flex; align-items: center; gap: 8px;">
+                                Follow Me
+                                <input type="text" id="follow-no" 
+                                placeholder="No"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                maxlength="3" 
+                                style="width: 50px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.15); color: white; border-radius: 8px; padding: 4px 6px; font-size: 12px; font-weight: bold; outline: none; text-align: center; text-transform: uppercase; transition: border-color 0.2s;" oninput="updateStickySummary()">
+                            </span>
+                            <div class="time-action">
+                                <button class="btn-time-delete" id="delete-time-follow" onclick="deleteTime('time-follow')">✕</button>
+                                <input type="time" class="time-input" id="time-follow">
+                                <button class="btn-time" onclick="recordTime('time-follow')">Saat Al</button>
+                            </div>
+                        </div>
+                        <div class="time-row">
+                            <span class="time-label">Kule İzin</span>
+                            <div class="time-action">
+                                <button class="btn-time-delete" id="delete-time-tower" onclick="deleteTime('time-tower')">✕</button>
+                                <input type="time" class="time-input" id="time-tower">
+                                <button class="btn-time" onclick="recordTime('time-tower')">Saat Al</button>
+                            </div>
+                        </div>
+                        
+                        <div class="time-row" style="flex-direction: column; align-items: stretch;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span class="time-label">Çekim Başlangıç</span>
+                                <div class="time-action">
+                                    <input type="time" class="time-input" id="time-start">
+                                    <button class="btn-time disabled-btn" id="btn-time-start" onclick="if(this.classList.contains('disabled-btn')) { event.preventDefault(); event.stopPropagation(); return; } recordTime('time-start')" style="opacity:0.4;">Saat Al</button>
+                                </div>
+                            </div>
+                            <div class="check-item sub-check" id="check-beacon" style="display:flex;" onclick="toggleBeacon(this)">
+                                <div class="check-box"></div><div class="check-label">Park Freni OFF/Beacon ışığı yakıldı mı?</div>
+                            </div>
+                        </div>
+
+                        <div class="time-row">
+                            <span class="time-label">Çekim Bitiş</span>
+                            <div class="time-action">
+                                <input type="time" class="time-input" id="time-end">
+                                <button class="btn-time disabled-btn" id="btn-time-end" onclick="if(this.classList.contains('disabled-btn')) { event.preventDefault(); event.stopPropagation(); return; } recordTime('time-end', true)" style="opacity:0.4;">Saat Al</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Devam Et Butonu (Kart tamamlandığında gösterilir) -->
+                    <button class="btn-main" id="btn-continue-card3" style="display:none; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); box-shadow: 0 6px 20px rgba(34,197,94,0.3);" onclick="continueFromCard3()">
+                        Sonraki Adıma Geç
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KART 4: After-Towing Checklist -->
+        <div class="card-wrap" id="card-4">
+            <div class="card-dot">4</div>
+            <div class="card" onclick="handleCardClick(4)">
+                <div class="card-title">
+                    <span>After-Towing Checklist</span>
+                    <span class="status-icon">✓</span>
+                </div>
+                <div class="card-summary" id="card-4-summary"></div>
+                
+                <div class="card-body-content" onclick="event.stopPropagation()">
+                    <div style="height: 10px;"></div>
+                    <div class="checklist-container" id="after-towing-list">
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Park freni ON.</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Uçak ana tekerleklerine takozları tak (Chocks).</div>
+                        </div>
+                        <div class="check-item" id="after-steering-pin-check" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Nose gear steering bypass pinini sök.</div>
+                        </div>
+                        <!-- Dinamik eklenecek yer: İniş takımı emniyet pinlerini sök (Landing gear pins). -->
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Kuleye (Tower) çekim bitiş ikazı ver.</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Beacon ışığı OFF.</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">ATC/TCAS Paneli STDBY.</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">APU OFF / Batarya OFF.</div>
+                        </div>
+                    </div>
+                    <button class="btn-main" id="btn-after-towing" style="display:none;" onclick="completeCard4()">Devam Et</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- KART 5: Fotoğraf Checklist & Tamamlama -->
+        <div class="card-wrap" id="card-5">
+            <div class="card-dot">5</div>
+            <div class="card" onclick="handleCardClick(5)">
+                <div class="card-title">
+                    <span>Fotoğraf Checklist</span>
+                    <span class="status-icon">✓</span>
+                </div>
+                <div class="card-summary" id="card-5-summary"></div>
+                
+                <div class="card-body-content" onclick="event.stopPropagation()">
+                    <div style="height: 10px;"></div>
+                    <div class="checklist-container" id="photo-checklist">
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Kalan yakıt, EPDSC, CRS (AML) fotoğrafı çekildi mi?</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">DIL Sayfası (Açık arızalar) fotoğrafı çekildi mi?</div>
+                        </div>
+                        <div class="check-item" id="photo-check-pin" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Pin durumu ve Park Brake basıncı fotoğrafı çekildi mi?</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">Yakıt, HYD, OIL ve Lastik basınçları fotoğrafı çekildi mi?</div>
+                        </div>
+                        <div class="check-item" onclick="toggleCheck(this)">
+                            <div class="check-box"></div><div class="check-label">CB, Overhead ve Kokpit Genel fotoğrafı çekildi mi?</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 24px;">
+                        <button class="btn-main" id="btn-save-towing" style="display:none;" onclick="finishTowing()">Çekimi Kaydet</button>
+                        <button class="btn-main btn-whatsapp hidden" id="btn-wa" onclick="shareWhatsApp()">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                            WhatsApp ile Paylaş
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- Logs Modal -->
+<div class="modal" id="logs-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Geçmiş Çekimler</div>
+            <button class="modal-close" onclick="closeLogs()">×</button>
+        </div>
+        <div class="modal-body" id="logs-list">
+            <!-- Logs will be generated here -->
+        </div>
+    </div>
+</div>
+
+<div id="toast-notification" class="toast"></div>
+
+<script>
+    // --- Toast Bildirim Sistemi ---
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast-notification');
+        toast.textContent = message;
+        toast.className = 'toast show toast-' + type;
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // --- Taslak (Auto-save) Sistemi ---
+    function saveDraft() {
+        const data = {
+            tail: document.getElementById('tail-input').value,
+            from: document.getElementById('from-pos-input').value,
+            to: document.getElementById('to-pos-input').value,
+            followNo: document.getElementById('follow-no').value.trim(),
+            timePlan: document.getElementById('time-plan-input').value,
+            times: {
+                harekat: document.getElementById('time-harekat').value,
+                pb: document.getElementById('time-pb').value,
+                follow: document.getElementById('time-follow').value,
+                tower: document.getElementById('time-tower').value,
+                start: document.getElementById('time-start').value,
+                end: document.getElementById('time-end').value
+            },
+            completedCards: [],
+            activeCard: 1,
+            checkedItems: []
+        };
+
+        for (let i = 1; i <= 5; i++) {
+            const card = document.getElementById(`card-${i}`);
+            if (card && card.classList.contains('completed')) {
+                data.completedCards.push(i);
+            }
+            if (card && card.classList.contains('active')) {
+                data.activeCard = i;
+            }
+        }
+
+        const checkItems = document.querySelectorAll('.check-item');
+        checkItems.forEach((el, index) => {
+            if (el.classList.contains('checked')) {
+                data.checkedItems.push(index);
+            }
+        });
+
+        localStorage.setItem('towing_draft', JSON.stringify(data));
+    }
+
+    function loadDraft() {
+        const raw = localStorage.getItem('towing_draft');
+        if (!raw) return;
+
+        try {
+            const data = JSON.parse(raw);
+            
+            if (data.tail) document.getElementById('tail-input').value = data.tail;
+            if (data.from) document.getElementById('from-pos-input').value = data.from;
+            if (data.to) document.getElementById('to-pos-input').value = data.to;
+            if (data.followNo) document.getElementById('follow-no').value = data.followNo;
+            if (data.timePlan) document.getElementById('time-plan-input').value = data.timePlan;
+
+            const times = ['harekat', 'pb', 'follow', 'tower', 'start', 'end'];
+            times.forEach(t => {
+                const val = data.times[t];
+                if (val) {
+                    const inp = document.getElementById(`time-${t}`);
+                    inp.value = val;
+                    inp.style.display = 'block';
+                    
+                    const btn = inp.nextElementSibling;
+                    if (btn) {
+                        btn.classList.add('recorded');
+                        btn.style.display = 'none';
+                    }
+                    
+                    const deleteBtn = document.getElementById(`delete-time-${t}`);
+                    if (deleteBtn) deleteBtn.style.display = 'block';
+                }
+            });
+
+            const checkItems = document.querySelectorAll('.check-item');
+            if (data.checkedItems && data.checkedItems.length > 0) {
+                checkItems.forEach((el, index) => {
+                    if (data.checkedItems.includes(index)) {
+                        el.classList.add('checked');
+                    }
+                });
+            }
+
+            const beaconCheck = document.getElementById('check-beacon');
+            const btnStart = document.getElementById('btn-time-start');
+            if (beaconCheck && beaconCheck.classList.contains('checked') && btnStart) {
+                btnStart.classList.remove('disabled-btn');
+                btnStart.style.opacity = '1';
+            }
+
+            if (data.times.end) {
+                const btnCont = document.getElementById('btn-continue-card3');
+                if (btnCont) btnCont.style.display = 'flex';
+                const btnEnd = document.getElementById('btn-time-end');
+                if (btnEnd) btnEnd.style.display = 'none';
+            }
+
+            if (data.completedCards && data.completedCards.length > 0) {
+                data.completedCards.forEach(num => {
+                    const card = document.getElementById(`card-${num}`);
+                    if (card) card.classList.add('completed');
+                });
+                
+                if (data.completedCards.includes(1)) {
+                    const actualActive = data.activeCard;
+                    completeCard1();
+                    setActiveCard(actualActive);
+                } else {
+                    setActiveCard(data.activeCard || 1);
+                }
+            } else {
+                setActiveCard(data.activeCard || 1);
+            }
+
+            checkCard1();
+            checkCard2();
+            checkCard3();
+            checkCard4();
+            checkCard5();
+            updateCardSummaries();
+            updateStickySummary();
+
+        } catch (e) {
+            console.error("Taslak yüklenemedi:", e);
+        }
+    }
+
+    function resetForm() {
+        if (!confirm('Yarım kalan formu sıfırlamak istediğinize emin misiniz? Mevcut tüm girişleriniz silinecektir.')) {
+            return;
+        }
+        localStorage.removeItem('towing_draft');
+        location.reload();
+    }
+
+    // --- Veri Yükleme ve Otomatik Tamamlama ---
+    let fleetData = [];
+    let fleetDetails = {};
+    let parkposData = [];
+    let parkposRawData = [];
+
+    async function loadData() {
+        try {
+            const fRes = await fetch('assets/fleet.json');
+            const fData = await fRes.json();
+            if(fData.tailMap) {
+                fleetDetails = fData.tailMap;
+                fleetData = Object.keys(fData.tailMap).map(k => k.toUpperCase());
+            }
+
+            const pRes = await fetch('assets/parkpos.json');
+            const pData = await pRes.json();
+            parkposRawData = pData;
+            let pList = [];
+            pData.forEach(cat => {
+                const catKategori = cat.kategori || '';
+                if (cat.bloklar) {
+                    cat.bloklar.forEach(blok => {
+                        const blokAdi = blok.blok_adi || '';
+                        if (blok.pozisyonlar) {
+                            blok.pozisyonlar.forEach(p => {
+                                if (p.ana_no) {
+                                    pList.push(p.ana_no);
+                                    const isBremze = blokAdi.toUpperCase().includes('BREMZE') || 
+                                                    catKategori.toUpperCase().includes('BREMZE');
+                                    if (isBremze && blokAdi) {
+                                        pList.push(`${p.ana_no} (${blokAdi.toUpperCase()})`);
+                                    }
+                                }
+                                if (p.alt_pozisyonlar) {
+                                    p.alt_pozisyonlar.forEach(ap => {
+                                        pList.push(ap);
+                                        const isBremze = blokAdi.toUpperCase().includes('BREMZE') || 
+                                                        catKategori.toUpperCase().includes('BREMZE');
+                                        if (isBremze && blokAdi) {
+                                            pList.push(`${ap} (${blokAdi.toUpperCase()})`);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                        if (blok.ornek_pozisyonlar) {
+                            blok.ornek_pozisyonlar.forEach(p => pList.push(p));
+                        }
+                    });
+                }
+            });
+            parkposData = [...new Set(pList)]; // Benzersiz değerler
+        } catch (e) {
+            console.error("Veri yüklenemedi:", e);
+        }
+    }
+
+    function validateTail() {
+        const inp = document.getElementById('tail-input');
+        const info = document.getElementById('tail-info');
+        const val = inp.value.toUpperCase();
+        
+        if (fleetDetails[val]) {
+            inp.classList.add('valid');
+            inp.classList.remove('invalid');
+            const d = fleetDetails[val];
+            info.textContent = `${d.oem} ${d.family}${d.model.startsWith("-") ? "" : " - "}${d.model}`;
+            info.style.color = 'var(--success)';
+            return true;
+        } else {
+            inp.classList.remove('valid');
+            if (val.length >= 6) {
+                inp.classList.add('invalid');
+                info.textContent = 'Kuyruk Kodu Bulunamadı';
+                info.style.color = 'var(--error)';
+            } else {
+                inp.classList.remove('invalid');
+                info.textContent = '';
+            }
+            return false;
+        }
+    }
+
+    function validatePos(inputId, infoId) {
+        const inp = document.getElementById(inputId);
+        const info = document.getElementById(infoId);
+        const rawVal = inp.value.toUpperCase().trim();
+        const val = rawVal.split(' ')[0];
+        
+        if (!rawVal) {
+            inp.classList.remove('valid', 'invalid');
+            info.textContent = '';
+            return false;
+        }
+
+        if (parkposData.includes(rawVal) || parkposData.includes(val)) {
+            inp.classList.add('valid');
+            inp.classList.remove('invalid');
+            const blockName = findBlockName(val);
+            info.textContent = blockName || 'Geçerli Pozisyon';
+            info.style.color = 'var(--primary)';
+            return true;
+        } else {
+            inp.classList.remove('valid');
+            inp.classList.add('invalid');
+            info.textContent = 'Hatalı Pozisyon!';
+            info.style.color = 'var(--error)';
+            return false;
+        }
+    }
+
+    function setupAutocomplete(inputId, suggId, dataList) {
+        const inp = document.getElementById(inputId);
+        const sugg = document.getElementById(suggId);
+        
+        if (inputId === 'tail-input') {
+            inp.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.selectionStart <= 3 && this.selectionEnd <= 3) {
+                    e.preventDefault();
+                }
+            });
+            inp.addEventListener('input', function() {
+                let val = this.value.toUpperCase();
+                if (!val.startsWith('TC-')) {
+                    val = 'TC-' + val.replace(/TC-?/g, '');
+                }
+                const suffix = val.slice(3).replace(/[^A-Z0-9]/g, '').slice(0, 3);
+                this.value = 'TC-' + suffix;
+                
+                sugg.innerHTML = '';
+                if (suffix.length === 0) { sugg.style.display = 'none'; checkCard1(); return; }
+                if (dataList.includes(this.value)) { sugg.style.display = 'none'; checkCard1(); return; }
+                
+                const matches = dataList.filter(item => item.includes(this.value)).slice(0, 5);
+                if (matches.length > 0) {
+                    matches.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.innerHTML = `${m}<small>${fleetDetails[m].family} - ${fleetDetails[m].model}</small>`;
+                        div.onclick = function() {
+                            inp.value = m;
+                            sugg.style.display = 'none';
+                            checkCard1();
+                            if (validateTail()) document.getElementById('from-pos-input').focus();
+                        };
+                        sugg.appendChild(div);
+                    });
+                    sugg.style.display = 'block';
+                } else {
+                    sugg.style.display = 'none';
+                }
+                checkCard1();
+            });
+        } else {
+            inp.addEventListener('input', function() {
+                let val = this.value.toUpperCase();
+                this.value = val;
+                sugg.innerHTML = '';
+                if (!val) { sugg.style.display = 'none'; checkCard1(); return; }
+                if (dataList.includes(val)) { 
+                    sugg.style.display = 'none'; 
+                    if (inputId === 'from-pos-input') {
+                        validatePos('from-pos-input', 'from-pos-info');
+                    } else if (inputId === 'to-pos-input') {
+                        validatePos('to-pos-input', 'to-pos-info');
+                    }
+                    checkCard1(); 
+                    return; 
+                }
+                
+                const matches = dataList.filter(item => item.includes(val)).slice(0, 5);
+                if (matches.length > 0) {
+                    matches.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = 'suggestion-item';
+                        div.textContent = m;
+                        div.onclick = function() {
+                            inp.value = m;
+                            sugg.style.display = 'none';
+                            if (inputId === 'from-pos-input') {
+                                if (validatePos('from-pos-input', 'from-pos-info')) document.getElementById('to-pos-input').focus();
+                            } else if (inputId === 'to-pos-input') {
+                                if (validatePos('to-pos-input', 'to-pos-info')) {
+                                    const btn = document.getElementById('btn-start');
+                                    if (btn && btn.style.display !== 'none') btn.focus();
+                                }
+                            }
+                            checkCard1();
+                        };
+                        sugg.appendChild(div);
+                    });
+                    sugg.style.display = 'block';
+                } else {
+                    sugg.style.display = 'none';
+                }
+                if (inputId === 'from-pos-input') {
+                    validatePos('from-pos-input', 'from-pos-info');
+                } else if (inputId === 'to-pos-input') {
+                    validatePos('to-pos-input', 'to-pos-info');
+                }
+                checkCard1();
+            });
+        }
+
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sugg.style.display = 'none';
+                if (inputId === 'tail-input') {
+                    if (validateTail()) document.getElementById('from-pos-input').focus();
+                } else if (inputId === 'from-pos-input') {
+                    if (validatePos('from-pos-input', 'from-pos-info')) document.getElementById('to-pos-input').focus();
+                } else if (inputId === 'to-pos-input') {
+                    if (validatePos('to-pos-input', 'to-pos-info')) {
+                        const btn = document.getElementById('btn-start');
+                        if (btn && btn.style.display !== 'none') {
+                            btn.click();
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Dışarı tıklandığında gizle
+        document.addEventListener('click', function(e) {
+            if (e.target !== inp && e.target !== sugg) sugg.style.display = 'none';
+        });
+    }
+
+    function findBlockName(posName) {
+        if (!posName) return '';
+        const upperPos = posName.toUpperCase().trim().split(' ')[0];
+        
+        // 218 ve 219 (ve alt pozisyonları) için LMH Hangar Önü önceliği
+        if (['218', '218L', '218R', '219', '219L', '219R'].includes(upperPos)) {
+            return "LMH Hangar Önü";
+        }
+
+        for (const cat of parkposRawData) {
+            if (cat.bloklar) {
+                for (const blok of cat.bloklar) {
+                    if (blok.pozisyonlar) {
+                        for (const p of blok.pozisyonlar) {
+                            if ((p.ana_no && p.ana_no.toUpperCase() === upperPos) || 
+                                (p.alt_pozisyonlar && p.alt_pozisyonlar.some(ap => ap.toUpperCase() === upperPos))) {
+                                return blok.blok_adi;
+                            }
+                        }
+                    }
+                    if (blok.ornek_pozisyonlar) {
+                        if (blok.ornek_pozisyonlar.some(p => p.toUpperCase() === upperPos)) {
+                            return blok.blok_adi;
+                        }
+                    }
+                }
+            }
+        }
+        // Fallback checks
+        if (/^1\d{2}$/.test(upperPos)) return "100'lü Blok (Apron 1)";
+        if (/^2\d{2}$/.test(upperPos)) return "200'lü Blok (Apron 2)";
+        if (/^3\d{2}$/.test(upperPos)) return "300'lü Blok (Apron 3)";
+        if (/^5\d{2}$/.test(upperPos)) return "500'lü Blok (Hangar Apronu)";
+        if (upperPos.startsWith('C') && !isNaN(upperPos.substring(1))) return "Cargo Apron (1 - 6)";
+        if (upperPos.includes('HANGAR') || upperPos.includes('BAKIM') || upperPos.includes('TEC') || upperPos.startsWith('H')) return "Teknik / Hangar";
+        return '';
+    }
+
+    // --- Saat Maskesi ve Validasyonu ---
+    function setupTimeMask(inputId, infoId) {
+        const inp = document.getElementById(inputId);
+        const info = document.getElementById(infoId);
+        
+        // Odaklanıldığında boşsa kılavuz şablonu "__:__" yerleştir ve imleci başa al
+        inp.addEventListener('focus', function() {
+            if (!this.value || this.value === '') {
+                this.value = '__:__';
+                setTimeout(() => {
+                    this.setSelectionRange(0, 0);
+                }, 10);
+            }
+        });
+
+        // Tıklama yapıldığında kılavuz şablonu bozulmasın
+        inp.addEventListener('click', function() {
+            if (this.value === '__:__') {
+                this.setSelectionRange(0, 0);
+            }
+        });
+
+        inp.addEventListener('keydown', function(e) {
+            const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter'];
+            const isNumber = /^[0-9]$/.test(e.key);
+            
+            if (!isNumber && !allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                e.preventDefault();
+                return;
+            }
+
+            if (isNumber) {
+                e.preventDefault();
+                let val = this.value;
+                if (val === '') val = '__:__';
+                
+                let idx = this.selectionStart;
+                if (idx > 4) return; // Dolu
+                
+                if (idx === 2) {
+                    idx = 3; // İki nokta işaretini atla
+                }
+                
+                let newVal = val.substring(0, idx) + e.key + val.substring(idx + 1);
+                this.value = newVal;
+                
+                let nextIdx = idx + 1;
+                if (nextIdx === 2) nextIdx = 3;
+                this.setSelectionRange(nextIdx, nextIdx);
+                
+                validateTimeInput(inputId, infoId);
+                checkCard1();
+            }
+
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                let idx = this.selectionStart;
+                if (idx === 0) return;
+                
+                let prevIdx = idx - 1;
+                if (prevIdx === 2) prevIdx = 1; // İki noktayı atla
+                
+                let val = this.value;
+                let newVal = val.substring(0, prevIdx) + '_' + val.substring(prevIdx + 1);
+                this.value = newVal;
+                this.setSelectionRange(prevIdx, prevIdx);
+                
+                validateTimeInput(inputId, infoId);
+                checkCard1();
+            }
+
+            if (e.key === 'Delete') {
+                e.preventDefault();
+                let idx = this.selectionStart;
+                if (idx > 4) return;
+                if (idx === 2) idx = 3; // İki noktayı atla
+                
+                let val = this.value;
+                let newVal = val.substring(0, idx) + '_' + val.substring(idx + 1);
+                this.value = newVal;
+                this.setSelectionRange(idx, idx);
+                
+                validateTimeInput(inputId, infoId);
+                checkCard1();
+            }
+        });
+
+        inp.addEventListener('blur', function() {
+            if (this.value === '__:__') {
+                this.value = '';
+            }
+            validateTimeInput(inputId, infoId);
+            checkCard1();
+        });
+    }
+
+    function validateTimeInput(inputId, infoId) {
+        const inp = document.getElementById(inputId);
+        const info = document.getElementById(infoId);
+        const val = inp.value;
+        
+        if (!val || val === '__:__') {
+            inp.classList.remove('valid', 'invalid');
+            info.textContent = '';
+            return false;
+        }
+
+        const parts = val.split(':');
+        if (parts.length === 2) {
+            if (parts[0].includes('_') || parts[1].includes('_')) {
+                inp.classList.remove('valid');
+                inp.classList.add('invalid');
+                info.textContent = 'Hatalı Saat!';
+                info.style.color = 'var(--error)';
+                return false;
+            }
+            const h = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10);
+            if (!isNaN(h) && !isNaN(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59 && val.length === 5) {
+                inp.classList.add('valid');
+                inp.classList.remove('invalid');
+                info.textContent = 'Geçerli Saat';
+                info.style.color = 'var(--success)';
+                return true;
+            }
+        }
+        
+        inp.classList.remove('valid');
+        inp.classList.add('invalid');
+        info.textContent = 'Hatalı Saat!';
+        info.style.color = 'var(--error)';
+        return false;
+    }
+
+    // --- Akış Kontrolü ---
+    function checkCard1() {
+        const tValid = validateTail();
+        const fValid = validatePos('from-pos-input', 'from-pos-info');
+        const toValid = validatePos('to-pos-input', 'to-pos-info');
+        const pValid = validateTimeInput('time-plan-input', 'time-plan-info');
+        
+        const btn = document.getElementById('btn-start');
+        if (tValid && fValid && toValid && pValid) {
+            btn.style.display = 'flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    }
+
+    // --- Akordeon ve Özet Sistemleri ---
+    function setActiveCard(num) {
+        for (let i = 1; i <= 5; i++) {
+            const wrap = document.getElementById(`card-${i}`);
+            if (i === num) {
+                wrap.classList.add('active');
+            } else {
+                wrap.classList.remove('active');
+            }
+        }
+        updateCardSummaries();
+        // Kartın açılma/kapanma animasyonu (0.4s) tamamlandıktan sonra kaydırarak
+        // dinamik yükseklik değişiminden kaynaklı ekran dışına kaçma/yok olma sorununu önlüyoruz.
+        setTimeout(() => {
+            document.getElementById(`card-${num}`).scrollIntoView({behavior: 'smooth', block: 'nearest'});
+        }, 400);
+        saveDraft();
+    }
+
+    function handleCardClick(num) {
+        const wrap = document.getElementById(`card-${num}`);
+        if (wrap.classList.contains('completed') && !wrap.classList.contains('active')) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`card-${i}`).classList.remove('active');
+            }
+            wrap.classList.add('active');
+            
+            // Show continue button for completed Card 3
+            if (num === 3) {
+                document.getElementById('btn-continue-card3').style.display = 'flex';
+            }
+        }
+    }
+
+    function updateCardSummaries() {
+        // Card 1
+        const tail = document.getElementById('tail-input').value;
+        const from = document.getElementById('from-pos-input').value;
+        const to = document.getElementById('to-pos-input').value;
+        if (tail || from || to) {
+            document.getElementById('card-1-summary').textContent = `✈️ ${tail || 'TC-???'} | ${from || '-'} ➡️ ${to || '-'}`;
+        }
+        
+        // Card 2
+        const preItems = document.querySelectorAll('#card-2 .check-item');
+        const checkedPre = Array.from(preItems).filter(i => i.classList.contains('checked')).length;
+        document.getElementById('card-2-summary').textContent = `✅ ${checkedPre}/${preItems.length} Checklist Kontrolü Tamam`;
+
+        // Card 3
+        const start = document.getElementById('time-start').value;
+        const end = document.getElementById('time-end').value;
+        if (start || end) {
+            document.getElementById('card-3-summary').textContent = `⏱️ Başlangıç: ${start || '-'} | Bitiş: ${end || '-'}`;
+        }
+
+        // Card 4
+        const afterItems = document.querySelectorAll('#card-4 .check-item');
+        const checkedAfter = Array.from(afterItems).filter(i => i.classList.contains('checked')).length;
+        document.getElementById('card-4-summary').textContent = `✅ ${checkedAfter}/${afterItems.length} After-Towing Kontrolü Tamam`;
+
+        // Card 5
+        const photoItems = document.querySelectorAll('#photo-checklist .check-item');
+        const checkedPhotos = Array.from(photoItems).filter(i => i.classList.contains('checked')).length;
+        document.getElementById('card-5-summary').textContent = `📸 ${checkedPhotos}/${photoItems.length} Fotoğraf Onaylandı`;
+    }
+
+    function updateStickySummary() {
+        const tail = document.getElementById('tail-input').value.toUpperCase();
+        const fromPos = document.getElementById('from-pos-input').value.toUpperCase();
+        const toPos = document.getElementById('to-pos-input').value.toUpperCase();
+        const followNo = document.getElementById('follow-no').value.toUpperCase().trim();
+        
+        if (tail || fromPos || toPos) {
+            let summaryText = `${tail || 'TC-???'} | ${fromPos || '-'} ➡️ ${toPos || '-'}`;
+            if (followNo) {
+                summaryText += ` | FM: ${followNo}`;
+            }
+            const stickyBar = document.getElementById('sticky-summary-bar');
+            stickyBar.textContent = summaryText;
+        }
+    }
+
+    function completeCard1() {
+        const tail = document.getElementById('tail-input').value.toUpperCase();
+        const fromPos = document.getElementById('from-pos-input').value.toUpperCase();
+        const toPos = document.getElementById('to-pos-input').value.toUpperCase();
+        
+        const fromBlock = findBlockName(fromPos);
+        const toBlock = findBlockName(toPos);
+        
+        updateStickySummary();
+        const stickyBar = document.getElementById('sticky-summary-bar');
+        stickyBar.style.display = 'flex';
+
+        const afterList = document.getElementById('after-towing-list');
+        const hangarPositions = ["218", "219", "506", "507", "508", "509"];
+        const isHangarPos = hangarPositions.includes(toPos);
+        const isMaintenance = isHangarPos || toPos.includes('HANGAR') || toPos.includes('BAKIM') || toPos.includes('TEC') || toPos.startsWith('H');
+        
+        const existingDynamic = document.getElementById('dynamic-pin-check');
+        if (existingDynamic) existingDynamic.remove();
+
+        if (!isMaintenance) {
+            const html = `
+            <div class="check-item" id="dynamic-pin-check" onclick="toggleCheck(this); checkCard4();">
+                <div class="check-box"></div><div class="check-label">İniş takımı emniyet pinlerini sök (Landing gear pins).</div>
+            </div>`;
+            const steeringCheck = document.getElementById('after-steering-pin-check');
+            if (steeringCheck) {
+                steeringCheck.insertAdjacentHTML('afterend', html);
+            } else {
+                afterList.insertAdjacentHTML('afterbegin', html);
+            }
+        }
+
+        const pinCheckEl = document.getElementById('photo-check-pin');
+        if (pinCheckEl) {
+            const label = pinCheckEl.querySelector('.check-label');
+            if (!isMaintenance) {
+                label.textContent = "Pinlerin toplandığının resmi ve AML kaydı fotoğrafı çekildi mi?";
+            } else {
+                label.textContent = "Pinlerin takılı olduğu resim, AML ve Park Brake basıncı fotoğrafı çekildi mi?";
+            }
+        }
+
+        // Hide Card 5 if destination is hangar
+        const card5 = document.getElementById('card-5');
+        const btnAfter = document.getElementById('btn-after-towing');
+        if (isMaintenance) {
+            card5.classList.add('hidden');
+            btnAfter.textContent = 'Çekimi Kaydet';
+            btnAfter.onclick = finishTowing;
+            btnAfter.classList.remove('btn-whatsapp');
+        } else {
+            card5.classList.remove('hidden');
+            btnAfter.textContent = 'Devam Et';
+            btnAfter.onclick = completeCard4;
+            btnAfter.classList.remove('btn-whatsapp');
+        }
+
+        document.getElementById('card-1').classList.add('completed');
+        setActiveCard(2);
+    }
+
+    function toggleCheck(el) {
+        if (!el.closest('.card-wrap').classList.contains('active')) return;
+        el.classList.toggle('checked');
+        
+        updateCardSummaries();
+        
+        const cardId = el.closest('.card-wrap').id;
+        if (cardId === 'card-2') checkCard2();
+        if (cardId === 'card-4') checkCard4();
+        if (cardId === 'card-5') checkCard5();
+        saveDraft();
+    }
+
+    function checkCard5() {
+        const items = document.querySelectorAll('#photo-checklist .check-item');
+        const allChecked = Array.from(items).every(i => i.classList.contains('checked'));
+        document.getElementById('btn-save-towing').style.display = allChecked ? 'flex' : 'none';
+    }
+
+    function checkCard2() {
+        const items = document.querySelectorAll('#card-2 .check-item');
+        const allChecked = Array.from(items).every(i => i.classList.contains('checked'));
+        document.getElementById('btn-pre-towing').style.display = allChecked ? 'flex' : 'none';
+    }
+
+    function completeCard2() {
+        document.getElementById('card-2').classList.add('completed');
+        setActiveCard(3);
+    }
+
+    function toggleBeacon(el) {
+        if (!el.closest('.card-wrap').classList.contains('active')) return;
+        el.classList.toggle('checked');
+        const btnStart = document.getElementById('btn-time-start');
+        if (el.classList.contains('checked')) {
+            btnStart.classList.remove('disabled-btn');
+            btnStart.style.opacity = '1';
+        } else {
+            btnStart.classList.add('disabled-btn');
+            btnStart.style.opacity = '0.4';
+        }
+        saveDraft();
+    }
+
+    function checkCard3() {
+        const requiredTimes = ['time-harekat', 'time-pb', 'time-follow', 'time-tower', 'time-start'];
+        const allFilled = requiredTimes.every(id => {
+            const inp = document.getElementById(id);
+            return inp && inp.value && inp.value.trim() !== '';
+        });
+        
+        const btnEnd = document.getElementById('btn-time-end');
+        if (allFilled) {
+            btnEnd.classList.remove('disabled-btn');
+            btnEnd.style.opacity = '1';
+        } else {
+            btnEnd.classList.add('disabled-btn');
+            btnEnd.style.opacity = '0.4';
+        }
+    }
+
+    function recordTime(inputId, isEnd = false) {
+        const inp = document.getElementById(inputId);
+        const btn = inp.nextElementSibling;
+        const deleteBtn = document.getElementById(`delete-${inputId}`);
+        
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        
+        inp.value = `${hh}:${mm}`;
+        inp.style.display = 'block';
+        btn.classList.add('recorded');
+        btn.style.display = 'none';
+        
+        // Show delete button
+        if (deleteBtn) {
+            deleteBtn.style.display = 'block';
+        }
+        
+        inp.onchange = () => {
+            if(!inp.value) {
+                inp.style.display = 'none';
+                btn.classList.remove('recorded');
+                btn.style.display = 'block';
+                btn.textContent = 'Saat Al';
+                if (deleteBtn) deleteBtn.style.display = 'none';
+            }
+            updateCardSummaries();
+            checkCard3();
+        };
+
+        updateCardSummaries();
+        checkCard3();
+
+        if (isEnd) {
+            // Güvenlik kontrolü: Tüm saatler dolu mu?
+            const requiredTimes = ['time-harekat', 'time-pb', 'time-follow', 'time-tower', 'time-start'];
+            const allFilled = requiredTimes.every(id => {
+                const inp = document.getElementById(id);
+                return inp && inp.value && inp.value.trim() !== '';
+            });
+            
+            if (!allFilled) {
+                showToast('⚠️ Tüm zorunlu saat kayıtlarını tamamlamadan çekim bitirilemez!', 'error');
+                return;
+            }
+            
+            document.getElementById('card-3').classList.add('completed');
+            
+            // Show continue button when card is completed
+            document.getElementById('btn-continue-card3').style.display = 'flex';
+            document.getElementById('btn-time-end').style.display = 'none';
+        }
+    }
+
+    function deleteTime(inputId) {
+        const inp = document.getElementById(inputId);
+        const btn = inp.nextElementSibling;
+        const deleteBtn = document.getElementById(`delete-${inputId}`);
+        
+        // Clear the time
+        inp.value = '';
+        inp.style.display = 'none';
+        
+        // Reset button
+        btn.classList.remove('recorded');
+        btn.style.display = 'block';
+        btn.textContent = 'Saat Al';
+        
+        // Hide delete button
+        if (deleteBtn) {
+            deleteBtn.style.display = 'none';
+        }
+        
+        // Update summaries and validations
+        updateCardSummaries();
+        checkCard3();
+        
+        // If this is time-start, also reset beacon check
+        if (inputId === 'time-start') {
+            const beaconCheck = document.getElementById('check-beacon');
+            if (beaconCheck) {
+                beaconCheck.classList.remove('checked');
+            }
+            const btnStart = document.getElementById('btn-time-start');
+            if (btnStart) {
+                btnStart.classList.add('disabled-btn');
+                btnStart.style.opacity = '0.4';
+            }
+        }
+    }
+
+    function checkCard4() {
+        const items = document.querySelectorAll('#card-4 .check-item');
+        const allChecked = Array.from(items).every(i => i.classList.contains('checked'));
+        document.getElementById('btn-after-towing').style.display = allChecked ? 'flex' : 'none';
+    }
+
+    function completeCard4() {
+        document.getElementById('card-4').classList.add('completed');
+        
+        // Check if Card 5 is hidden (hangar position)
+        const card5 = document.getElementById('card-5');
+        if (card5.classList.contains('hidden')) {
+            // Skip to finish directly
+            finishTowing();
+        } else {
+            setActiveCard(5);
+        }
+    }
+
+    function handlePhoto(input, cardId) {
+        if (input.files && input.files[0]) {
+            const card = document.getElementById(cardId);
+            const img = card.querySelector('.photo-preview');
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                img.src = e.target.result;
+                card.classList.add('has-photo');
+                updateCardSummaries();
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // --- Kayıt ve Paylaşım ---
+    async function finishTowing() {
+        const data = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('tr-TR'),
+            tail: document.getElementById('tail-input').value,
+            from: document.getElementById('from-pos-input').value,
+            to: document.getElementById('to-pos-input').value,
+            followNo: document.getElementById('follow-no').value.trim(),
+            times: {
+                plan: document.getElementById('time-plan-input').value,
+                harekat: document.getElementById('time-harekat').value,
+                pb: document.getElementById('time-pb').value,
+                follow: document.getElementById('time-follow').value,
+                tower: document.getElementById('time-tower').value,
+                start: document.getElementById('time-start').value,
+                end: document.getElementById('time-end').value
+            }
+        };
+
+        try {
+            await db.save('towing_logs', data);
+            const card5 = document.getElementById('card-5');
+            if (card5.classList.contains('hidden')) {
+                const btnAfter = document.getElementById('btn-after-towing');
+                btnAfter.textContent = 'WhatsApp ile Paylaş';
+                btnAfter.classList.add('btn-whatsapp');
+                btnAfter.onclick = shareWhatsApp;
+                document.getElementById('card-4').classList.add('completed');
+            } else {
+                document.getElementById('card-5').classList.add('completed');
+                document.getElementById('btn-wa').classList.remove('hidden');
+                document.getElementById('btn-save-towing').style.display = 'none';
+            }
+            localStorage.removeItem('towing_draft');
+            showToast('Çekim operasyonu başarıyla kaydedildi!', 'success');
+        } catch (e) {
+            showToast('Kayıt başarısız. Cihaz hafızası dolu olabilir.', 'error');
+        }
+    }
+
+    function shareWhatsApp() {
+        const t = document.getElementById('tail-input').value;
+        const f = document.getElementById('from-pos-input').value;
+        const to = document.getElementById('to-pos-input').value;
+        const d = new Date().toLocaleDateString('tr-TR');
+        const fmNo = document.getElementById('follow-no').value.trim();
+        
+        const times = {
+            'Planlı': document.getElementById('time-plan-input').value || '-',
+            'Harekat': document.getElementById('time-harekat').value || '-',
+            'Pushback': document.getElementById('time-pb').value || '-',
+            'Follow Me': (document.getElementById('time-follow').value || '-') + (fmNo ? ` (No: ${fmNo})` : ''),
+            'Kule': document.getElementById('time-tower').value || '-',
+            'Başlangıç': document.getElementById('time-start').value || '-',
+            'Bitiş': document.getElementById('time-end').value || '-'
+        };
+
+        let text = `\u2708\uFE0F *TOWING RAPORU* \u2708\uFE0F\n\n`;
+        text += `*Tarih:* ${d}\n`;
+        text += `*Kuyruk:* ${t}\n`;
+        text += `*Park Pozisyonu:* ${f} \u27A1\uFE0F ${to}\n\n`;
+        text += `\u23F1\uFE0F *Zaman Kayıtları*\n`;
+        for (const [k, v] of Object.entries(times)) {
+            text += `• ${k}: ${v}\n`;
+        }
+
+
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    }
+
+    // --- Logs Modal ---
+    async function openLogs() {
+        const list = document.getElementById('logs-list');
+        list.innerHTML = '';
+        
+        let logs = await db.getAll('towing_logs');
+        logs.sort((a, b) => b.id - a.id);
+        
+        if(logs.length === 0) {
+            list.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">Henüz kayıt bulunmuyor.</div>';
+        } else {
+            logs.forEach((log, index) => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                div.id = `log-item-${log.id}`;
+                div.onclick = (e) => {
+                    if (e.target.closest('.btn-log-action')) return;
+                    div.classList.toggle('expanded');
+                };
+                div.innerHTML = `
+                    <div class="log-header">
+                        <span>${log.tail}</span>
+                        <span>${log.date}</span>
+                    </div>
+                    <div class="log-detail">
+                        <span>Rota: ${log.from} ➡️ ${log.to}</span>
+                        <span style="color:var(--primary); font-size:10px; font-weight:700;">DETAYLAR ▾</span>
+                    </div>
+                    <div class="log-detail">Süre: ${log.times.start || '-'} - ${log.times.end || '-'}</div>
+                    
+                    <div class="log-expandable">
+                        <div class="log-times-grid">
+                            <div class="log-time-badge"><span>Planlı:</span> <span>${log.times.plan || '-'}</span></div>
+                            <div class="log-time-badge"><span>Harekat:</span> <span>${log.times.harekat || '-'}</span></div>
+                            <div class="log-time-badge"><span>Pushback:</span> <span>${log.times.pb || '-'}</span></div>
+                            <div class="log-time-badge"><span>Follow Me:</span> <span>${log.times.follow ? `${log.times.follow}${log.followNo ? ` (No: ${log.followNo})` : ''}` : '-'}</span></div>
+                            <div class="log-time-badge"><span>Kule İzin:</span> <span>${log.times.tower || '-'}</span></div>
+                            <div class="log-time-badge"><span>Başlangıç:</span> <span>${log.times.start || '-'}</span></div>
+                            <div class="log-time-badge"><span>Bitiş:</span> <span>${log.times.end || '-'}</span></div>
+                        </div>
+                        <div class="log-actions">
+                            <button class="btn-log-action btn-log-wa" onclick="sharePastLog(${index})">
+                                <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+                                Tekrar Paylaş
+                            </button>
+                            <button class="btn-log-action btn-log-delete" onclick="deletePastLog(${log.id})" title="Kayıt Sil">
+                                🗑️ Sil
+                            </button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        document.getElementById('logs-modal').style.display = 'flex';
+    }
+
+    async function deletePastLog(id) {
+        if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+        await db.delete('towing_logs', id);
+        await openLogs();
+    }
+
+    async function sharePastLog(index) {
+        let logs = await db.getAll('towing_logs');
+        logs.sort((a, b) => b.id - a.id);
+        const log = logs[index];
+        if (!log) return;
+        
+        const times = {
+            'Planlı': log.times.plan || '-',
+            'Harekat': log.times.harekat || '-',
+            'Pushback': log.times.pb || '-',
+            'Follow Me': log.times.follow ? `${log.times.follow}${log.followNo ? ` (No: ${log.followNo})` : ''}` : '-',
+            'Kule': log.times.tower || '-',
+            'Başlangıç': log.times.start || '-',
+            'Bitiş': log.times.end || '-'
+        };
+
+        let text = `\u2708\uFE0F *TOWING RAPORU* \u2708\uFE0F\n\n`;
+        text += `*Tarih:* ${log.date}\n`;
+        text += `*Kuyruk:* ${log.tail}\n`;
+        text += `*Park Pozisyonu:* ${log.from} \u27A1\uFE0F ${log.to}\n\n`;
+        text += `\u23F1\uFE0F *Zaman Kayıtları*\n`;
+        for (const [k, v] of Object.entries(times)) {
+            text += `• ${k}: ${v}\n`;
+        }
+        text += `\n\u2705 Checklist'ler tamamlandı.\n`;
+        text += `\uD83D\uDCF7 Fotoğraflar cihaz galerisinde/uygulamada mevcuttur.`;
+
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    }
+
+    function closeLogs() {
+        document.getElementById('logs-modal').style.display = 'none';
+    }
+
+    // Continue from Card 3 function
+    function continueFromCard3() {
+        setActiveCard(4);
+        saveDraft();
+    }
+
+    // Başlat
+    window.onload = async () => {
+        await loadData();
+        setupAutocomplete('tail-input', 'tail-suggestions', fleetData);
+        setupAutocomplete('from-pos-input', 'from-pos-suggestions', parkposData);
+        setupAutocomplete('to-pos-input', 'to-pos-suggestions', parkposData);
+        setupTimeMask('time-plan-input', 'time-plan-info');
+        
+        // Input dinleyicileriyle özetleri güncelle ve taslağı kaydet
+        ['tail-input', 'from-pos-input', 'to-pos-input', 'time-plan-input', 'follow-no'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', () => {
+                    updateCardSummaries();
+                    updateStickySummary();
+                    saveDraft();
+                });
+                el.addEventListener('change', () => {
+                    updateCardSummaries();
+                    updateStickySummary();
+                    saveDraft();
+                });
+            }
+        });
+        
+        updateCardSummaries();
+        loadDraft();
+    };
+
+</script>
+</body>
+</html>

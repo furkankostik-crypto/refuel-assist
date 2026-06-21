@@ -1,0 +1,4613 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Refuel Assist v8.0.0 — Engine Test</title>
+<style>
+:root {
+  --primary: #38bdf8;
+  --primary-rgb: 56,189,248;
+  --bg: #0f172a;
+  --panel: rgba(30, 41, 59, 0.55);
+  --panel-border: rgba(255,255,255,0.08);
+  --text: #ffffff;
+  --muted: #94a3b8;
+  --brand-font: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  height: 100dvh;
+  width: 100vw;
+  font-family: var(--brand-font);
+  background-color: var(--bg);
+  color: var(--text);
+  padding: env(safe-area-inset-top, 4px) env(safe-area-inset-right, 4px) env(safe-area-inset-bottom, 4px) env(safe-area-inset-left, 4px);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.page {
+  width: 100%;
+  max-width: 420px;
+  height: 100%;
+  padding: calc(max(env(safe-area-inset-top,4px),4px)) calc(max(env(safe-area-inset-right,4px),4px)) calc(max(env(safe-area-inset-bottom,4px),4px)) calc(max(env(safe-area-inset-left,4px),4px));
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Top bar (Card style matching calc.html) */
+.topbar {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  transition: transform 0.2s, background 0.2s;
+}
+.topbar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s, background 0.2s;
+  padding: 0;
+}
+.topbar-back:active {
+  transform: scale(0.95);
+  background: rgba(56, 189, 248, 0.22);
+  border-color: var(--primary);
+}
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-grow: 1;
+  min-width: 0;
+  padding-left: 2px;
+}
+.topbar-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.topbar-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex-grow: 1;
+}
+.topbar-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-subtitle {
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 600;
+  margin-top: 1px;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offline-banner {
+  display: none;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.28);
+  color: #ffb3aa;
+  font-size: 13px;
+  text-align: center;
+}
+
+.offline-banner.visible {
+  display: block;
+}
+
+.alert-banner {
+  display: none;
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 18px;
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.28);
+  color: #ffb3aa;
+  font-size: 13px;
+  text-align: center;
+  cursor: pointer;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.alert-banner.visible {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cockpit-panel {
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid var(--panel-border);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 460px;
+  padding: 12px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+}
+
+h2 {
+  text-align: center;
+  margin-top: 0;
+  color: var(--primary);
+  letter-spacing: 1px;
+  font-size: 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+}
+
+.airport-name-display {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 1px;
+  min-height: 18px;
+}
+
+.airport-location-display {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  min-height: 14px;
+}
+
+.section-title {
+  font-size: 10.5px;
+  color: var(--primary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin: 8px 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: rgba(255,255,255,0.08);
+}
+
+.search-box {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+input {
+  flex: 1;
+  background: rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+button,
+.btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease, filter 160ms ease, background 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 40px;
+}
+
+button:hover,
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+button:active,
+.btn:active {
+  transform: translateY(0);
+}
+
+button:disabled,
+.btn:disabled {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  min-width: 38px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  touch-action: manipulation;
+}
+
+.btn-gps {
+  background: rgba(15,23,42,0.95);
+  color: var(--primary);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.card {
+  background: rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-full {
+  grid-column: span 2;
+}
+
+.label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  display: block;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.unit {
+  font-size: 13px;
+  color: var(--primary);
+  margin-left: 3px;
+}
+
+.compass-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 4px;
+  padding: 4px 0 2px;
+}
+
+.wind-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 8px 0 4px;
+  width: 100%;
+}
+
+.wind-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 75px;
+}
+
+.wind-block-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.wind-speed {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.wind-speed .unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-left: 3px;
+}
+
+.wind-direction {
+  font-size: 20px;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.wind-divider {
+  width: 1px;
+  height: 38px;
+  background: rgba(255,255,255,0.12);
+  align-self: stretch;
+}
+
+.wind-direction-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.4s ease;
+}
+
+.arrow:hover {
+  background: transparent;
+}
+
+.raw-metar-box {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(15,23,42,0.88);
+  border: 1px dashed rgba(255,255,255,0.08);
+  border-radius: 16px;
+  font-size: 11px;
+  color: #00e5ff;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.decoder-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 10px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.decoder-toggle-btn:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+.decoder-content {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 6px;
+  animation: slideDown 0.2s ease-out;
+}
+.decoder-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 6px 0;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+.decoder-item:last-child {
+  border-bottom: none;
+}
+.decoder-label {
+  color: var(--muted);
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+.decoder-value {
+  color: var(--text);
+  text-align: right;
+  word-break: break-word;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chrono-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.chrono-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.90);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.chrono-overlay.show {
+  display: flex;
+}
+
+.chrono-overlay-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(15,23,42,0.99);
+  border: 1.5px solid rgba(56, 189, 248, 0.25);
+  border-radius: 28px;
+  padding: 24px 20px;
+  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.55), 0 0 30px rgba(56, 189, 248, 0.08);
+}
+
+.chrono-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.chrono-overlay-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 900;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+}
+
+.chrono-overlay-close {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.chrono-overlay-close:hover {
+  background: rgba(255,255,255,0.14);
+}
+
+.chrono-overlay-close:active {
+  transform: scale(0.95);
+}
+
+.chrono-open-button {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(56,189,248,0.95), rgba(0,229,255,0.9));
+  color: #05111e;
+  font-weight: 800;
+  border-radius: 12px;
+  border: none;
+  padding: 10px 14px;
+  margin-top: 10px;
+  box-shadow: 0 15px 30px rgba(3,52,90,0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.chrono-open-button:hover {
+  filter: brightness(1.02);
+}
+
+.chrono-box {
+  background: rgba(15,23,42,0.96);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 20px 14px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chrono-box:hover {
+  background: rgba(15,23,42,1);
+}
+
+.chrono-box.active {
+  border-color: var(--primary);
+  background: rgba(56, 189, 248, 0.03);
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+.chrono-hold-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 5px;
+  width: 0;
+  background: linear-gradient(90deg, #00e5ff, var(--primary));
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+.chrono-time {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 25px;
+  font-weight: 900;
+  color: var(--text);
+  margin: 12px 0 8px;
+  letter-spacing: 1px;
+}
+
+.chrono-hint {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+}
+
+.chrono-instructions {
+  margin-top: 22px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1.5px dashed rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  text-align: left;
+}
+
+.chrono-instructions strong {
+  color: var(--primary);
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 16px;
+  text-transform: uppercase;
+}
+
+/* ═══════ ENGINE TEST COMPASS ═══════ */
+.engine-compass-section {
+  margin-top: 10px;
+}
+
+.compass-brake-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.compass-card {
+  background: rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.compass-card:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.1);
+}
+
+.compass-card.interactive {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.compass-card.interactive:active {
+  cursor: grabbing;
+}
+
+.compass-card .section-label {
+  font-size: 10.5px;
+  color: var(--primary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.compass-ring-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  margin: 0 auto 10px;
+  touch-action: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.3) 60%, transparent 100%);
+  box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.05);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  border: 1px dashed rgba(255, 255, 255, 0.03);
+}
+
+.compass-ring-container:hover {
+  box-shadow: inset 0 0 30px rgba(56, 189, 248, 0.15), 0 0 15px rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.compass-ring-container:active {
+  transform: scale(0.98);
+}
+
+.compass-ring-container.active-drag {
+  box-shadow: inset 0 0 40px rgba(56, 189, 248, 0.4), 0 0 25px rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.6) !important;
+  transform: scale(1.02);
+}
+
+.compass-ring {
+  width: 100%;
+  height: 100%;
+}
+
+.compass-aircraft {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 46px;
+  height: 46px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.5));
+  pointer-events: none;
+}
+
+.compass-wind-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  transform: translate(-50%, -50%) rotate(0deg);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+.compass-heading-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.compass-info-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.compass-info-chip:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.compass-info-chip .chip-icon {
+  font-size: 13px;
+}
+
+.compass-info-chip .chip-label {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.compass-info-chip .chip-value {
+  color: var(--text);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.compass-info-chip.heading-chip .chip-value {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.heading-input {
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  width: 42px;
+  text-align: center;
+  padding: 0 2px;
+  margin: 0;
+  outline: none;
+  border-bottom: 1.5px dashed rgba(56, 189, 248, 0.5);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.heading-input:focus {
+  border-bottom-style: solid;
+  border-bottom-color: var(--primary);
+  background: rgba(56, 189, 248, 0.15);
+  border-radius: 4px;
+}
+
+.heading-input::-webkit-outer-spin-button,
+.heading-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.heading-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.compass-hint-text {
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 6px;
+  opacity: 0.7;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+  animation: pulseHint 2s infinite ease-in-out;
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; color: var(--primary); }
+}
+
+.compass-vrb-warning {
+  display: none;
+  background: rgba(255, 170, 0, 0.12);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: #fbbf24;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.compass-vrb-warning.visible {
+  display: block;
+}
+
+/* ═══════ BRAKE AREA ═══════ */
+.brake-area-card {
+  background: rgba(15,23,42,0.95);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 14px 10px;
+  text-align: center;
+}
+
+.brake-area-card .section-label {
+  font-size: 10px;
+  color: var(--primary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.brake-area-visual {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brake-ltfm-areas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brake-ltfm-item {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: left;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brake-ltfm-item .area-icon {
+  font-size: 22px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+  flex-shrink: 0;
+}
+
+.brake-ltfm-item .area-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.brake-ltfm-item .area-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.brake-ltfm-item .area-range {
+  font-size: 9px;
+  color: rgba(148, 163, 184, 0.6);
+  font-weight: 600;
+}
+
+.brake-ltfm-item.active {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+}
+
+.brake-ltfm-item.active .area-label {
+  color: var(--primary);
+}
+
+.brake-ltfm-item.active .area-range {
+  color: rgba(56, 189, 248, 0.7);
+}
+
+.brake-ltfm-item.active .area-icon {
+  opacity: 1;
+}
+
+.brake-ltfm-item.active::after {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 14px;
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.brake-quadrant-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.brake-quadrant {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1.5px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.brake-quadrant .quad-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.brake-quadrant .quad-range {
+  font-size: 9px;
+  color: rgba(148, 163, 184, 0.6);
+  font-weight: 600;
+}
+
+.brake-quadrant .quad-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.brake-quadrant.active {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.12);
+}
+
+.brake-quadrant.active .quad-label {
+  color: var(--primary);
+}
+
+.brake-quadrant.active .quad-range {
+  color: rgba(56, 189, 248, 0.7);
+}
+
+.brake-quadrant.active .quad-icon {
+  opacity: 1;
+}
+
+.brake-quadrant.active::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.brake-recommendation {
+  margin-top: 8px;
+  padding: 8px 14px;
+  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  border-radius: 10px;
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.brake-recommendation .rec-title {
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 460px) {
+  .compass-brake-container {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .compass-ring-container {
+    width: 160px;
+    height: 160px;
+  }
+  .compass-aircraft {
+    width: 38px;
+    height: 38px;
+  }
+  .compass-wind-arrow {
+    width: 145px;
+    height: 145px;
+  }
+  .compass-heading-info {
+    gap: 6px;
+  }
+  .compass-info-chip {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+  .brake-quadrant-grid {
+    gap: 4px;
+  }
+  .brake-quadrant {
+    padding: 8px 6px;
+  }
+  .brake-ltfm-item {
+    padding: 6px 8px;
+  }
+}
+
+@media (max-width: 460px) {
+  .taf-timeline-item::before {
+    left: 65px;
+  }
+  .taf-timeline-badge {
+    left: 61px;
+  }
+  .taf-period-time {
+    width: 55px;
+    min-width: 55px;
+    font-size: 10px;
+  }
+
+  .page {
+    padding: 4px;
+  }
+
+  .topbar {
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* topbar elements handled by standard classes */
+
+  .cockpit-panel {
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .airport-name-display {
+    font-size: 13px;
+  }
+
+  .airport-location-display {
+    font-size: 9px;
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    gap: 4px;
+    margin: 6px 0 4px 0;
+  }
+
+  .search-box {
+    flex-wrap: nowrap;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  input {
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 8px;
+  }
+
+  .btn-icon {
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .data-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+  }
+
+  .chrono-overlay-card {
+    padding: 14px 10px;
+    border-radius: 16px;
+  }
+
+  .chrono-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .card,
+  .chrono-box,
+  .raw-metar-box {
+    padding: 6px;
+    border-radius: 10px;
+  }
+
+  .chrono-box {
+    min-height: 90px;
+  }
+
+  .chrono-time {
+    font-size: 18px;
+  }
+}
+
+/* Tabs UI */
+.tabs-container {
+  display: flex;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  outline: none;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 8px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.03);
+}
+.tab-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+.tab-btn:active {
+  transform: translateY(1px);
+}
+.tab-btn.active {
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--primary);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+.tab-panel {
+  display: none;
+  animation: fadeIn 0.25s ease-out;
+}
+.tab-panel.active {
+  display: block;
+}
+
+/* TAF Timeline CSS */
+.taf-timeline {
+  position: relative;
+  text-align: left;
+  padding: 10px 0;
+}
+.taf-timeline-item {
+  display: flex;
+  gap: 20px;
+  position: relative;
+  margin-bottom: 20px;
+}
+.taf-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 85px;
+  top: 0;
+  bottom: -20px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 1;
+}
+.taf-timeline-item:last-child::before {
+  display: none;
+}
+.taf-timeline-item:last-child {
+  margin-bottom: 5px;
+}
+.taf-timeline-badge {
+  position: absolute;
+  left: 81px;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #0b1329;
+  z-index: 2;
+}
+.taf-timeline-badge.taf-type-base {
+  background-color: var(--primary);
+  box-shadow: 0 0 6px var(--primary);
+}
+.taf-timeline-badge.taf-type-tempo {
+  background-color: #ffaa00;
+  box-shadow: 0 0 6px #ffaa00;
+}
+.taf-timeline-badge.taf-type-becmg {
+  background-color: #a855f7;
+  box-shadow: 0 0 6px #a855f7;
+}
+.taf-timeline-badge.taf-type-prob {
+  background-color: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+.taf-timeline-badge.taf-type-compact {
+  background-color: rgba(255, 255, 255, 0.25);
+  box-shadow: none;
+  width: 8px;
+  height: 8px;
+  left: 82px;
+  top: 15px;
+}
+@media (max-width: 460px) {
+  .taf-timeline-badge.taf-type-compact {
+    left: 62px;
+  }
+}
+.taf-timeline-item.taf-item-compact {
+  margin-bottom: 4px;
+}
+.taf-timeline-item.taf-item-compact .taf-period-time {
+  padding-top: 4px;
+}
+.taf-timeline-item.taf-item-compact .taf-period-card {
+  background: transparent;
+  border: none;
+  padding: 4px 12px;
+  min-height: auto;
+  box-shadow: none;
+}
+.taf-day-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 15px 0;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.taf-day-divider::before,
+.taf-day-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.taf-period-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+.taf-period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+.taf-period-type {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.taf-type-base {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--primary);
+}
+.taf-type-tempo {
+  background: rgba(255, 170, 0, 0.15);
+  color: #ffaa00;
+}
+.taf-type-becmg {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+}
+.taf-type-prob {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+.taf-period-time {
+  width: 80px;
+  min-width: 80px;
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+  line-height: 1.4;
+  padding-top: 12px;
+  text-transform: uppercase;
+}
+.taf-detail-row {
+  display: flex;
+  font-size: 11px;
+  margin-bottom: 4px;
+  align-items: flex-start;
+}
+.taf-detail-row:last-child {
+  margin-bottom: 0;
+}
+.taf-detail-icon {
+  width: 16px;
+  color: var(--primary);
+  margin-right: 6px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.taf-detail-text {
+  color: var(--text);
+}
+.raw-toggle-container {
+  margin-top: 10px;
+}
+.raw-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin: 0 auto;
+  min-height: auto;
+}
+.raw-toggle-btn:hover {
+  color: var(--text);
+}
+
+/* Autocomplete suggestions */
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  margin-top: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.05);
+  display: none;
+}
+
+.suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease;
+  font-size: 13px;
+  text-transform: none;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover, .suggestion-item.active {
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.suggestion-codes {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 800;
+  color: var(--primary);
+  margin-right: 12px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.suggestion-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+  flex-grow: 1;
+}
+
+.suggestion-name {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-location {
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* TAF Professional Styling */
+.taf-group-card {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.taf-group-card:hover {
+  background: rgba(30, 41, 59, 0.65);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+.taf-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.taf-time-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  letter-spacing: 0.3px;
+}
+.taf-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 3px 7px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.taf-badge-tempo {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.taf-badge-becmg {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.taf-badge-from {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.taf-badge-prob {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+.taf-wind-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #38bdf8;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.02);
+}
+.taf-wind-icon {
+  font-size: 14px;
+  filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.3));
+}
+
+/* Loading Overlay Styles */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.loading-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.loading-card {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid rgba(56, 189, 248, 0.2);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.05);
+}
+
+.loading-spinner-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(56, 189, 248, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #00e5ff, var(--primary));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.loading-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.loading-status {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
+}
+</style>
+</head>
+<body>
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+  <div class="loading-card">
+    <div class="loading-spinner-container">
+      <div class="loading-spinner"></div>
+    </div>
+    <div class="loading-bar-container">
+      <div class="loading-bar-fill" id="loadingBarFill"></div>
+    </div>
+    <div class="loading-title">REFUEL ASSIST</div>
+    <div class="loading-status" id="loadingStatus">Yükleniyor...</div>
+  </div>
+</div>
+
+<div class="page">
+  <div class="cockpit-panel" style="margin-bottom: 24px;">
+    <div class="topbar">
+      <button onclick="window.location.href='index.html'" aria-label="Back" class="topbar-back">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#00e5ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="topbar-center">
+        <img src="assets/logo-192.png" alt="logo" class="topbar-logo">
+        <div class="topbar-text">
+          <div class="topbar-title" id="topbarTitle">Engine Test</div>
+          <div class="topbar-subtitle" id="topbarSubtitle">Pre-Start Cockpit</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="offline-banner" id="offlineBanner"></div>
+    <div class="alert-banner" id="alertBanner" onclick="hideAlert()"></div>
+    <div class="airport-name-display" id="airportNameDisplay">ISTANBUL HAVALIMANI</div>
+    <div class="airport-location-display" id="airportLocationDisplay">İstanbul, Türkiye</div>
+
+  <div class="section-title" id="selectionTitle">Meydan Seçimi</div>
+  <div class="search-box">
+    <button onclick="getLocationAndMatchAirport()" class="btn-gps btn-icon" title="Konumdan Otomatik Bul" id="gpsBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+      </svg>
+    </button>
+    
+    <div class="search-input-wrapper">
+      <input type="text" id="icaoInput" placeholder="ICAO VEYA IATA KODU (LTFM / IST)" value="LTFM" autocomplete="off">
+      <div id="suggestionsDropdown" class="suggestions-dropdown"></div>
+    </div>
+    
+    <button onclick="getMetarData()" class="btn-icon" title="METAR Çek" id="fetchBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="data-grid">
+    <!-- BAROMETRIC PRESSURE -->
+    <div class="card">
+      <span class="label" id="label-pressure">Barometric Press</span>
+      <div class="value" id="pressVal">----<span class="unit">m/bar</span></div>
+    </div>
+
+    <!-- ALTITUDE -->
+    <div class="card">
+      <span class="label" id="label-altitude">Altitude (Official)</span>
+      <div class="value" id="altVal">----<span class="unit">Feet</span></div>
+    </div>
+
+    <!-- OAT -->
+    <div class="card">
+      <span class="label" id="label-temp">Outside Air Temp (OAT)</span>
+      <div class="value" id="tempVal">--<span class="unit">°C</span></div>
+    </div>
+
+    <!-- GMT -->
+    <div class="card">
+      <span class="label" id="label-gmt">GMT (ZULU)</span>
+      <div class="value" id="gmtVal" style="color: var(--accent-color); font-size: 22px;">--:--</div>
+      <div id="metarObsContainer" style="font-size: 11px; color: var(--muted); margin-top: 4px; display: none;">
+        <span id="label-metar-obs">METAR Obs:</span> <span id="metarTimeVal">--:--</span>
+      </div>
+    </div>
+
+    <!-- WIND -->
+    <div class="card card-full">
+      <span class="label" id="label-wind">WIND</span>
+      <div class="compass-display">
+        <div class="wind-main">
+          <div class="wind-block">
+            <div class="wind-block-label">Hız</div>
+            <div class="value wind-speed" id="windSpeedVal">0<span class="unit">KT</span></div>
+          </div>
+          <div class="wind-divider"></div>
+          <div class="wind-block">
+            <div class="wind-block-label">Yön</div>
+            <div class="wind-direction-row">
+              <div class="wind-direction" id="windDirVal">000°</div>
+              <div class="arrow" id="windArrow">↑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <!-- ENGINE TEST COMPASS & BRAKE AREA -->
+  <div class="engine-compass-section" id="engineCompassSection" style="display: none;">
+    <div class="section-title" id="compassSectionTitle">Motor Testi Yönlendirme</div>
+    
+    <!-- Entegre Pusula ve Öneri Kartı -->
+    <div class="compass-card" id="compassCard" style="cursor: grab; user-select: none;">
+      <div class="section-label" id="compassLabel">Uçak Burun Yönü (Rüzgâra Karşı)</div>
+      
+      <div class="compass-ring-container">
+        <!-- Pusula halkası ve uçak -->
+        <svg class="compass-ring" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(56, 189, 248, 0.2)" stroke-width="1.5"/>
+          <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="2,5"/>
+          
+          <!-- 30 Derece Kertikleri ve Havacılık Numaraları -->
+          <!-- North -->
+          <line x1="100" y1="5" x2="100" y2="15" stroke="#38bdf8" stroke-width="2"/>
+          <text x="100" y="30" text-anchor="middle" fill="#38bdf8" font-size="13" font-weight="900" font-family="'Segoe UI', sans-serif">N</text>
+          
+          <!-- 030° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(30 100 100)"/>
+          <text x="145" y="52" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">03</text>
+          
+          <!-- 060° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(60 100 100)"/>
+          <text x="178" y="82" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">06</text>
+          
+          <!-- East -->
+          <line x1="100" y1="5" x2="100" y2="15" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" transform="rotate(90 100 100)"/>
+          <text x="182" y="104" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11" font-weight="800" font-family="'Segoe UI', sans-serif">E</text>
+          
+          <!-- 120° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(120 100 100)"/>
+          <text x="178" y="128" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">12</text>
+          
+          <!-- 150° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(150 100 100)"/>
+          <text x="145" y="158" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">15</text>
+          
+          <!-- South -->
+          <line x1="100" y1="5" x2="100" y2="15" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" transform="rotate(180 100 100)"/>
+          <text x="100" y="180" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11" font-weight="800" font-family="'Segoe UI', sans-serif">S</text>
+          
+          <!-- 210° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(210 100 100)"/>
+          <text x="55" y="158" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">21</text>
+          
+          <!-- 240° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(240 100 100)"/>
+          <text x="22" y="128" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">24</text>
+          
+          <!-- West -->
+          <line x1="100" y1="5" x2="100" y2="15" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" transform="rotate(270 100 100)"/>
+          <text x="18" y="104" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="11" font-weight="800" font-family="'Segoe UI', sans-serif">W</text>
+          
+          <!-- 300° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(300 100 100)"/>
+          <text x="22" y="82" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">30</text>
+          
+          <!-- 330° -->
+          <line x1="100" y1="5" x2="100" y2="12" stroke="rgba(255,255,255,0.3)" stroke-width="1" transform="rotate(330 100 100)"/>
+          <text x="55" y="52" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">33</text>
+
+          <!-- 10 Derecelik Küçük Kertikler -->
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(10 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(20 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(40 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(50 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(70 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(80 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(100 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(110 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(130 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(140 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(160 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(170 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(190 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(200 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(220 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(230 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(250 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(260 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(280 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(290 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(310 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(320 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(340 100 100)"/>
+          <line x1="100" y1="5" x2="100" y2="9" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" transform="rotate(350 100 100)"/>
+        </svg>
+        
+        <svg class="compass-wind-arrow" id="compassWindArrow" viewBox="0 0 180 180">
+          <defs>
+            <marker id="windArrowHead" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="rgba(239, 68, 68, 0.7)"/>
+            </marker>
+          </defs>
+          <line x1="90" y1="18" x2="90" y2="60" stroke="rgba(239, 68, 68, 0.5)" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#windArrowHead)"/>
+          <text x="90" y="14" text-anchor="middle" fill="rgba(239, 68, 68, 0.7)" font-size="8" font-weight="700" font-family="'Segoe UI', sans-serif">WIND</text>
+        </svg>
+        
+        <svg class="compass-aircraft" id="compassAircraft" viewBox="0 0 48 48">
+          <path d="M24 4 L22 16 L10 26 L10 29 L22 24 L22 38 L17 42 L17 44 L24 41 L31 44 L31 42 L26 38 L26 24 L38 29 L38 26 L26 16 Z" 
+                fill="#38bdf8" fill-opacity="0.9" stroke="rgba(255,255,255,0.3)" stroke-width="0.5"/>
+        </svg>
+      </div>
+
+      <!-- Sürükleme İpucu Metni -->
+      <div class="compass-hint-text" id="compassHint">Döndürmek için Üzerine Basılı Tutun veya Dereceye Tıklayıp Yazın</div>
+
+      <!-- Entegre Bilgi ve Öneri Chips -->
+      <div class="compass-heading-info" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-top: 10px;">
+        <div class="compass-info-chip heading-chip">
+          <div class="chip-label" id="chipHeadingLabel" style="font-size: 8px;">BURUN</div>
+          <div class="chip-value" id="chipHeadingValue"><input type="number" id="chipHeadingInput" class="heading-input" value="360" min="0" max="360" maxlength="3" step="1">°</div>
+        </div>
+        <div class="compass-info-chip">
+          <div class="chip-label" id="chipWindLabel" style="font-size: 8px;">RÜZGÂR GELİŞ</div>
+          <div class="chip-value" id="chipRelativeWindValue">---° / -- KT</div>
+        </div>
+        <!-- Önerilen Alan Çipi -->
+        <div class="compass-info-chip" style="grid-column: span 2; justify-content: center; background: rgba(56, 189, 248, 0.08);">
+          <div class="chip-label" style="color: var(--primary); font-size: 8px; margin-right: 4px;">ÖNERİ:</div>
+          <div class="chip-value" id="brakeRecText" style="font-size: 10px;">Veri bekleniyor...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- TAB SYSTEM -->
+  <div class="tabs-container">
+    <button type="button" class="tab-btn" id="tabMetarBtn" onclick="switchTab('metar')">ANLIK DURUM (METAR)</button>
+    <button type="button" class="tab-btn" id="tabTafBtn" onclick="switchTab('taf')">HAVA TAHMİNİ (TAF)</button>
+  </div>
+
+  <!-- METAR PANEL -->
+  <div id="metarPanel" class="tab-panel">
+    <!-- METAR DECODER PANEL -->
+    <div id="metarDecoderContainer" style="display: none; margin-top: 5px; margin-bottom: 5px;">
+      <div class="decoder-content" id="decoderContent" style="display: block; position: relative;">
+        <!-- Close button inside panel -->
+        <button type="button" class="raw-toggle-btn" onclick="toggleDecoderContainer('metar')" style="position: absolute; top: 8px; right: 8px; padding: 4px; min-height: auto;" aria-label="Close">✕</button>
+        <div id="decoderGrid" style="margin-top: 15px;">
+          <!-- Will be dynamically filled by JS -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Metar Raw Toggle -->
+    <div class="raw-toggle-container" id="metarRawToggleContainer" style="display: none;">
+      <button type="button" class="raw-toggle-btn" onclick="toggleRawData('metar')">
+        <span id="metarRawToggleText">Ham Raporu Göster</span>
+        <span id="metarRawToggleArrow">▼</span>
+      </button>
+      <div class="raw-metar-box" id="rawMetar" style="display: none; margin-top: 5px;">
+        Canlı METAR verisi için sorgu yapın.
+      </div>
+    </div>
+  </div>
+
+  <!-- TAF PANEL -->
+  <div id="tafPanel" class="tab-panel">
+    <!-- TAF DECODER PANEL -->
+    <div id="tafDecoderContainer" style="display: none; margin-top: 5px; margin-bottom: 5px;">
+      <div class="decoder-content" id="tafDecoderContent" style="display: block; position: relative;">
+        <!-- Close button inside panel -->
+        <button type="button" class="raw-toggle-btn" onclick="toggleDecoderContainer('taf')" style="position: absolute; top: 8px; right: 8px; padding: 4px; min-height: auto; z-index: 10;" aria-label="Close">✕</button>
+        <div id="tafDecoderGrid" style="margin-top: 15px;">
+          <!-- Will be dynamically filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Taf Raw Toggle -->
+    <div class="raw-toggle-container" id="tafRawToggleContainer" style="display: none;">
+      <button type="button" class="raw-toggle-btn" onclick="toggleRawData('taf')">
+        <span id="tafRawToggleText">Ham Raporu Göster</span>
+        <span id="tafRawToggleArrow">▼</span>
+      </button>
+      <div class="raw-metar-box" id="rawTaf" style="display: none; margin-top: 5px; color: #ffaa00; border: 1px dashed rgba(255, 170, 0, 0.25); text-transform: uppercase;">
+        Canlı TAF tahmini için sorgu yapın.
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="chrono-open-button" id="openChronoBtn" onclick="openChronoOverlay()">Kontroller Tamam Motor Çalıştırmaya başla</button>
+
+  <div class="chrono-overlay" id="chronoOverlay" role="dialog" aria-modal="true" aria-labelledby="chronoOverlayTitle">
+    <div class="chrono-overlay-card">
+      <div class="chrono-overlay-header">
+        <h3 class="chrono-overlay-title" id="chronoOverlayTitle">Fuel On Time Kronometre</h3>
+        <button type="button" class="chrono-overlay-close" onclick="closeChronoOverlay()" aria-label="Kapat">✕</button>
+      </div>
+      <div class="chrono-container">
+        <div class="chrono-box" id="chrono-eng1">
+          <div class="chrono-hold-progress" id="progress-eng1"></div>
+          <span class="label" id="label-eng1">ENGINE 1</span>
+          <div class="chrono-time" id="display-eng1">00:00:00</div>
+          <div class="chrono-hint" id="hint-eng1">TAP TO START</div>
+        </div>
+        <div class="chrono-box" id="chrono-eng2">
+          <div class="chrono-hold-progress" id="progress-eng2"></div>
+          <span class="label" id="label-eng2">ENGINE 2</span>
+          <div class="chrono-time" id="display-eng2">00:00:00</div>
+          <div class="chrono-hint" id="hint-eng2">TAP TO START</div>
+        </div>
+      </div>
+      <div class="chrono-instructions" id="chronoInstructions"></div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footerNote">SOURCE: LIVE METAR VIA REMOTE API + FREE PROXIES</div>
+  </div>
+</div>
+
+<script>
+const YOUR_WORKER_URL = 'https://metar-taf-proxy.furkankostik.workers.dev';
+const airportDataUrl = 'assets/airports.json';
+let airportIndex = null;
+
+// ═══════ LOADING OVERLAY FUNCTIONS ═══════
+function showLoading(statusText, progressPercent = 0) {
+  if (document.activeElement && typeof document.activeElement.blur === 'function') {
+    document.activeElement.blur();
+  }
+  const overlay = document.getElementById('loadingOverlay');
+  const status = document.getElementById('loadingStatus');
+  const bar = document.getElementById('loadingBarFill');
+  if (overlay) overlay.classList.add('show');
+  if (status) status.textContent = statusText;
+  if (bar) bar.style.width = `${progressPercent}%`;
+}
+
+function updateLoadingStatus(statusText, progressPercent) {
+  const status = document.getElementById('loadingStatus');
+  const bar = document.getElementById('loadingBarFill');
+  if (status) status.textContent = statusText;
+  if (bar && progressPercent !== undefined) bar.style.width = `${progressPercent}%`;
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.classList.remove('show');
+}
+
+function showAlert(message) {
+  const alertBanner = document.getElementById('alertBanner');
+  if (alertBanner) {
+    alertBanner.textContent = message;
+    alertBanner.classList.add('visible');
+  }
+}
+
+function hideAlert() {
+  const alertBanner = document.getElementById('alertBanner');
+  if (alertBanner) {
+    alertBanner.textContent = '';
+    alertBanner.classList.remove('visible');
+  }
+}
+
+// ═══════ AIRPORT BRAKE CONFIGURATION ═══════
+const AIRPORT_BRAKE_CONFIG = {
+  'LTFM': {
+    hasBrakeAreas: true,
+    areas: [
+      {
+        name: 'B10',
+        label: { tr: 'Kuzey Bremze (B10)', en: 'North Brake (B10)' },
+        windRange: [120, 240],  // South winds → use North brake
+        icon: '🔵'
+      },
+      {
+        name: 'B9',
+        label: { tr: 'Güney Bremze (B9)', en: 'South Brake (B9)' },
+        windRange: [300, 60],   // North winds (wraps around 360°) → use South brake
+        icon: '🟢'
+      },
+      {
+        name: 'TAXI',
+        label: { tr: 'Taksi Yolu', en: 'Taxiway' },
+        windRange: [[60, 120], [240, 300]],  // East-West winds → use taxiway
+        icon: '🟡'
+      }
+    ]
+  }
+  // Other airports can be added here in the future
+};
+
+const LANG_STORAGE_KEY = 'refuel_assist_lang';
+const I18N = {
+  tr: {
+    page_title: 'Motor Testi',
+    page_subtitle: 'Motor Çalıştırma Öncesi Kontrol',
+    selection_title: 'Meydan Seçimi',
+    icao_placeholder: 'ICAO VEYA IATA KODU (LTFM / IST)',
+    gps_title: 'Konumdan Otomatik Bul',
+    fetch_title: 'METAR Çek',
+    back_button: 'Geri',
+    label_pressure: 'Barometrik Basınç',
+    label_altitude: 'Yükseklik (Resmi)',
+    label_temp: 'Dış Hava Sıcaklığı (OAT)',
+    label_gmt: 'GMT (ZULU)',
+    label_metar_obs: 'METAR Obs:',
+    label_wind: 'RÜZGAR',
+    raw_metar_hint: 'Canlı METAR verisi için sorgu yapın.',
+    chrono_title: 'Fuel On Time Kronometre',
+    label_eng1: 'ENGINE 1',
+    label_eng2: 'ENGINE 2',
+    hint_start: 'BAŞLATMAK İÇİN DOKUN',
+    hint_running: 'ÇALIŞIYOR (DURDURMAK İÇİN DOKUN / SIFIRLAMAK İÇİN BASILI TUT)',
+    hint_paused: 'DURAKLATILDI (DEVAM ETMEK İÇİN DOKUN / SIFIRLAMAK İÇİN BASILI TUT)',
+    chrono_instructions: '<strong>Nasıl Kullanılır?</strong><br>• Başlatmak veya Duraklatmak için ilgili motor kutusuna <strong>dokunun</strong>.<br>• Sıfırlamak için kutunun üzerine <strong>basılı tutun (1 sn)</strong>.',
+    footer_note: 'KAYNAK: CANLI METAR UZAK API + ÜCRETSİZ PROXYLER',
+    loading: 'YÜKLENİYOR...',
+    loading_data: 'Veri çekiliyor...',
+    error_location_not_available: 'Konum alınamadı. Lütfen izinleri kontrol edin.',
+    error_airport_not_found: 'Girilen IATA kodu bulunamadı. Lütfen ICAO kodu deneyin.',
+    error_invalid_code: 'Geçerli bir kod girin (Örn: IST veya LTFM).',
+    error_data_connection: 'Veri bağlantı hatası.',
+    error_data_unavailable: 'Veri alınamadı.',
+    error_metar_fetch: 'METAR verisi alınamadı. Lütfen internet bağlantınızı kontrol edin veya bir proxy deneyin.',
+    offline_warning: 'Bu sayfa internet olmadan çalışmayacaktır. Lütfen internet bağlantınızı kontrol edin.',
+    error_airport_data_load: 'Havalimanı veri dosyası yüklenemedi.',
+    error_no_metar_line: 'Güncel METAR verisi bulunamadı.',
+    no_nearest_airport: 'Yakın havaalanı bulunamadı.',
+    label_taf: 'TAF Raporu',
+    raw_taf_hint: 'Canlı TAF tahmini için sorgu yapın.',
+    error_taf_fetch: 'TAF verisi alınamadı. Lütfen internet bağlantınızı kontrol edin veya bir proxy deneyin.',
+    label_metar_title: 'Anlık Hava Durumu',
+    label_taf_title: 'Tahmini Hava Durumu',
+    label_raw_show: 'Ham Raporu Göster',
+    label_raw_hide: 'Ham Raporu Gizle',
+    label_decoder_show: 'Açıklamaları Göster',
+    label_decoder_hide: 'Açıklamaları Kapat',
+    tab_metar: 'ANLIK DURUM (METAR)',
+    tab_taf: 'HAVA TAHMİNİ (TAF)',
+    taf_base_forecast: 'Ana Tahmin',
+    taf_tempo: 'Geçici Durum (TEMPO)',
+    taf_becmg: 'Kademeli Değişim (BECMG)',
+    taf_prob: 'Olasılık Tahmini (PROB)',
+    taf_wind: 'Rüzgâr',
+    taf_vis: 'Görüş',
+    taf_clouds: 'Bulutlar',
+    taf_weather: 'Hava Olayı',
+    compass_section_title: 'Motor Testi Yönlendirme',
+    compass_label: 'Uçak Burun Yönü (Rüzgâra Karşı)',
+    chip_heading_label: 'Burun Yönü',
+    chip_wind_label: 'Rüzgâr Geliş',
+    compass_hint_hold: 'Döndürmek için Üzerine Basılı Tutun veya Dereceye Tıklayıp Yazın',
+    compass_hint_active: 'Döndürme Aktif, Şimdi Çevirin!',
+    vrb_warning: 'Rüzgâr yönü değişken (VRB). Uçağı mevcut pist yönüne göre konumlandırın.',
+    brake_area_label: 'Önerilen Bremze Alanı',
+    brake_rec_title: 'Öneri',
+    brake_rec_default: 'Bremze alanı önerisi burada görünecektir.',
+    quad_nw: 'Kuzeybatı',
+    quad_ne: 'Kuzeydoğu',
+    quad_sw: 'Güneybatı',
+
+    quad_se: 'Güneybatı',
+    brake_rec_text: 'Rüzgâr {dir}° yönünden esiyor. Uçağın burnunu {heading}° yönüne çevirin. {quadrant} bremze alanını kullanmanız önerilir.',
+    brake_rec_vrb: 'Rüzgâr değişken yönlü. Mevcut pist konfigürasyonuna uygun bremze alanını kullanın.',
+    brake_rec_calm: 'Rüzgâr sakin veya çok hafif. Herhangi bir bremze alanı kullanılabilir.',
+    brake_rec_ltfm: '{icon} {area} önerilir. Rüzgâr: {dir}° / {speed} KT',
+    crosswind_label: 'Crosswind',
+    headwind_label: 'Headwind',
+    tailwind_label: 'Tailwind',
+    wind_components: 'Rüzgâr Bileşenleri'
+  },
+  en: {
+    page_title: 'Engine Test',
+    page_subtitle: 'Pre-Engine Start Check ',
+    selection_title: 'Airport Selection',
+    icao_placeholder: 'ICAO OR IATA CODE (LTFM / IST)',
+    gps_title: 'Auto find by location',
+    fetch_title: 'Fetch METAR',
+    back_button: 'Back',
+    label_pressure: 'Barometric Pressure',
+    label_altitude: 'Altitude (Official)',
+    label_temp: 'Outside Air Temp (OAT)',
+    label_gmt: 'GMT (ZULU)',
+    label_metar_obs: 'METAR Obs:',
+    label_wind: 'WIND',
+    raw_metar_hint: 'Query for live METAR data.',
+    chrono_title: 'Fuel On Time Chrono',
+    label_eng1: 'ENGINE 1',
+    label_eng2: 'ENGINE 2',
+    hint_start: 'TAP TO START',
+    hint_running: 'RUNNING (TAP TO PAUSE / HOLD TO RESET)',
+    hint_paused: 'PAUSED (TAP TO RESUME / HOLD TO RESET)',
+    chrono_instructions: '<strong>How to Use?</strong><br>• <strong>Tap</strong> the respective engine box to Start or Pause.<br>• <strong>Press and hold (1s)</strong> to Reset.',
+    footer_note: 'SOURCE: LIVE METAR VIA REMOTE API + FREE PROXIES',
+    loading: 'LOADING...',
+    loading_data: 'Fetching data...',
+    error_location_not_available: 'Location unavailable. Please check permissions.',
+    error_airport_not_found: 'Entered IATA code not found. Please try an ICAO code.',
+    error_invalid_code: 'Enter a valid code (e.g., IST or LTFM).',
+    error_data_connection: 'Data connection error.',
+    error_data_unavailable: 'Data unavailable.',
+    error_metar_fetch: 'METAR data could not be retrieved. Please check your internet connection or try a proxy.',
+    offline_warning: 'This page requires internet access. Please check your connection.',
+    error_airport_data_load: 'Unable to load airport data file.',
+    error_no_metar_line: 'No valid METAR line was found.',
+    no_nearest_airport: 'No nearby airport found.',
+    label_taf: 'TAF Report',
+    raw_taf_hint: 'Query for live TAF forecast.',
+    error_taf_fetch: 'TAF data could not be retrieved. Please check your internet connection or try a proxy.',
+    label_metar_title: 'Live Weather',
+    label_taf_title: 'Weather Forecast',
+    label_raw_show: 'Show Raw Report',
+    label_raw_hide: 'Hide Raw Report',
+    label_decoder_show: 'Show Explanations',
+    label_decoder_hide: 'Close Explanations',
+    tab_metar: 'LIVE STATE (METAR)',
+    tab_taf: 'FORECAST (TAF)',
+    taf_base_forecast: 'Base Forecast',
+    taf_tempo: 'Temporary (TEMPO)',
+    taf_becmg: 'Becoming (BECMG)',
+    taf_prob: 'Probability (PROB)',
+    taf_wind: 'Wind',
+    taf_vis: 'Visibility',
+    taf_clouds: 'Clouds',
+    taf_weather: 'Weather',
+    compass_section_title: 'Engine Test Guidance',
+    compass_label: 'Aircraft Nose Heading (Into the Wind)',
+    chip_heading_label: 'Nose Heading',
+    chip_wind_label: 'Wind From',
+    compass_hint_hold: 'Press and Hold to Rotate or Tap to Enter Heading',
+    compass_hint_active: 'Rotation Active, Rotate Now!',
+    vrb_warning: 'Wind direction is variable (VRB). Position the aircraft according to the current runway configuration.',
+    brake_area_label: 'Recommended Brake Area',
+    brake_rec_title: 'Recommendation',
+    brake_rec_default: 'Brake area recommendation will appear here.',
+    quad_nw: 'Northwest',
+    quad_ne: 'Northeast',
+    quad_sw: 'Southwest',
+
+    quad_se: 'Southwest',
+    brake_rec_text: 'Wind is blowing from {dir}°. Turn the aircraft nose to {heading}°. It is recommended to use the {quadrant} brake area.',
+    brake_rec_vrb: 'Wind direction is variable. Use the brake area suitable for the current runway configuration.',
+    brake_rec_calm: 'Wind is calm or very light. Any brake area can be used.',
+    brake_rec_ltfm: '{icon} {area} recommended. Wind: {dir}° / {speed} KT',
+    crosswind_label: 'Crosswind',
+    headwind_label: 'Headwind',
+    tailwind_label: 'Tailwind',
+    wind_components: 'Wind Components'
+  }
+};
+
+const COUNTRY_LOCALIZATION = {
+  tr: {
+    Turkey: 'Türkiye',
+    'United States': 'Amerika Birleşik Devletleri',
+    'United Kingdom': 'Birleşik Krallık',
+    Germany: 'Almanya',
+    France: 'Fransa',
+    Italy: 'İtalya',
+    Spain: 'İspanya',
+    Greece: 'Yunanistan',
+    Netherlands: 'Hollanda',
+    Switzerland: 'İsviçre',
+    Austria: 'Avusturya',
+    Belgium: 'Belçika',
+    Russia: 'Rusya',
+    Brazil: 'Brezilya',
+    Argentina: 'Arjantin',
+    Mexico: 'Meksika',
+    Australia: 'Avustralya',
+    Canada: 'Kanada',
+    China: 'Çin',
+    Japan: 'Japonya',
+    'South Korea': 'Güney Kore',
+    'North Korea': 'Kuzey Kore',
+    'Saudi Arabia': 'Suudi Arabistan',
+    'United Arab Emirates': 'Birleşik Arap Emirlikleri',
+    'Czech Republic': 'Çekya',
+    Czechia: 'Çekya',
+    'South Africa': 'Güney Afrika'
+  }
+};
+
+function localizeCountryName(country, lang) {
+  if (!country || typeof country !== 'string') return country;
+  if (lang === 'tr') {
+    return COUNTRY_LOCALIZATION.tr[country] || country;
+  }
+  return country;
+}
+
+function updateAirportLocationDisplay() {
+  const locationDisplay = document.getElementById('airportLocationDisplay');
+  if (!locationDisplay) return;
+  const currentText = locationDisplay.innerText.trim();
+  if (!currentText) return;
+
+  const [city, ...countryParts] = currentText.split(',').map((part) => part.trim());
+  if (!city || countryParts.length === 0) return;
+
+  const country = countryParts.join(', ');
+  const localizedCountry = localizeCountryName(country, getLang());
+  if (localizedCountry && localizedCountry !== country) {
+    locationDisplay.innerText = `${city}, ${localizedCountry}`;
+  }
+}
+
+const chronos = {
+  eng1: { elapsed: 0, startTime: 0, timer: null, state: 'stopped' },
+  eng2: { elapsed: 0, startTime: 0, timer: null, state: 'stopped' }
+};
+
+function getLang() {
+  const raw = (localStorage.getItem(LANG_STORAGE_KEY) || '').toLowerCase();
+  if (raw === 'en' || raw === 'tr') return raw;
+  const nav = (navigator.language || navigator.userLanguage || 'tr').toLowerCase();
+  return nav.startsWith('en') ? 'en' : 'tr';
+}
+
+function t(key) {
+  const lang = getLang();
+  return I18N[lang]?.[key] ?? I18N.tr[key] ?? key;
+}
+
+function setLang(lang) {
+  const next = lang === 'en' ? 'en' : 'tr';
+  localStorage.setItem(LANG_STORAGE_KEY, next);
+  applyLang(next);
+}
+
+function syncChronoHints(dict) {
+  Object.keys(chronos).forEach((id) => {
+    const state = chronos[id].state;
+    if (state === 'running') {
+      setHint(id, dict.hint_running, '#00e5ff');
+    } else if (state === 'paused') {
+      setHint(id, dict.hint_paused, '#ff3d71');
+    } else {
+      setHint(id, dict.hint_start, '#8a99ad');
+    }
+  });
+}
+
+function applyLang(lang) {
+  const dict = I18N[lang] || I18N.tr;
+  document.documentElement.lang = lang;
+  updateAirportLocationDisplay();
+
+  const topbarTitle = document.getElementById('topbarTitle');
+  if (topbarTitle) topbarTitle.textContent = dict.page_title;
+  document.title = `Refuel Assist v8.0.0 — ${dict.page_title}`;
+
+  const topbarSubtitle = document.getElementById('topbarSubtitle');
+  if (topbarSubtitle) topbarSubtitle.textContent = dict.page_subtitle;
+
+  const selectionTitle = document.getElementById('selectionTitle');
+  if (selectionTitle) selectionTitle.textContent = dict.selection_title;
+
+  const icaoInput = document.getElementById('icaoInput');
+  if (icaoInput) icaoInput.placeholder = dict.icao_placeholder;
+
+  const backBtn = document.querySelector('.topbar-back');
+  if (backBtn) backBtn.setAttribute('aria-label', dict.back_button);
+
+  const gpsBtn = document.getElementById('gpsBtn');
+  if (gpsBtn) {
+    gpsBtn.title = dict.gps_title;
+    gpsBtn.setAttribute('aria-label', dict.gps_title);
+  }
+
+  const fetchBtn = document.getElementById('fetchBtn');
+  if (fetchBtn) {
+    fetchBtn.title = dict.fetch_title;
+    fetchBtn.setAttribute('aria-label', dict.fetch_title);
+  }
+
+  const labelPressure = document.getElementById('label-pressure');
+  if (labelPressure) labelPressure.textContent = dict.label_pressure;
+
+  const labelAltitude = document.getElementById('label-altitude');
+  if (labelAltitude) labelAltitude.textContent = dict.label_altitude;
+
+  const labelTemp = document.getElementById('label-temp');
+  if (labelTemp) labelTemp.textContent = dict.label_temp;
+
+  const labelGmt = document.getElementById('label-gmt');
+  if (labelGmt) labelGmt.textContent = dict.label_gmt;
+
+  const labelMetarObs = document.getElementById('label-metar-obs');
+  if (labelMetarObs) labelMetarObs.textContent = dict.label_metar_obs;
+
+  const labelWind = document.getElementById('label-wind');
+  if (labelWind) labelWind.textContent = dict.label_wind;
+
+
+  const rawMetar = document.getElementById('rawMetar');
+  if (rawMetar) {
+    const currentText = rawMetar.textContent.trim();
+    const defaultHints = [I18N.tr.raw_metar_hint, I18N.en.raw_metar_hint, I18N.tr.loading_data, I18N.en.loading_data];
+    if (!currentText || defaultHints.includes(currentText)) {
+      rawMetar.textContent = dict.raw_metar_hint;
+    }
+  }
+
+  const tafSectionTitle = document.getElementById('tafSectionTitle');
+  if (tafSectionTitle) tafSectionTitle.textContent = dict.label_taf;
+
+  const rawTaf = document.getElementById('rawTaf');
+  if (rawTaf) {
+    const currentText = rawTaf.textContent.trim();
+    const defaultHints = [I18N.tr.raw_taf_hint, I18N.en.raw_taf_hint, I18N.tr.loading_data, I18N.en.loading_data];
+    if (!currentText || defaultHints.includes(currentText)) {
+      rawTaf.textContent = dict.raw_taf_hint;
+    }
+  }
+
+  updateTabButtons();
+
+  updateRawToggleText('metar');
+  updateRawToggleText('taf');
+
+  const chronoTitle = document.getElementById('chronoTitle');
+  if (chronoTitle) chronoTitle.textContent = dict.chrono_title;
+
+  const labelEng1 = document.getElementById('label-eng1');
+  if (labelEng1) labelEng1.textContent = dict.label_eng1;
+
+  const labelEng2 = document.getElementById('label-eng2');
+  if (labelEng2) labelEng2.textContent = dict.label_eng2;
+
+  const chronoInstructions = document.getElementById('chronoInstructions');
+  if (chronoInstructions) chronoInstructions.innerHTML = dict.chrono_instructions;
+
+  const footerNote = document.getElementById('footerNote');
+  if (footerNote) footerNote.textContent = dict.footer_note;
+
+  const langTrBtn = document.getElementById('lang-tr');
+  const langEnBtn = document.getElementById('lang-en');
+  if (langTrBtn) {
+    langTrBtn.classList.toggle('active', lang === 'tr');
+    langTrBtn.setAttribute('aria-pressed', String(lang === 'tr'));
+  }
+  if (langEnBtn) {
+    langEnBtn.classList.toggle('active', lang === 'en');
+    langEnBtn.setAttribute('aria-pressed', String(lang === 'en'));
+  }
+
+  syncChronoHints(dict);
+  applyCompassLang();
+}
+
+function parseCsvLine(line) {
+  const cols = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      cols.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  cols.push(current);
+  return cols;
+}
+
+async function loadAirportIndex() {
+  if (airportIndex) return airportIndex;
+  const response = await fetch(airportDataUrl);
+  if (!response.ok) {
+    throw new Error(t('error_airport_data_load'));
+  }
+  const list = await response.json();
+  airportIndex = {
+    byIata: {},
+    byIcao: {},
+    all: []
+  };
+  
+  for (let i = 0; i < list.length; i++) {
+    const entry = list[i];
+    
+    // Pre-calculate normalized values once on load for high-performance instant searching
+    entry._icaoNorm = normalizeText(entry.icao);
+    entry._iataNorm = entry.iata ? normalizeText(entry.iata) : '';
+    entry._nameNorm = normalizeText(entry.name);
+    entry._cityNorm = normalizeText(entry.city);
+    entry._countryNorm = normalizeText(entry.country);
+    
+    if (entry.iata) {
+      airportIndex.byIata[entry.iata] = entry;
+    }
+    airportIndex.byIcao[entry.icao] = entry;
+    airportIndex.all.push(entry);
+  }
+  return airportIndex;
+}
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function getLocationAndMatchAirport() {
+  hideAlert();
+  const isTr = getLang() === 'tr';
+  showLoading(isTr ? 'Cihaz konumu alınıyor...' : 'Retrieving device location...', 15);
+
+  if (!navigator.geolocation) {
+    updateLoadingStatus(isTr ? 'Konum servisleri desteklenmiyor...' : 'Location services not supported...', 30);
+    return getMetarData();
+  }
+
+  const gpsBtn = document.getElementById('gpsBtn');
+  if (gpsBtn) gpsBtn.disabled = true;
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          updateLoadingStatus(isTr ? 'Havalimanı veritabanı yükleniyor...' : 'Loading airport database...', 40);
+          const index = await loadAirportIndex();
+          
+          updateLoadingStatus(isTr ? 'En yakın havalimanı hesaplanıyor...' : 'Calculating nearest airport...', 60);
+          const uLat = position.coords.latitude;
+          const uLon = position.coords.longitude;
+          let nearest = null;
+          let minDistance = Infinity;
+          for (const airport of index.all) {
+            if (Number.isNaN(airport.lat) || Number.isNaN(airport.lon)) continue;
+            const dist = getDistance(uLat, uLon, airport.lat, airport.lon);
+            if (dist < minDistance) {
+              minDistance = dist;
+              nearest = airport;
+            }
+          }
+
+          if (!nearest) {
+            throw new Error(t('no_nearest_airport'));
+          }
+
+          updateLoadingStatus(isTr ? `${nearest.icao} havalimanı seçildi, veriler çekiliyor...` : `${nearest.icao} selected, fetching weather...`, 80);
+          document.getElementById('icaoInput').value = nearest.icao;
+          await getMetarData();
+          resolve();
+        } catch (error) {
+          hideLoading();
+          showAlert(error.message || t('error_data_unavailable'));
+          reject(error);
+        } finally {
+          if (gpsBtn) gpsBtn.disabled = false;
+        }
+      },
+      (error) => {
+        hideLoading();
+        showAlert(t('error_location_not_available'));
+        if (gpsBtn) gpsBtn.disabled = false;
+        reject(error);
+      },
+      { enableHighAccuracy: true, timeout: 6000 }
+    );
+  });
+}
+
+async function tryFetchText(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return await response.text();
+}
+
+function parseRawMetarText(text, icao, airportIndex) {
+  if (!text || !text.trim()) return null;
+  const originalLines = text
+    .trim()
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line);
+  
+  // Make a copy so reversing lines does not mutate originalLines which we use for parsing the NOAA timestamp header
+  const linesForSearch = [...originalLines];
+  
+  // NOAA METAR text files usually have the timestamp on the first line (e.g., 2026/06/06 08:20) and the METAR string on the second line.
+  // Let's find the correct METAR line containing the ICAO code and a 6-digit Zulu timestamp (e.g. 060820Z).
+  // Searching from the end of the lines ensuring we get the actual METAR line, not a generic header.
+  const candidateLine = linesForSearch.reverse().find((line) => line.includes(icao) && /\b\d{6}Z\b/.test(line));
+  const rawLine = candidateLine || linesForSearch.find((line) => /\b\d{6}Z\b/.test(line)) || linesForSearch[0];
+  if (!rawLine) return null;
+
+  const entry = airportIndex?.byIcao?.[icao] || null;
+  const current = {
+    raw_text: rawLine,
+    name: entry ? entry.name : icao,
+    city: entry ? entry.city : null,
+    country: entry ? entry.country : null,
+    elev: entry ? entry.elev : null,
+    temp: null,
+    altim: null,
+    wdir: null,
+    wspd: null,
+    obsTime: null
+  };
+
+  const windMatch = rawLine.match(/\b(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT\b/);
+  if (windMatch) {
+    current.wdir = windMatch[1] === 'VRB' ? 'VRB' : parseInt(windMatch[1], 10);
+    current.wspd = parseInt(windMatch[2], 10);
+  }
+
+  const tempMatch = rawLine.match(/\b(M?\d{2})\/(M?\d{2})\b/);
+  if (tempMatch) {
+    current.temp = tempMatch[1].startsWith('M') ? -parseInt(tempMatch[1].slice(1), 10) : parseInt(tempMatch[1], 10);
+  }
+
+  const altMatch = rawLine.match(/\bQ(\d{4})\b/);
+  if (altMatch) {
+    current.altim = parseInt(altMatch[1], 10);
+  } else {
+    const altMatch2 = rawLine.match(/\bA(\d{4})\b/);
+    if (altMatch2) {
+      const inches = parseInt(altMatch2[1], 10) / 100;
+      current.altim = Math.round(inches * 33.8639);
+    }
+  }
+
+  let parsedObsTime = null;
+
+  // 1. Try to parse from NOAA's timestamp line (e.g. "2026/05/11 14:50")
+  const headerLine = originalLines.find(line => /\b\d{4}\/\d{2}\/\d{2}\s+\d{2}:\d{2}\b/.test(line));
+  if (headerLine) {
+    const headerMatch = headerLine.match(/\b(\d{4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})\b/);
+    if (headerMatch) {
+      const yr = parseInt(headerMatch[1], 10);
+      const mo = parseInt(headerMatch[2], 10) - 1;
+      const dy = parseInt(headerMatch[3], 10);
+      const hr = parseInt(headerMatch[4], 10);
+      const mi = parseInt(headerMatch[5], 10);
+      parsedObsTime = Date.UTC(yr, mo, dy, hr, mi);
+    }
+  }
+
+  // 2. If header is missing or failed, fall back to parsing from rawLine's 6-digit Zulu timestamp (e.g. 111450Z)
+  if (!parsedObsTime) {
+    const timeMatch = rawLine.match(/\b(\d{2})(\d{2})(\d{2})Z\b/);
+    if (timeMatch) {
+      const now = new Date();
+      const day = parseInt(timeMatch[1], 10);
+      const hour = parseInt(timeMatch[2], 10);
+      const minute = parseInt(timeMatch[3], 10);
+      
+      let year = now.getUTCFullYear();
+      let month = now.getUTCMonth();
+      
+      let obsDate = new Date(Date.UTC(year, month, day, hour, minute));
+      if (obsDate > now) {
+        month--;
+        if (month < 0) {
+          month = 11;
+          year--;
+        }
+        obsDate = new Date(Date.UTC(year, month, day, hour, minute));
+      }
+      parsedObsTime = obsDate.getTime();
+    }
+  }
+
+  current.obsTime = parsedObsTime;
+  return current;
+}
+
+function getMetarAgeInfo(obsTime) {
+  if (!obsTime) return { text: '', color: '' };
+  const diffMs = Date.now() - obsTime;
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  
+  let text = '';
+  let color = '';
+  
+  const isTr = getLang() === 'tr';
+  
+  if (diffMins < 0) {
+    text = isTr ? '(şimdi)' : '(now)';
+    color = '#4caf50';
+  } else if (diffMins < 60) {
+    text = isTr ? `(${diffMins} dk önce)` : `(${diffMins}m ago)`;
+    color = '#00e5ff';
+  } else if (diffMins < 1440) {
+    const hours = Math.floor(diffMins / 60);
+    const mins = diffMins % 60;
+    const timeStr = mins > 0 
+      ? (isTr ? `${hours} sa ${mins} dk` : `${hours}h ${mins}m`)
+      : (isTr ? `${hours} sa` : `${hours}h`);
+    text = isTr ? `(${timeStr} önce)` : `(${timeStr} ago)`;
+    
+    if (hours < 2) {
+      color = '#00e5ff';
+    } else {
+      color = '#ffaa00';
+      text += isTr ? ' - ESKİ' : ' - STALE';
+    }
+  } else {
+    const days = Math.floor(diffMins / 1440);
+    text = isTr ? `(${days} gün önce - ESKİ!)` : `(${days}d ago - STALE!)`;
+    color = '#ff3d71';
+  }
+  
+  return { text, color };
+}
+
+function decodeMetarToHtml(rawLine, current) {
+  const isTr = getLang() === 'tr';
+  const grid = document.getElementById('decoderGrid');
+  if (!grid) return;
+
+  const items = [];
+
+  // 1. Station
+  items.push({
+    label: isTr ? 'İstasyon' : 'Station',
+    value: `${rawLine.split(' ')[0]} ${current.name ? '(' + current.name + ')' : ''}`
+  });
+
+  // Data Source
+  if (current.source) {
+    items.push({
+      label: isTr ? 'Veri Kaynağı' : 'Data Source',
+      value: current.source === 'MGM' ? 'MGM (Meteoroloji Genel Müdürlüğü)' : 'NOAA (National Oceanic and Administration)'
+    });
+  } else {
+    items.push({
+      label: isTr ? 'Veri Kaynağı' : 'Data Source',
+    });
+  }
+
+  // 2. Observation Time
+  if (current.obsTime) {
+    const d = new Date(current.obsTime);
+    const dateStr = d.toLocaleDateString(isTr ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) + ' UTC';
+    items.push({
+      label: isTr ? 'Gözlem Zamanı' : 'Observation Time',
+      value: dateStr
+    });
+  }
+
+  // 3. Wind
+  let windText = '';
+  const windDir = current.wdir;
+  const windSpeed = current.wspd;
+  if (windDir === 'VRB') {
+    windText = isTr 
+      ? `Değişken yönden ${windSpeed} KT hızında` 
+      : `Variable direction at ${windSpeed} KT`;
+  } else if (windSpeed != null) {
+    windText = isTr 
+      ? `${String(windDir).padStart(3, '0')}° yönden ${windSpeed} KT hızında` 
+      : `${String(windDir).padStart(3, '0')}° direction at ${windSpeed} KT`;
+  } else {
+    windText = isTr ? 'Sakin rüzgar' : 'Calm wind';
+  }
+
+  // Check wind gust or variability in rawLine
+  const gustMatch = rawLine.match(/\b\d{3}\d{2,3}G(\d{2,3})KT\b/);
+  if (gustMatch) {
+    const gustSpeed = parseInt(gustMatch[1], 10);
+    windText += isTr ? ` (Hamleli maks: ${gustSpeed} KT)` : ` (Gusting up to ${gustSpeed} KT)`;
+  }
+  const varMatch = rawLine.match(/\b(\d{3})V(\d{3})\b/);
+  if (varMatch) {
+    windText += isTr 
+      ? ` (${varMatch[1]}° ile ${varMatch[2]}° arasında değişken)` 
+      : ` (varying between ${varMatch[1]}° and ${varMatch[2]}°)`;
+  }
+  items.push({
+    label: isTr ? 'Rüzgâr' : 'Wind',
+    value: windText
+  });
+
+  // 4. Visibility / Clouds
+  let visText = '';
+  if (rawLine.includes('CAVOK')) {
+    visText = isTr 
+      ? 'CAVOK (Görüş 10 km veya üzeri, 5000 feet altında bulut yok, hava hadisesi yok)' 
+      : 'CAVOK (Visibility 10 km or more, no clouds below 5000 feet, no significant weather)';
+  } else {
+    const visMatch = rawLine.match(/\b(\d{4})\b/);
+    if (visMatch && parseInt(visMatch[1], 10) !== current.altim) {
+      const meters = parseInt(visMatch[1], 10);
+      if (meters === 9999) {
+        visText = isTr ? '10 km veya daha fazla görüş' : '10 km or more visibility';
+      } else {
+        visText = isTr ? `${meters} metre görüş` : `${meters} meters visibility`;
+      }
+    }
+  }
+  if (visText) {
+    items.push({
+      label: isTr ? 'Görüş / Gökyüzü' : 'Visibility / Sky',
+      value: visText
+    });
+  }
+
+  // 5. Temperature / Dewpoint
+  const tempMatch = rawLine.match(/\b(M?\d{2})\/(M?\d{2})\b/);
+  if (tempMatch) {
+    const tVal = tempMatch[1].startsWith('M') ? -parseInt(tempMatch[1].slice(1), 10) : parseInt(tempMatch[1], 10);
+    const dpVal = tempMatch[2].startsWith('M') ? -parseInt(tempMatch[2].slice(1), 10) : parseInt(tempMatch[2], 10);
+    items.push({
+      label: isTr ? 'Sıcaklık / Çiy Noktası' : 'Temp / Dew Point',
+      value: `OAT: ${tVal}°C | DP: ${dpVal}°C`
+    });
+  }
+
+  // 6. Pressure
+  if (current.altim != null) {
+    items.push({
+      label: isTr ? 'Basınç (QNH)' : 'Pressure (QNH)',
+      value: `${current.altim} hPa (mbar)`
+    });
+  }
+
+  // 7. Remarks
+  const rmkIndex = rawLine.indexOf('RMK');
+  if (rmkIndex !== -1) {
+    const rmkText = rawLine.substring(rmkIndex).trim();
+    items.push({
+      label: isTr ? 'Özel Açıklamalar' : 'Remarks',
+      value: rmkText
+    });
+  }
+
+  grid.innerHTML = items.map(item => `
+    <div class="decoder-item">
+      <div class="decoder-label">${item.label}</div>
+      <div class="decoder-value">${item.value}</div>
+    </div>
+  `).join('');
+}
+
+function toggleDecoderPanel() {
+  const content = document.getElementById('decoderContent');
+  const arrow = document.getElementById('decoderArrow');
+  if (content.style.display === 'none') {
+    content.style.display = 'block';
+    arrow.style.transform = 'rotate(180deg)';
+  } else {
+    content.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  }
+}
+
+function toggleDecoderContainer(type) {
+  const container = document.getElementById(`${type}DecoderContainer`);
+  if (!container) return;
+  const isVisible = container.style.display === 'block';
+  
+  const btn = document.getElementById(type === 'metar' ? 'tabMetarBtn' : 'tabTafBtn');
+  const panel = document.getElementById(type === 'metar' ? 'metarPanel' : 'tafPanel');
+  const rawToggle = document.getElementById(`${type}RawToggleContainer`);
+
+  if (isVisible) {
+    container.style.display = 'none';
+    if (btn) btn.classList.remove('active');
+    if (panel) panel.classList.remove('active');
+    if (rawToggle) rawToggle.style.display = 'none';
+  } else {
+    container.style.display = 'block';
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+    const rawText = document.getElementById(type === 'metar' ? 'rawMetar' : 'rawTaf').innerText.trim();
+    const defaultHints = [I18N.tr.raw_metar_hint, I18N.en.raw_metar_hint, I18N.tr.loading_data, I18N.en.loading_data, ''];
+    if (rawToggle && !defaultHints.includes(rawText)) {
+      rawToggle.style.display = 'block';
+    }
+  }
+  updateDecoderToggleText(type);
+  updateTabButtons();
+}
+
+function updateDecoderToggleText(type) {
+  const btnText = document.getElementById(`${type}DecoderToggleText`);
+  if (!btnText) return;
+  const container = document.getElementById(`${type}DecoderContainer`);
+  const isVisible = container && container.style.display === 'block';
+  btnText.textContent = isVisible ? t('label_decoder_hide') : t('label_decoder_show');
+  
+  const arrow = document.getElementById(`${type}DecoderToggleArrow`);
+  if (arrow) arrow.textContent = isVisible ? '▲' : '▼';
+}
+
+async function fetchLiveMetar(icao) {
+  const timestamp = Date.now();
+  const rawMetarUrl = `https://tgftp.nws.noaa.gov/data/observations/metar/stations/${icao}.TXT`;
+  const rawMetarUrlWithCacheBuster = `${rawMetarUrl}?t=${timestamp}`;
+  const sources = [
+    `${YOUR_WORKER_URL}/api/data/metar?ids=${icao}&format=raw`,
+    `${YOUR_WORKER_URL}/data/observations/metar/stations/${icao}.TXT?t=${timestamp}`,
+    rawMetarUrlWithCacheBuster,
+    `https://corsproxy.io/?${encodeURIComponent(rawMetarUrlWithCacheBuster)}`
+  ];
+
+  const indexPromise = loadAirportIndex().catch(() => null);
+
+  const fetchSource = async (source) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+
+    try {
+      const response = await fetch(source, { 
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const rawData = await response.text();
+      const index = await indexPromise;
+      const parsed = parseRawMetarText(rawData, icao, index);
+      if (!parsed) {
+        throw new Error('Geçerli METAR satırı bulunamadı.');
+      }
+      return parsed;
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  try {
+    const parsed = await Promise.any(sources.map(fetchSource));
+    return [parsed];
+  } catch (err) {
+    throw new Error('METAR verisi alınamadı. Lütfen internet bağlantınızı kontrol edin veya bir proxy deneyin.');
+  }
+}
+
+function parseRawTafText(text, icao) {
+  if (!text || !text.trim()) return null;
+  
+  // NOAA stations .TXT files usually look like this:
+  // 2024/05/11 12:20
+  // TAF LTFM 111140Z 1112/1218 ...
+  //   BECMG ...
+  //   TEMPO ...=
+  
+  // Clean the text and preserve original spacing for multi-line reports
+  const cleanText = text.trim();
+  
+  // If the text contains '=', it's likely a complete report that ends there.
+  // We want to capture everything from 'TAF [ICAO]' until the '=' or end of text.
+  const tafRegex = new RegExp(`(TAF\\s+${icao}[\\s\\S]*?)(?:=|$)`, 'i');
+  const match = cleanText.match(tafRegex);
+  
+  if (match && match[1]) {
+    // Remove extra newlines and leading spaces on subsequent lines to make it a clean block
+    return match[1].replace(/\r?\n\s*/g, ' ').trim();
+  }
+
+  // Fallback to old line-by-line if regex fails
+  const lines = cleanText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+  const tafLine = lines.find(line => line.includes(icao) && (line.startsWith('TAF') || line.includes(' TAF')));
+  
+  if (tafLine) return tafLine;
+  
+  const icaoLine = lines.find(line => line.startsWith(icao));
+  if (icaoLine) return icaoLine;
+
+  const lastLine = lines[lines.length - 1];
+  if (lastLine && lastLine.length > 10) return lastLine;
+
+  return null;
+}
+
+async function fetchLiveTaf(icao) {
+  const timestamp = Date.now();
+  const rawTafUrl = `https://tgftp.nws.noaa.gov/data/forecasts/taf/stations/${icao}.TXT`;
+  const rawTafUrlWithCacheBuster = `${rawTafUrl}?t=${timestamp}`;
+  const sources = [
+    `${YOUR_WORKER_URL}/api/data/taf?ids=${icao}&format=raw`,
+    `${YOUR_WORKER_URL}/data/forecasts/taf/stations/${icao}.TXT?t=${timestamp}`,
+    rawTafUrlWithCacheBuster,
+    `https://corsproxy.io/?${encodeURIComponent(rawTafUrlWithCacheBuster)}`
+  ];
+
+  const fetchSource = async (source) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+
+    try {
+      const response = await fetch(source, { 
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const rawData = await response.text();
+      const parsed = parseRawTafText(rawData, icao);
+      if (!parsed) {
+        throw new Error('Geçerli TAF satırı bulunamadı.');
+      }
+      return parsed;
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  try {
+    return await Promise.any(sources.map(fetchSource));
+  } catch (err) {
+    throw new Error('TAF verisi alınamadı.');
+  }
+}
+
+async function fetchFromMgmRasat(icao) {
+  const url = `https://rasat.mgm.gov.tr/result?stations=${icao}&obsType=1&obsType=2&hours=24`;
+  const sources = [
+    `${YOUR_WORKER_URL}/result?stations=${icao}&obsType=1&obsType=2&hours=24`,
+    `https://corsproxy.io/?${encodeURIComponent(url)}`
+  ];
+
+  const fetchSource = async (src) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+
+    try {
+      const response = await fetch(src, { 
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const html = await response.text();
+      const nextDataMatch = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+      if (!nextDataMatch) {
+        throw new Error("MGM verisi okunamadı.");
+      }
+      const data = JSON.parse(nextDataMatch[1]);
+      const responseList = data?.props?.pageProps?.response;
+      if (!responseList || responseList.length === 0) {
+        throw new Error("Boş veri.");
+      }
+      const stationData = responseList[0]?.data;
+      if (!stationData || stationData.length === 0) {
+        throw new Error("İstasyon verisi boş.");
+      }
+
+      const metarItem = stationData.find((item) => item.observationTypeExplanation === "SATU" || item.observationTypeExplanation === "SPTU");
+      const tafItem = stationData.find((item) => item.observationTypeExplanation === "FTTU" || item.observationTypeExplanation === "FCTU" || item.observationText?.startsWith("TAF"));
+
+      return {
+        metar: metarItem ? metarItem.observationText : null,
+        taf: tafItem ? tafItem.observationText : null,
+        stationName: responseList[0]?.istInfo?.name || null
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  return await Promise.any(sources.map(fetchSource));
+}
+
+function updateNetworkStatus() {
+  const offlineBanner = document.getElementById('offlineBanner');
+  const fetchBtn = document.getElementById('fetchBtn');
+  const gpsBtn = document.getElementById('gpsBtn');
+  const isOnline = navigator.onLine;
+
+  if (offlineBanner) {
+    offlineBanner.textContent = isOnline ? '' : t('offline_warning');
+    offlineBanner.classList.toggle('visible', !isOnline);
+  }
+
+  if (fetchBtn) fetchBtn.disabled = !isOnline;
+  if (gpsBtn) gpsBtn.disabled = !isOnline;
+}
+
+async function getMetarData() {
+  hideAlert();
+  const isTr = getLang() === 'tr';
+
+  if (!navigator.onLine) {
+    hideLoading();
+    showAlert(t('offline_warning'));
+    return;
+  }
+
+  let rawInput = document.getElementById('icaoInput').value.trim().toUpperCase();
+  if (!rawInput) {
+    hideLoading();
+    return;
+  }
+
+  // Eğer loading ekranı açık değilse açalım (manuel buton sorgularında)
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay && !overlay.classList.contains('show')) {
+    showLoading(isTr ? 'Meydan bilgileri işleniyor...' : 'Processing airport info...', 10);
+  }
+
+  let icao = rawInput;
+  if (rawInput.length === 3) {
+    try {
+      updateLoadingStatus(isTr ? 'IATA kodu çözümleniyor...' : 'Resolving IATA code...', 25);
+      const index = await loadAirportIndex();
+      const airport = index.byIata[rawInput];
+      if (!airport) {
+        hideLoading();
+        showAlert(t('error_airport_not_found'));
+        return;
+      }
+      icao = airport.icao;
+    } catch (error) {
+      hideLoading();
+      showAlert(error.message || 'IATA doğrulaması için havalimanı verisi alınamadı.');
+      return;
+    }
+  }
+
+  if (icao.length !== 4) {
+    hideLoading();
+    showAlert(t('error_invalid_code'));
+    return;
+  }
+
+  const fetchBtn = document.getElementById('fetchBtn');
+  if (fetchBtn) fetchBtn.disabled = true;
+  
+  document.getElementById('airportNameDisplay').innerText = t('loading');
+  document.getElementById('airportLocationDisplay').innerText = '';
+  document.getElementById('altVal').innerHTML = `--<span class="unit">Feet</span>`;
+  document.getElementById('tempVal').innerHTML = `--<span class="unit">°C</span>`;
+  document.getElementById('pressVal').innerHTML = `----<span class="unit">m/bar</span>`;
+  document.getElementById('windSpeedVal').innerHTML = `--<span class="unit">KT</span>`;
+  document.getElementById('windDirVal').innerText = `---°`;
+  document.getElementById('windArrow').style.opacity = '0.3';
+  document.getElementById('rawMetar').innerText = t('loading_data');
+  
+  const rawTaf = document.getElementById('rawTaf');
+  const tafSectionTitle = document.getElementById('tafSectionTitle');
+  if (rawTaf) {
+    rawTaf.innerText = t('loading_data');
+    rawTaf.style.display = 'none';
+  }
+  if (tafSectionTitle) {
+    tafSectionTitle.style.display = 'block';
+  }
+
+  const decoderContainer = document.getElementById('metarDecoderContainer');
+  if (decoderContainer) {
+    decoderContainer.style.display = 'none';
+  }
+  const tafDecoderContainer = document.getElementById('tafDecoderContainer');
+  if (tafDecoderContainer) {
+    tafDecoderContainer.style.display = 'none';
+  }
+  document.getElementById('metarRawToggleContainer').style.display = 'none';
+  document.getElementById('tafRawToggleContainer').style.display = 'none';
+
+  const metarBtn = document.getElementById('tabMetarBtn');
+  const tafBtn = document.getElementById('tabTafBtn');
+  const metarPanel = document.getElementById('metarPanel');
+  const tafPanel = document.getElementById('tafPanel');
+  if (metarBtn) metarBtn.classList.remove('active');
+  if (tafBtn) tafBtn.classList.remove('active');
+  if (metarPanel) metarPanel.classList.remove('active');
+  if (tafPanel) tafPanel.classList.remove('active');
+
+  let current = null;
+  let rawMetar = null;
+  let rawTafText = null;
+  let mgmData = null;
+
+  const isTurkishAirport = icao.startsWith('LT');
+
+  let metarSource = null;
+  let tafSource = null;
+
+  // Tüm istekleri paralel olarak başlatıyoruz
+  updateLoadingStatus(isTr ? 'Canlı hava durumu verileri çekiliyor (AWC/NOAA)...' : 'Fetching live weather data (AWC/NOAA)...', 50);
+  console.log(`[AWC/NOAA] Hava verileri paralel olarak çekiliyor (${icao})...`);
+  const noaaMetarPromise = fetchLiveMetar(icao).catch(() => null);
+  const noaaTafPromise = fetchLiveTaf(icao).catch(() => null);
+  const mgmPromise = isTurkishAirport ? fetchFromMgmRasat(icao).catch((err) => {
+    console.warn(`[MGM] MGM paralel servis hatası:`, err);
+    return null;
+  }) : Promise.resolve(null);
+
+  // İlk olarak son derece hızlı olan AWC (NOAA) verilerini çekip ekrana basıyoruz
+  try {
+    const [noaaMetar, noaaTaf] = await Promise.all([noaaMetarPromise, noaaTafPromise]);
+    if (noaaMetar && noaaMetar.length > 0) {
+      current = noaaMetar[0];
+      rawMetar = current.rawOb || current.raw_text || current.raw;
+      metarSource = 'NOAA';
+      current.source = metarSource;
+      console.log(`[AWC/NOAA] METAR başarıyla çekildi: ${rawMetar}`);
+    }
+    if (noaaTaf) {
+      rawTafText = noaaTaf;
+      tafSource = 'NOAA';
+      console.log(`[AWC/NOAA] TAF başarıyla çekildi: ${rawTafText}`);
+    }
+  } catch (err) {
+    console.warn(`[AWC/NOAA] Paralel veri çekme sırasında hata veya gecikme:`, err);
+  }
+
+  // Eğer AWC başarılı olduysa, kullanıcıyı bekletmemek için ara güncelleme yapıyoruz
+  if (current && rawMetar) {
+    updateLoadingStatus(isTr ? 'Veriler çözümleniyor ve ekran güncelleniyor...' : 'Decoding data and updating UI...', 75);
+    updateWeatherUI(current, rawMetar, rawTafText, metarSource, tafSource, icao);
+  }
+
+  // Türkiye havalimanı ise veya yabancı meydanda fallback gerekiyorsa MGM verisini arka planda bekleyip zenginleştiriyoruz
+  try {
+    if (isTurkishAirport) {
+      updateLoadingStatus(isTr ? 'Canlı MGM verileriyle zenginleştiriliyor...' : 'Enriching with live MGM data...', 85);
+    }
+    mgmData = await mgmPromise;
+    if (mgmData) {
+      console.log(`[MGM] MGM verisi başarıyla alındı ve zenginleştiriliyor...`);
+      if (mgmData.metar) {
+        const index = await loadAirportIndex().catch(() => null);
+        const parsedMgm = parseRawMetarText(mgmData.metar, icao, index);
+        if (parsedMgm) {
+          current = parsedMgm;
+          rawMetar = mgmData.metar;
+          metarSource = 'MGM';
+          current.source = metarSource;
+          if (mgmData.stationName) {
+            current.name = mgmData.stationName;
+          }
+        }
+      }
+      if (mgmData.taf) {
+        rawTafText = mgmData.taf;
+        tafSource = 'MGM';
+      }
+      
+      // MGM verisiyle ekranı nihai/zenginleştirilmiş haliyle güncelliyoruz
+      if (current && rawMetar) {
+        updateWeatherUI(current, rawMetar, rawTafText, metarSource, tafSource, icao);
+      }
+    }
+  } catch (mgmErr) {
+    console.warn(`[MGM] MGM paralel zenginleştirme tamamlanamadı:`, mgmErr);
+  }
+
+  // Eğer hiçbir yerden veri çekilemediyse kullanıcıya hata gösterelim
+  if (!current || !rawMetar) {
+    hideLoading();
+    showAlert(t('error_no_metar_line'));
+  } else {
+    updateLoadingStatus(isTr ? 'Yükleme tamamlandı!' : 'Load completed!', 100);
+    setTimeout(hideLoading, 300);
+  }
+  if (fetchBtn) fetchBtn.disabled = false;
+}
+
+function updateWeatherUI(current, rawMetar, rawTafText, metarSource, tafSource, icao) {
+  const decoderContainer = document.getElementById('metarDecoderContainer');
+  const rawTaf = document.getElementById('rawTaf');
+
+  try {
+    if (!current || !rawMetar) {
+      throw new Error(t('error_no_metar_line'));
+    }
+
+    const airportName = current.name || icao;
+    const elevationFeet = current.elev != null ? Math.round(current.elev) : '----';
+    const temperature = current.temp != null ? Math.round(current.temp) : '--';
+    const pressure = current.altim != null ? Math.round(current.altim) : '----';
+    const windDir = current.wdir != null ? current.wdir : 0;
+    const windSpeed = current.wspd != null ? Math.round(current.wspd) : 0;
+
+    let metarGmtTime = '--:--';
+    if (current.obsTime) {
+      const obsDate = new Date(current.obsTime);
+      if (!Number.isNaN(obsDate.getTime())) {
+        metarGmtTime = `${String(obsDate.getUTCHours()).padStart(2, '0')}:${String(obsDate.getUTCMinutes()).padStart(2, '0')}Z`;
+      }
+    }
+
+    document.getElementById('airportNameDisplay').innerText = airportName;
+    const locationDisplay = document.getElementById('airportLocationDisplay');
+    if (locationDisplay) {
+      const localizedCountry = localizeCountryName(current.country, getLang());
+      locationDisplay.innerText = current.city && localizedCountry ? `${current.city}, ${localizedCountry}` : current.city || localizedCountry || '';
+    }
+    document.getElementById('altVal').innerHTML = `${elevationFeet}<span class="unit">Feet</span>`;
+    document.getElementById('tempVal').innerHTML = `${temperature}<span class="unit">°C</span>`;
+    document.getElementById('pressVal').innerHTML = `${pressure}<span class="unit">m/bar</span>`;
+    
+    const metarTimeVal = document.getElementById('metarTimeVal');
+    if (metarTimeVal) {
+      const ageInfo = getMetarAgeInfo(current.obsTime);
+      if (ageInfo.text) {
+        metarTimeVal.innerHTML = `${metarGmtTime} <span style="color: ${ageInfo.color}; font-weight: bold; margin-left: 4px;">${ageInfo.text}</span>`;
+      } else {
+        metarTimeVal.textContent = metarGmtTime;
+      }
+    }
+    const metarObsContainer = document.getElementById('metarObsContainer');
+    if (metarObsContainer) {
+      metarObsContainer.style.display = 'block';
+    }
+
+    const formattedDir = windDir === 'VRB' ? 'VRB' : (windDir === 0 ? 'VRB' : String(windDir).padStart(3, '0'));
+    document.getElementById('windSpeedVal').innerHTML = `${windSpeed}<span class="unit">KT</span>`;
+    document.getElementById('windDirVal').innerText = formattedDir === 'VRB' ? 'VRB' : `${formattedDir}°`;
+    if (windDir !== 'VRB' && windDir !== 0) {
+      document.getElementById('windArrow').style.transform = `rotate(${windDir + 180}deg)`;
+      document.getElementById('windArrow').style.opacity = '1';
+    } else {
+      document.getElementById('windArrow').style.transform = 'rotate(0deg)';
+      document.getElementById('windArrow').style.opacity = '0.3';
+    }
+
+    document.getElementById('rawMetar').innerText = rawMetar;
+    document.getElementById('rawMetar').style.display = 'none';
+    const isMetarActive = document.getElementById('tabMetarBtn').classList.contains('active');
+    document.getElementById('metarRawToggleContainer').style.display = isMetarActive ? 'block' : 'none';
+    updateRawToggleText('metar');
+
+    if (decoderContainer) {
+      decoderContainer.style.display = isMetarActive ? 'block' : 'none';
+      decodeMetarToHtml(rawMetar, current);
+    }
+
+    // Update Engine Test Compass & Brake Area
+    updateEngineCompass(windDir, windSpeed, icao);
+    updateBrakeArea(windDir, windSpeed, icao);
+  } catch (error) {
+    console.error(error);
+    showAlert(error.message || t('error_data_connection'));
+    document.getElementById('rawMetar').innerText = error.message || t('error_data_unavailable');
+    if (decoderContainer) {
+      decoderContainer.style.display = 'none';
+    }
+  }
+
+  if (rawTaf) {
+    if (rawTafText) {
+      rawTaf.innerText = rawTafText;
+      rawTaf.style.display = 'none';
+      const isTafActive = document.getElementById('tabTafBtn').classList.contains('active');
+      document.getElementById('tafRawToggleContainer').style.display = isTafActive ? 'block' : 'none';
+      updateRawToggleText('taf');
+      
+      const tafDecoderContainer = document.getElementById('tafDecoderContainer');
+      if (tafDecoderContainer) {
+        tafDecoderContainer.style.display = isTafActive ? 'block' : 'none';
+        decodeTafToHtml(rawTafText, tafSource);
+      }
+    } else {
+      rawTaf.innerText = t('error_taf_fetch');
+      rawTaf.style.display = 'none';
+      document.getElementById('tafRawToggleContainer').style.display = 'block';
+      updateRawToggleText('taf');
+    }
+  }
+}
+
+function setupChronoEvents(id) {
+  const box = document.getElementById(`chrono-${id}`);
+  const progress = document.getElementById(`progress-${id}`);
+  const chrono = chronos[id];
+  let pressTimer = null;
+  let progressFrame = null;
+  let pressStart = 0;
+
+  box.addEventListener('click', function(e) {
+    if (chrono.ignoreClick) {
+      chrono.ignoreClick = false;
+      return;
+    }
+
+    if (chrono.state === 'stopped') {
+      startChrono(id);
+    } else if (chrono.state === 'running') {
+      pauseChrono(id);
+    } else if (chrono.state === 'paused') {
+      startChrono(id);
+    }
+  });
+
+  const updateProgress = (timestamp) => {
+    if (!pressStart) return;
+    const progressRatio = Math.min((Date.now() - pressStart) / 1000, 1);
+    progress.style.width = `${progressRatio * 100}%`;
+    if (progressRatio < 1) {
+      progressFrame = requestAnimationFrame(updateProgress);
+    }
+  };
+
+  const cancelPress = () => {
+    clearTimeout(pressTimer);
+    pressTimer = null;
+    pressStart = 0;
+    progress.style.width = '0';
+    if (progressFrame) {
+      cancelAnimationFrame(progressFrame);
+      progressFrame = null;
+    }
+  };
+
+  const startPress = (e) => {
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    cancelPress();
+    pressStart = Date.now();
+    progress.style.width = '0';
+    progressFrame = requestAnimationFrame(updateProgress);
+    pressTimer = setTimeout(() => {
+      resetChrono(id);
+      chrono.ignoreClick = true;
+      cancelPress();
+    }, 1000);
+  };
+
+  box.addEventListener('mousedown', startPress);
+  box.addEventListener('mouseup', cancelPress);
+  box.addEventListener('mouseleave', cancelPress);
+  box.addEventListener('touchstart', startPress, { passive: true });
+  box.addEventListener('touchend', cancelPress, { passive: true });
+  box.addEventListener('touchcancel', cancelPress, { passive: true });
+}
+
+function resetChrono(id) {
+  const chrono = chronos[id];
+  const box = document.getElementById(`chrono-${id}`);
+  clearInterval(chrono.timer);
+  chrono.timer = null;
+  chrono.elapsed = 0;
+  chrono.state = 'stopped';
+  chrono.startTime = 0;
+  chrono.ignoreClick = true;
+  box.classList.remove('active');
+  document.getElementById(`display-${id}`).innerText = '00:00:00';
+  document.getElementById(`progress-${id}`).style.width = '0';
+  setHint(id, t('hint_start'), '#8a99ad');
+  if (navigator.vibrate) navigator.vibrate(50);
+}
+
+function startChrono(id) {
+  const box = document.getElementById(`chrono-${id}`);
+  const chrono = chronos[id];
+  chrono.state = 'running';
+  box.classList.add('active');
+  setHint(id, t('hint_running'), '#00e5ff');
+  chrono.startTime = Date.now() - chrono.elapsed;
+  chrono.timer = setInterval(() => {
+    chrono.elapsed = Date.now() - chrono.startTime;
+    updateChronoDisplay(id);
+  }, 40);
+}
+
+function pauseChrono(id) {
+  const box = document.getElementById(`chrono-${id}`);
+  const chrono = chronos[id];
+  chrono.state = 'paused';
+  clearInterval(chrono.timer);
+  chrono.timer = null;
+  box.classList.remove('active');
+  setHint(id, t('hint_paused'), '#ff3d71');
+}
+
+function setHint(id, text, color) {
+  const hint = document.getElementById(`hint-${id}`);
+  hint.innerText = text;
+  hint.style.color = color;
+}
+
+function updateChronoDisplay(id) {
+  const elapsed = chronos[id].elapsed;
+  const totalSeconds = Math.floor(elapsed / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  const centiseconds = String(Math.floor((elapsed % 1000) / 10)).padStart(2, '0');
+  document.getElementById(`display-${id}`).innerText = `${minutes}:${seconds}:${centiseconds}`;
+}
+
+function openChronoOverlay() {
+  document.getElementById('chronoOverlay').classList.add('show');
+  document.getElementById('openChronoBtn')?.blur();
+}
+
+function closeChronoOverlay() {
+  document.getElementById('chronoOverlay').classList.remove('show');
+}
+
+// Normalizes search terms for locale-insensitive (including Turkish) matching
+function normalizeText(text) {
+  if (!text) return '';
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // remove diacritics
+    .replace(/ı/g, 'i')
+    .replace(/ş/g, 's')
+    .replace(/ğ/g, 'g')
+    .replace(/ç/g, 'c')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o');
+}
+
+let activeSuggestionIndex = -1;
+
+function setupAutocomplete() {
+  const input = document.getElementById('icaoInput');
+  const dropdown = document.getElementById('suggestionsDropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', async function() {
+    const val = this.value.trim();
+    activeSuggestionIndex = -1;
+    if (val.length < 2) {
+      dropdown.innerHTML = '';
+      dropdown.style.display = 'none';
+      return;
+    }
+
+    try {
+      const index = await loadAirportIndex();
+      const searchNormalized = normalizeText(val);
+      
+      const matches = [];
+      for (const airport of index.all) {
+        if (
+          airport._icaoNorm.includes(searchNormalized) ||
+          airport._iataNorm.includes(searchNormalized) ||
+          airport._nameNorm.includes(searchNormalized) ||
+          airport._cityNorm.includes(searchNormalized) ||
+          airport._countryNorm.includes(searchNormalized)
+        ) {
+          // Scoring to prioritize exact and prefix matches
+          let score = 0;
+          if (airport._icaoNorm === searchNormalized || airport._iataNorm === searchNormalized) score = 10;
+          else if (airport._icaoNorm.startsWith(searchNormalized) || airport._iataNorm.startsWith(searchNormalized)) score = 8;
+          else if (airport._cityNorm.startsWith(searchNormalized)) score = 6;
+          else if (airport._nameNorm.startsWith(searchNormalized)) score = 4;
+          else score = 1;
+
+          matches.push({ airport, score });
+        }
+      }
+
+      // Sort by score descending
+      matches.sort((a, b) => b.score - a.score);
+      const limit = matches.slice(0, 8).map(m => m.airport);
+
+      if (limit.length === 0) {
+        dropdown.innerHTML = '';
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      // Render suggestions
+      dropdown.innerHTML = limit.map((airport, idx) => {
+        const codesStr = airport.iata ? `${airport.icao} / ${airport.iata}` : airport.icao;
+        const locationStr = airport.city && airport.country 
+          ? `${airport.city}, ${localizeCountryName(airport.country, getLang())}` 
+          : (airport.city || localizeCountryName(airport.country, getLang()) || '');
+          
+        return `
+          <div class="suggestion-item" data-index="${idx}" data-icao="${airport.icao}">
+            <span class="suggestion-codes">${codesStr}</span>
+            <div class="suggestion-info">
+              <span class="suggestion-name">${airport.name}</span>
+              <span class="suggestion-location">${locationStr}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      dropdown.style.display = 'block';
+
+      // Mouse click selection
+      const items = dropdown.querySelectorAll('.suggestion-item');
+      items.forEach(item => {
+        item.addEventListener('mousedown', function(e) {
+          e.preventDefault(); 
+          selectAirport(this.getAttribute('data-icao'));
+        });
+      });
+
+    } catch (err) {
+      console.error('Autocomplete error:', err);
+    }
+  });
+
+  // Keyboard navigation (Arrow keys, Enter, Escape)
+  input.addEventListener('keydown', function(e) {
+    const items = dropdown.querySelectorAll('.suggestion-item');
+    if (dropdown.style.display !== 'block' || items.length === 0) {
+      if (e.key === 'Enter') {
+        getMetarData();
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeSuggestionIndex = (activeSuggestionIndex + 1) % items.length;
+      updateActiveSuggestion(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeSuggestionIndex = (activeSuggestionIndex - 1 + items.length) % items.length;
+      updateActiveSuggestion(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggestionIndex >= 0 && activeSuggestionIndex < items.length) {
+        selectAirport(items[activeSuggestionIndex].getAttribute('data-icao'));
+      } else if (items.length > 0) {
+        selectAirport(items[0].getAttribute('data-icao'));
+      }
+    } else if (e.key === 'Escape') {
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // Blur hide
+  input.addEventListener('blur', function() {
+    setTimeout(() => {
+      dropdown.style.display = 'none';
+    }, 200);
+  });
+
+  // Focus re-trigger
+  input.addEventListener('focus', function() {
+    if (this.value.trim().length >= 2) {
+      const event = new Event('input');
+      this.dispatchEvent(event);
+    }
+  });
+}
+
+function updateActiveSuggestion(items) {
+  items.forEach((item, idx) => {
+    if (idx === activeSuggestionIndex) {
+      item.classList.add('active');
+      item.scrollIntoView({ block: 'nearest' });
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+function selectAirport(icao) {
+  const input = document.getElementById('icaoInput');
+  const dropdown = document.getElementById('suggestionsDropdown');
+  if (input) {
+    input.value = icao;
+    dropdown.style.display = 'none';
+    getMetarData();
+  }
+}
+
+document.getElementById('chronoOverlay')?.addEventListener('click', function (e) {
+  if (e.target === this) closeChronoOverlay();
+});
+
+function updateTabButtons() {
+  const metarBtn = document.getElementById('tabMetarBtn');
+  if (metarBtn) {
+    const isTr = getLang() === 'tr';
+    const label = isTr ? I18N.tr.tab_metar : I18N.en.tab_metar;
+    const isMetarActive = metarBtn.classList.contains('active');
+    metarBtn.innerHTML = `${label} <span class="tab-arrow" style="font-size: 10px; margin-left: 2px; opacity: 0.85; transition: transform 0.2s ease; display: inline-block; transform: ${isMetarActive ? 'rotate(180deg)' : 'rotate(0deg)'};">▼</span>`;
+  }
+
+  const tafBtn = document.getElementById('tabTafBtn');
+  if (tafBtn) {
+    const isTr = getLang() === 'tr';
+    const label = isTr ? I18N.tr.tab_taf : I18N.en.tab_taf;
+    const isTafActive = tafBtn.classList.contains('active');
+    tafBtn.innerHTML = `${label} <span class="tab-arrow" style="font-size: 10px; margin-left: 2px; opacity: 0.85; transition: transform 0.2s ease; display: inline-block; transform: ${isTafActive ? 'rotate(180deg)' : 'rotate(0deg)'};">▼</span>`;
+  }
+}
+
+function switchTab(tab) {
+  const metarBtn = document.getElementById('tabMetarBtn');
+  const tafBtn = document.getElementById('tabTafBtn');
+  const metarPanel = document.getElementById('metarPanel');
+  const tafPanel = document.getElementById('tafPanel');
+  const metarDecoder = document.getElementById('metarDecoderContainer');
+  const tafDecoder = document.getElementById('tafDecoderContainer');
+  const metarRawToggle = document.getElementById('metarRawToggleContainer');
+  const tafRawToggle = document.getElementById('tafRawToggleContainer');
+
+  if (tab === 'metar') {
+    const isActive = metarBtn.classList.contains('active');
+    if (isActive) {
+      metarBtn.classList.remove('active');
+      metarPanel.classList.remove('active');
+      if (metarDecoder) metarDecoder.style.display = 'none';
+      if (metarRawToggle) metarRawToggle.style.display = 'none';
+    } else {
+      metarBtn.classList.add('active');
+      metarPanel.classList.add('active');
+      if (metarDecoder) metarDecoder.style.display = 'block';
+      const rawText = document.getElementById('rawMetar').innerText.trim();
+      const defaultHints = [I18N.tr.raw_metar_hint, I18N.en.raw_metar_hint, I18N.tr.loading_data, I18N.en.loading_data, ''];
+      if (metarRawToggle && !defaultHints.includes(rawText)) {
+        metarRawToggle.style.display = 'block';
+      }
+
+      // Close TAF (mutually exclusive)
+      tafBtn.classList.remove('active');
+      tafPanel.classList.remove('active');
+      if (tafDecoder) tafDecoder.style.display = 'none';
+      if (tafRawToggle) tafRawToggle.style.display = 'none';
+    }
+  } else if (tab === 'taf') {
+    const isActive = tafBtn.classList.contains('active');
+    if (isActive) {
+      tafBtn.classList.remove('active');
+      tafPanel.classList.remove('active');
+      if (tafDecoder) tafDecoder.style.display = 'none';
+      if (tafRawToggle) tafRawToggle.style.display = 'none';
+    } else {
+      tafBtn.classList.add('active');
+      tafPanel.classList.add('active');
+      if (tafDecoder) tafDecoder.style.display = 'block';
+      const rawText = document.getElementById('rawTaf').innerText.trim();
+      const defaultHints = [I18N.tr.raw_taf_hint, I18N.en.raw_taf_hint, I18N.tr.loading_data, I18N.en.loading_data, ''];
+      if (tafRawToggle && !defaultHints.includes(rawText)) {
+        tafRawToggle.style.display = 'block';
+      }
+
+      // Close METAR (mutually exclusive)
+      metarBtn.classList.remove('active');
+      metarPanel.classList.remove('active');
+      if (metarDecoder) metarDecoder.style.display = 'none';
+      if (metarRawToggle) metarRawToggle.style.display = 'none';
+    }
+  }
+  updateTabButtons();
+}
+
+function toggleRawData(type) {
+  const box = document.getElementById(`raw${type === 'metar' ? 'Metar' : 'Taf'}`);
+  if (box.style.display === 'none' || box.style.display === '') {
+    box.style.display = 'block';
+  } else {
+    box.style.display = 'none';
+  }
+  updateRawToggleText(type);
+}
+
+function updateRawToggleText(type) {
+  const btnText = document.getElementById(`${type}RawToggleText`);
+  if (!btnText) return;
+  const box = document.getElementById(`raw${type === 'metar' ? 'Metar' : 'Taf'}`);
+  const isVisible = box && box.style.display === 'block';
+  btnText.textContent = isVisible ? t('label_raw_hide') : t('label_raw_show');
+  
+  const arrow = document.getElementById(`${type}RawToggleArrow`);
+  if (arrow) arrow.textContent = isVisible ? '▲' : '▼';
+}
+
+function parseTafDate(dayStr, hourStr, minStr, baseDate) {
+  const day = parseInt(dayStr, 10);
+  const hour = parseInt(hourStr, 10);
+  const min = minStr ? parseInt(minStr, 10) : 0;
+  
+  let year = baseDate.getUTCFullYear();
+  let month = baseDate.getUTCMonth();
+  
+  // Eğer gün şimdikinden çok büyükse (örneğin bugün ayın 2'si ama TAF 30'u için) bir önceki aydır
+  if (day > baseDate.getUTCDate() + 15) {
+    month--;
+    if (month < 0) {
+      month = 11;
+      year--;
+    }
+  } else if (day < baseDate.getUTCDate() - 15) {
+    // Sonraki ay
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+  
+  return new Date(Date.UTC(year, month, day, hour, min));
+}
+
+function parseTafGroup(tokens, baseDate) {
+  const group = {
+    raw: tokens.join(' '),
+    type: 'BASE',
+    probVal: null,
+    start: null,
+    end: null,
+    wind: null,
+    vis: null,
+    sky: null,
+    weather: []
+  };
+
+  let i = 0;
+  if (tokens[i] === 'BECMG' || tokens[i] === 'TEMPO') {
+    group.type = tokens[i];
+    i++;
+  } else if (tokens[i] && tokens[i].startsWith('PROB')) {
+    group.type = 'PROB';
+    group.probVal = tokens[i].replace('PROB', '') + '%';
+    i++;
+    if (tokens[i] === 'TEMPO') i++;
+  } else if (tokens[i] && tokens[i].startsWith('FM')) {
+    group.type = 'FM';
+    const fmMatch = tokens[i].match(/^FM(\d{2})(\d{2})(\d{2})$/);
+    if (fmMatch) {
+      group.start = parseTafDate(fmMatch[1], fmMatch[2], fmMatch[3], baseDate);
+      group.end = new Date(group.start.getTime() + 24 * 60 * 60 * 1000); // Varsayılan bitiş çok ileri
+    }
+    i++;
+  }
+
+  for (; i < tokens.length; i++) {
+    const token = tokens[i];
+
+    const timeMatch = token.match(/^(\d{2})(\d{2})\/(\d{2})(\d{2})$/);
+    if (timeMatch) {
+      group.start = parseTafDate(timeMatch[1], timeMatch[2], null, baseDate);
+      // Bitiş saat 24 ise bir sonraki gün 00:00 demektir
+      let endH = parseInt(timeMatch[4], 10);
+      let endD = parseInt(timeMatch[3], 10);
+      if (endH === 24) {
+        endH = 0;
+        group.end = parseTafDate(endD.toString(), '0', null, baseDate);
+        group.end = new Date(group.end.getTime() + 24 * 60 * 60 * 1000);
+      } else {
+        group.end = parseTafDate(endD.toString(), endH.toString(), null, baseDate);
+      }
+      continue;
+    }
+
+    const windMatch = token.match(/^(VRB|\d{3})(\d{2,3})(G(\d{2,3}))?KT$/);
+    if (windMatch) {
+      group.wind = {
+        dir: windMatch[1],
+        speed: parseInt(windMatch[2], 10),
+        gust: windMatch[4] ? parseInt(windMatch[4], 10) : null
+      };
+      continue;
+    }
+
+    if (token === 'CAVOK') {
+      group.vis = 'CAVOK';
+      group.sky = 'CAVOK';
+      continue;
+    }
+    const visMatch = token.match(/^(\d{4})$/);
+    if (visMatch) {
+      group.vis = parseInt(visMatch[1], 10);
+      continue;
+    }
+
+    const cloudMatch = token.match(/^(FEW|SCT|BKN|OVC|NSC|SKC)(\d{3})?(CB|TCU)?$/);
+    if (cloudMatch) {
+      if (!group.sky) group.sky = [];
+      if (group.sky === 'CAVOK') group.sky = []; // Override CAVOK with specific clouds if any
+      group.sky.push({
+        type: cloudMatch[1],
+        height: cloudMatch[2] ? parseInt(cloudMatch[2], 10) * 100 : 0,
+        convective: cloudMatch[3] || null
+      });
+      continue;
+    }
+
+    const weatherRegex = /^(\+|-|VC)?(MI|BC|PR|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|PL|GR|GS|UP|BR|FG|FU|VA|DU|SA|HZ|PY|SQ|FC|SS|DS)$/;
+    const wxMatch = token.match(weatherRegex);
+    if (wxMatch) {
+      group.weather.push({
+        intensity: wxMatch[1] || '',
+        descriptor: wxMatch[2] || '',
+        phenomenon: wxMatch[3] || ''
+      });
+      continue;
+    }
+  }
+  return group;
+}
+
+function formatWind(wind, isTr) {
+  if (!wind) return null;
+  let text = '';
+  if (wind.dir === 'VRB') {
+    text = isTr ? `Değişken yönden ${wind.speed} KT` : `Variable at ${wind.speed} KT`;
+  } else {
+    text = isTr ? `${wind.dir}° yönden ${wind.speed} KT` : `${wind.dir}° direction at ${wind.speed} KT`;
+  }
+  if (wind.gust) {
+    text += isTr ? ` (Hamleli maks: ${wind.gust} KT)` : ` (Gusting up to ${wind.gust} KT)`;
+  }
+  return text;
+}
+
+function areWindsEqual(w1, w2) {
+  if (!w1 && !w2) return true;
+  if (!w1 || !w2) return false;
+  return w1.dir === w2.dir && w1.speed === w2.speed && w1.gust === w2.gust;
+}
+
+function formatSky(sky, isTr) {
+  if (!sky) return null;
+  if (sky === 'CAVOK') return isTr ? 'Bulut yok (5000 FT altı)' : 'No clouds below 5000 FT';
+  if (Array.isArray(sky) && sky.length > 0) {
+    return sky.map(c => {
+      let desc = '';
+      if (c.type === 'FEW') desc = isTr ? 'Az Bulutlu' : 'Few Clouds';
+      else if (c.type === 'SCT') desc = isTr ? 'Parçalı Bulutlu' : 'Scattered Clouds';
+      else if (c.type === 'BKN') desc = isTr ? 'Çok Bulutlu' : 'Broken Clouds';
+      else if (c.type === 'OVC') desc = isTr ? 'Kapalı Gökyüzü' : 'Overcast';
+      else if (c.type === 'NSC') desc = isTr ? 'Önemli Bulut Yok' : 'No Significant Clouds';
+      else if (c.type === 'SKC') desc = isTr ? 'Açık Gökyüzü' : 'Clear Sky';
+      
+      const conv = c.convective ? ` (${c.convective})` : '';
+      return c.height > 0 ? `${desc} @ ${c.height} FT${conv}` : desc;
+    }).join(', ');
+  }
+  return null;
+}
+
+function formatVis(vis, isTr) {
+  if (vis === null) return null;
+  if (vis === 'CAVOK') return isTr ? 'CAVOK (10 km+ Görüş)' : 'CAVOK (10 km+ Visibility)';
+  if (vis === 9999) return isTr ? '10 km veya üzeri' : '10 km or more';
+  return isTr ? `${vis} metre` : `${vis} meters`;
+}
+
+function formatWeather(wxList, isTr) {
+  if (!wxList || wxList.length === 0) return null;
+  return wxList.map(wx => {
+    let intText = '';
+    if (wx.intensity === '-') intText = isTr ? 'Hafif ' : 'Light ';
+    else if (wx.intensity === '+') intText = isTr ? 'Kuvvetli ' : 'Heavy ';
+    else if (wx.intensity === 'VC') intText = isTr ? 'Çevrede ' : 'In vicinity ';
+
+    let descText = '';
+    if (wx.descriptor === 'SH') descText = isTr ? 'Sağanak ' : 'Showers of ';
+    else if (wx.descriptor === 'TS') descText = isTr ? 'Gök Gürültülü ' : 'Thunderstorm with ';
+    else if (wx.descriptor === 'FZ') descText = isTr ? 'Dondurucu ' : 'Freezing ';
+
+    let phenText = wx.phenomenon;
+    if (wx.phenomenon === 'RA') phenText = isTr ? 'Yağmur' : 'Rain';
+    else if (wx.phenomenon === 'DZ') phenText = isTr ? 'Çiseleme' : 'Drizzle';
+    else if (wx.phenomenon === 'SN') phenText = isTr ? 'Kar' : 'Snow';
+    else if (wx.phenomenon === 'FG') phenText = isTr ? 'Sis' : 'Fog';
+    else if (wx.phenomenon === 'BR') phenText = isTr ? 'Pus' : 'Mist';
+    else if (wx.phenomenon === 'HZ') phenText = isTr ? 'Pus / Kuru Pus' : 'Haze';
+    else if (wx.phenomenon === 'TS') phenText = isTr ? 'Fırtına' : 'Thunderstorm';
+    else if (wx.phenomenon === 'GR') phenText = isTr ? 'Dolu' : 'Hail';
+    
+    return `${intText}${descText}${phenText}`;
+  }).join(', ');
+}
+
+function isWeatherEqual(s1, s2) {
+  return JSON.stringify(s1) === JSON.stringify(s2);
+}
+
+function decodeTafToHtml(rawTafText, source) {
+  const isTr = getLang() === 'tr';
+  const grid = document.getElementById('tafDecoderGrid');
+  if (!grid) return;
+
+  if (!rawTafText || rawTafText.trim() === '') {
+    grid.innerHTML = `<div style="text-align: center; color: var(--muted); padding: 20px;">${t('error_data_unavailable')}</div>`;
+    return;
+  }
+
+  const tokens = rawTafText.replace(/\s+/g, ' ').trim().split(' ');
+  const groups = [];
+  let currentTokens = [];
+  
+  const baseDate = new Date();
+
+  // Tokenization
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token === 'TAF' || token === 'COR' || token === 'AMD' || token === 'NIL') continue;
+    
+    // Group start markers
+    if (token === 'BECMG' || token === 'TEMPO' || token.startsWith('PROB') || token.startsWith('FM')) {
+      if (currentTokens.length > 0) {
+        groups.push(parseTafGroup(currentTokens, baseDate));
+      }
+      currentTokens = [token];
+    } else {
+      currentTokens.push(token);
+    }
+  }
+  if (currentTokens.length > 0) {
+    groups.push(parseTafGroup(currentTokens, baseDate));
+  }
+
+  if (groups.length === 0) return;
+
+  let html = '<div style="display: flex; flex-direction: column; text-align: left;">';
+  let linesEmitted = 0;
+  let lastWind = null;
+
+  groups.forEach((group, idx) => {
+    // Only display wind information
+    if (!group.wind) {
+      return;
+    }
+
+    if (areWindsEqual(group.wind, lastWind)) {
+      return;
+    }
+
+    lastWind = group.wind;
+
+    // Determine the title of the group based on its type
+    let groupTitle = '';
+    if (group.type === 'BASE') {
+      groupTitle = isTr ? 'Ana Tahmin' : 'Base Forecast';
+    } else if (group.type === 'TEMPO') {
+      groupTitle = isTr ? 'Geçici Durum (TEMPO)' : 'Temporary (TEMPO)';
+    } else if (group.type === 'BECMG') {
+      groupTitle = isTr ? 'Kademeli Değişim (BECMG)' : 'Becoming (BECMG)';
+    } else if (group.type === 'PROB') {
+      groupTitle = isTr ? `Olasılık Tahmini (PROB ${group.probVal || ''})` : `Probability (PROB ${group.probVal || ''})`;
+    } else if (group.type === 'FM') {
+      groupTitle = isTr ? 'Kademeli Değişim (FROM)' : 'Becoming (FROM)';
+    }
+
+    // Format time label
+    let timeLabel = '';
+    const pad = (num) => String(num).padStart(2, '0');
+    if (group.start && group.end) {
+      const startDay = pad(group.start.getUTCDate());
+      const startMonth = pad(group.start.getUTCMonth() + 1);
+      const startYear = group.start.getUTCFullYear();
+      const startHour = pad(group.start.getUTCHours());
+
+      const endDay = pad(group.end.getUTCDate());
+      const endMonth = pad(group.end.getUTCMonth() + 1);
+      const endYear = group.end.getUTCFullYear();
+      const endHour = pad(group.end.getUTCHours());
+
+      const startDateStr = `${startDay}.${startMonth}.${startYear}`;
+      const endDateStr = `${endDay}.${endMonth}.${endYear}`;
+
+      if (startDateStr === endDateStr) {
+        timeLabel = `${startDateStr} ${startHour}:00 - ${endHour}:00 UTC`;
+      } else {
+        timeLabel = `${startDateStr} ${startHour}:00 - ${endDateStr} ${endHour}:00 UTC`;
+      }
+    } else if (group.start) {
+      const startDay = pad(group.start.getUTCDate());
+      const startMonth = pad(group.start.getUTCMonth() + 1);
+      const startYear = group.start.getUTCFullYear();
+      const startHour = pad(group.start.getUTCHours());
+      const startDateStr = `${startDay}.${startMonth}.${startYear}`;
+      timeLabel = `FM ${startDateStr} ${startHour}:00 UTC`;
+    } else {
+      timeLabel = isTr ? 'Genel' : 'Period';
+    }
+
+    const windText = formatWind(group.wind, isTr);
+
+    linesEmitted++;
+
+    const isLast = idx === groups.length - 1;
+    const borderStyle = isLast ? '' : 'border-bottom: 1px solid rgba(255,255,255,0.06);';
+    const paddingStyle = isLast ? '' : 'padding-bottom: 12px;';
+    const marginStyle = isLast ? '' : 'margin-bottom: 12px;';
+
+    html += `
+      <div class="taf-decoded-group" style="${marginStyle} ${paddingStyle} ${borderStyle}">
+        <div style="font-weight: 700; color: var(--accent-color); font-size: 11px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+          <span>${groupTitle}</span>
+          <span style="font-weight: 400; color: var(--muted); text-transform: none; font-size: 10.5px;">${timeLabel}</span>
+        </div>
+        <div class="decoder-item">
+          <div class="decoder-label">${isTr ? 'Rüzgâr' : 'Wind'}</div>
+          <div class="decoder-value">${windText}</div>
+        </div>
+      </div>
+    `;
+  });
+
+  if (linesEmitted === 0) {
+    html += `<div style="color: var(--muted); text-align: center; padding: 20px; background: rgba(15,23,42,0.6); border-radius: 14px; border: 1px solid rgba(255,255,255,0.05);">${isTr ? 'Rapor açıklaması bulunmuyor.' : 'No forecast details found.'}</div>`;
+  }
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+// ═══════ ENGINE TEST COMPASS & BRAKE AREA ═══════
+let currentIcao = null; // Track current airport ICAO
+let currentWindDir = null;
+let currentWindSpeed = 0;
+let currentAircraftHeading = 0;
+
+function calculateWindComponents() {
+  const relativeWindVal = document.getElementById('chipRelativeWindValue');
+  if (!relativeWindVal) return;
+
+  const isVrb = (currentWindDir === 'VRB' || currentWindDir === 0 || currentWindDir == null);
+  const isCalm = (currentWindSpeed <= 1);
+
+  if (isVrb || isCalm) {
+    relativeWindVal.textContent = '---°';
+    return;
+  }
+
+  // Fark açısı (Rüzgârdan uçağın yönünü çıkarıyoruz)
+  let angleDiff = (currentWindDir - currentAircraftHeading) % 360;
+  if (angleDiff < 0) angleDiff += 360;
+  angleDiff = Math.round(angleDiff);
+  if (angleDiff === 0) angleDiff = 360;
+
+  relativeWindVal.textContent = `${String(angleDiff).padStart(3, '0')}° / ${currentWindSpeed} KT`;
+}
+
+function updateEngineCompass(windDir, windSpeed, icao) {
+  const section = document.getElementById('engineCompassSection');
+  const aircraft = document.getElementById('compassAircraft');
+  const windArrowEl = document.getElementById('compassWindArrow');
+  const headingInput = document.getElementById('chipHeadingInput');
+  const windVal = document.getElementById('windDirVal');
+  const brakeRecText = document.getElementById('brakeRecText');
+
+  if (!section) return;
+
+  if (icao) currentIcao = icao;
+
+  currentWindDir = windDir;
+  currentWindSpeed = windSpeed != null ? Math.round(windSpeed) : 0;
+
+  const isVrb = (windDir === 'VRB' || windDir === 0 || windDir == null);
+  const isCalm = (windSpeed == null || windSpeed <= 1);
+
+  section.style.display = 'block';
+
+  // Başlangıçta uçağın burnunu rüzgar yönüne (rüzgara karşı) çevirelim.
+  // Rüzgar sakin veya değişken ise Kuzey (360) yapalım.
+  const initialHeading = (isVrb || isCalm) ? 360 : windDir;
+  currentAircraftHeading = initialHeading === 360 ? 0 : initialHeading;
+
+  if (aircraft) {
+    aircraft.style.transform = `translate(-50%, -50%) rotate(${currentAircraftHeading}deg)`;
+    aircraft.style.transition = 'transform 0.3s cubic-bezier(.4,0,.2,1)';
+  }
+  if (windArrowEl) {
+    const windRotation = (isVrb || isCalm) ? 0 : windDir;
+    windArrowEl.style.transform = `translate(-50%, -50%) rotate(${windRotation}deg)`;
+    windArrowEl.style.opacity = (isVrb || isCalm) ? '0.2' : '1';
+  }
+
+  if (headingInput) {
+    headingInput.value = initialHeading;
+  }
+  if (windVal) {
+    windVal.textContent = isVrb || isCalm ? '---°' : `${String(windDir).padStart(3, '0')}°`;
+  }
+
+  // Rüzgâr bileşenlerini hesapla
+  calculateWindComponents();
+  
+  // Bremze önerisini her zaman gerçek rüzgâra göre yapalım
+  updateBrakeArea(currentWindDir, currentWindSpeed, currentIcao);
+}
+
+
+// Helper function to check if wind direction is within a range (handles wrap-around)
+function isWindInRange(windDir, range) {
+  if (Array.isArray(range[0])) {
+    // Multiple ranges (e.g., [[60, 120], [240, 300]])
+    return range.some(r => isWindInRange(windDir, r));
+  }
+  
+  const [start, end] = range;
+  if (start <= end) {
+    // Normal range (e.g., 120-240)
+    return windDir >= start && windDir <= end;
+  } else {
+    // Wrap-around range (e.g., 300-60 means 300-360 or 0-60)
+    return windDir >= start || windDir <= end;
+  }
+}
+
+function updateBrakeArea(windDir, windSpeed, icao) {
+  const isTr = getLang() === 'tr';
+  const recText = document.getElementById('brakeRecText');
+  if (!recText) return;
+  
+
+
+
+
+  // Check if this airport has special brake configuration
+  const airportConfig = AIRPORT_BRAKE_CONFIG[icao];
+  
+  if (airportConfig && airportConfig.hasBrakeAreas) {
+
+
+
+
+
+
+
+
+
+
+
+
+    // LTFM or other configured airport
+    if (windSpeed == null || windSpeed <= 1) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      recText.textContent = t('brake_rec_calm');
+    } else if (windDir == null) {
+      recText.textContent = t('brake_rec_vrb');
+    } else {
+      // Find matching brake area based on wind direction
+      let matchedArea = null;
+      for (const area of airportConfig.areas) {
+        if (isWindInRange(windDir, area.windRange)) {
+          matchedArea = area;
+          break;
+        }
+      }
+
+      if (matchedArea) {
+        const areaLabel = matchedArea.label[isTr ? 'tr' : 'en'];
+        recText.textContent = t('brake_rec_ltfm')
+          .replace('{icon}', matchedArea.icon)
+          .replace('{area}', areaLabel)
+          .replace('{dir}', String(windDir).padStart(3, '0'))
+          .replace('{speed}', windSpeed);
+      } else {
+
+        recText.textContent = isTr ? 'Uygun alan yok' : 'No suitable area';
+      }
+
+
+
+
+
+
+    }
+  } else {
+    // Standard airport
+    if (windSpeed == null || windSpeed <= 1) {
+      recText.textContent = t('brake_rec_calm');
+    } else if (windDir == null) {
+      recText.textContent = t('brake_rec_vrb');
+    } else {
+      let quadName = '';
+      if (windDir > 270 || windDir <= 90) {
+        quadName = (windDir > 270 || windDir === 0) ? t('quad_nw') : t('quad_ne');
+      } else {
+        quadName = (windDir > 180) ? t('quad_sw') : t('quad_se');
+      }
+
+
+
+
+
+
+
+      recText.textContent = t('brake_rec_text')
+
+
+
+        .replace('{dir}', String(windDir).padStart(3, '0'))
+        .replace('{heading}', String(windDir).padStart(3, '0'))
+        .replace('{quadrant}', quadName);
+    }
+  }
+}
+
+function applyCompassLang() {
+  const dict = I18N[getLang()] || I18N.tr;
+  const ids = {
+    'compassSectionTitle': 'compass_section_title',
+    'compassLabel': 'compass_label',
+    'chipHeadingLabel': 'chip_heading_label',
+    'chipWindLabel': 'chip_wind_label',
+    'vrbWarningText': 'vrb_warning',
+    'brakeAreaLabel': 'brake_area_label',
+    'brakeRecTitle': 'brake_rec_title',
+    'quadLabelNW': 'quad_nw',
+    'quadLabelNE': 'quad_ne',
+    'quadLabelSW': 'quad_sw',
+    'quadLabelSE': 'quad_se'
+  };
+  for (const [elId, key] of Object.entries(ids)) {
+    const el = document.getElementById(elId);
+    if (el && dict[key]) el.textContent = dict[key];
+  }
+}
+
+// ═══════ INTERACTIVE COMPASS ROTATION ═══════
+function setupInteractiveCompass() {
+  const compassCard = document.getElementById('compassCard');
+  const compassRing = document.querySelector('.compass-ring-container');
+  const headingInput = document.getElementById('chipHeadingInput');
+  const compassHint = document.getElementById('compassHint');
+  if (!compassCard || !compassRing) return;
+
+  let isDragging = false;
+  let startAngle = 0;
+  let currentRotation = 0;
+  let pressTimer = null;
+  let dragActivated = false;
+  let startX = 0;
+  let startY = 0;
+  const HOLD_DURATION = 250; // ms
+
+  const getAngle = (e, rect) => {
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    return Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  };
+
+  const startDragAttempt = (e) => {
+    if (e.target.id === 'chipHeadingInput') return;
+    
+    dragActivated = false;
+    isDragging = false;
+    
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX;
+    startY = clientY;
+
+    // Start hold timer
+    clearTimeout(pressTimer);
+    pressTimer = setTimeout(() => {
+      dragActivated = true;
+      isDragging = true;
+      compassRing.classList.add('active-drag');
+      
+      if (navigator.vibrate) {
+        navigator.vibrate(50);
+      }
+      
+      // Update hint text dynamically
+      if (compassHint) {
+        compassHint.textContent = t('compass_hint_active');
+        compassHint.style.color = 'var(--primary)';
+        compassHint.style.animation = 'none';
+      }
+
+      const rect = compassRing.getBoundingClientRect();
+      currentRotation = currentAircraftHeading - 90;
+      startAngle = getAngle(e, rect) - currentRotation;
+      compassCard.style.cursor = 'grabbing';
+    }, HOLD_DURATION);
+  };
+
+  const onDrag = (e) => {
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    
+    // If not activated yet, check if user has moved too much.
+    // If they moved more than 8px before 250ms, they are probably scrolling, so cancel the drag attempt!
+    if (!dragActivated) {
+      const dist = Math.hypot(clientX - startX, clientY - startY);
+      if (dist > 8) {
+        clearTimeout(pressTimer);
+      }
+      return;
+    }
+
+    if (!isDragging) return;
+    
+    // Sürükleme aktifse default dikey sayfa kaydırmasını (scroll) önle!
+    e.preventDefault();
+    
+    const rect = compassRing.getBoundingClientRect();
+    const angle = getAngle(e, rect);
+    currentRotation = angle - startAngle;
+    
+    let heading = (currentRotation + 90) % 360;
+    if (heading < 0) heading += 360;
+    heading = Math.round(heading);
+    if (heading === 0) heading = 360;
+
+    const aircraft = document.getElementById('compassAircraft');
+    if (aircraft) {
+      aircraft.style.transform = `translate(-50%, -50%) rotate(${heading}deg)`;
+      aircraft.style.transition = 'none';
+    }
+
+    currentAircraftHeading = heading === 360 ? 0 : heading;
+
+    if (headingInput) {
+      headingInput.value = heading;
+    }
+
+    calculateWindComponents();
+  };
+
+  const endDrag = () => {
+    clearTimeout(pressTimer);
+    dragActivated = false;
+    
+    if (isDragging) {
+      isDragging = false;
+      compassCard.style.cursor = 'grab';
+      compassRing.classList.remove('active-drag');
+      
+      if (compassHint) {
+        compassHint.textContent = t('compass_hint_hold');
+        compassHint.style.color = '';
+        compassHint.style.animation = 'pulseHint 2s infinite ease-in-out';
+      }
+
+      const aircraft = document.getElementById('compassAircraft');
+      if (aircraft) {
+        aircraft.style.transition = 'transform 0.3s cubic-bezier(.4,0,.2,1)';
+      }
+    }
+  };
+
+  // Keyboard / Input Listener for manual heading entry
+  if (headingInput) {
+    headingInput.addEventListener('input', function() {
+      // Limit to maximum 3 characters
+      if (this.value.length > 3) {
+        this.value = this.value.slice(0, 3);
+      }
+
+      let val = parseInt(this.value, 10);
+      if (isNaN(val)) return;
+      if (val < 0) val = (val % 360) + 360;
+      if (val > 360) val = val % 360;
+      if (val === 0) val = 360;
+
+      currentAircraftHeading = val === 360 ? 0 : val;
+
+      const aircraft = document.getElementById('compassAircraft');
+      if (aircraft) {
+        aircraft.style.transform = `translate(-50%, -50%) rotate(${currentAircraftHeading}deg)`;
+        aircraft.style.transition = 'transform 0.3s cubic-bezier(.4,0,.2,1)';
+      }
+
+      calculateWindComponents();
+    });
+
+    headingInput.addEventListener('focus', function() {
+      this.value = '';
+    });
+
+    headingInput.addEventListener('blur', function() {
+      if (this.value === '' || isNaN(parseInt(this.value, 10))) {
+        this.value = currentAircraftHeading === 0 ? 360 : currentAircraftHeading;
+      }
+    });
+
+    headingInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        this.blur();
+      }
+    });
+  }
+
+  // Mouse events
+  compassRing.addEventListener('mousedown', startDragAttempt);
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', endDrag);
+
+  // Touch events
+  compassRing.addEventListener('touchstart', startDragAttempt, { passive: false });
+  document.addEventListener('touchmove', onDrag, { passive: false });
+  document.addEventListener('touchend', endDrag);
+}
+
+window.onload = () => {
+  applyLang(getLang());
+  document.getElementById('lang-tr')?.addEventListener('click', () => setLang('tr'));
+  document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'));
+  updateNetworkStatus();
+  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('offline', updateNetworkStatus);
+  
+  // Initialize autocomplete search
+  setupAutocomplete();
+
+  // Initialize interactive compass
+  setupInteractiveCompass();
+
+  getLocationAndMatchAirport().catch(() => {
+    getMetarData();
+  });
+  setupChronoEvents('eng1');
+  setupChronoEvents('eng2');
+
+  // Initialize and keep updating Live GMT (Zulu) time
+  const updateLiveGmtClock = () => {
+    const now = new Date();
+    const gmtStr = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
+    const gmtValEl = document.getElementById('gmtVal');
+    if (gmtValEl) {
+      gmtValEl.textContent = gmtStr;
+    }
+  };
+  updateLiveGmtClock();
+  updateLiveGmtClock();
+  setInterval(updateLiveGmtClock, 1000);
+};
+</script>
+
+</body>
+</html>

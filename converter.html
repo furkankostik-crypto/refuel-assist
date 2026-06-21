@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+	<title>Refuel Assist v8.0.0 — Hızlı Dönüştürücü</title>
+    <meta name="theme-color" content="#0f172a">
+    <link class="icon" type="image/png" href="assets/logo-192.png">
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        input, textarea, [contenteditable="true"] {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        :root {
+            --primary: #38bdf8;
+            --primary-rgb: 56,189,248;
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.45);
+            --muted: #64748b;
+            --amber: #f59e0b;
+            --success: #22c55e;
+            --error: #ef4444;
+            --brand-font: 'Segoe UI', Arial, sans-serif;
+        }
+
+        /* Tarayıcıların varsayılan oklarını temizleme */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            min-height: 100dvh;
+            min-height: -webkit-fill-available;
+            height: 100%;
+            font-family: var(--brand-font);
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: #fff;
+        }
+        body {
+            padding-top: env(safe-area-inset-top, 16px);
+            padding-bottom: env(safe-area-inset-bottom, 16px);
+            padding-left: env(safe-area-inset-left, 16px);
+            padding-right: env(safe-area-inset-right, 16px);
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            min-height: 100dvh;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px 30px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.45);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 26px;
+            padding: 16px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        /* Top bar (Card style matching calc.html) */
+        .topbar {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-sizing: border-box;
+            margin-bottom: 24px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .topbar-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.15s, background 0.2s;
+            padding: 0;
+            text-decoration: none;
+        }
+        .topbar-back:active {
+            transform: scale(0.95);
+            background: rgba(56, 189, 248, 0.22);
+            border-color: var(--primary);
+        }
+        .topbar-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-grow: 1;
+            min-width: 0;
+            padding-left: 4px;
+        }
+        .topbar-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .topbar-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex-grow: 1;
+        }
+        .topbar-title {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .topbar-subtitle {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 600;
+            margin-top: 3px;
+            line-height: 1.2;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+        }
+
+        /* Title Area */
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .welcome-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin: 0 0 6px 0;
+        }
+        .welcome-desc {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        /* Modules Grid */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .module-card {
+            background: var(--card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 16px 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.22s cubic-bezier(0.2, 0.9, 0.2, 1);
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            color: inherit;
+            outline: none;
+            user-select: none;
+            touch-action: manipulation;
+            min-height: 150px;
+        }
+        .module-card:hover {
+            border-color: rgba(56, 189, 248, 0.45);
+            background: rgba(56, 189, 248, 0.06);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(2, 6, 23, 0.3);
+        }
+        .module-card:active {
+            transform: translateY(0) scale(0.98);
+            background: rgba(56, 189, 248, 0.12);
+        }
+        .module-card-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            width: 100%;
+        }
+        .module-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .module-card:hover .module-icon-box {
+            border-color: rgba(56, 189, 248, 0.3);
+            background: rgba(56, 189, 248, 0.1);
+        }
+        .module-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 0;
+            width: 100%;
+        }
+        .module-title {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffffff;
+            transition: color 0.2s;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-align: center;
+        }
+        .module-card:hover .module-title {
+            color: var(--primary);
+        }
+        .module-desc {
+            margin: 0;
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .module-arrow {
+            display: none;
+        }
+
+        /* Overlay and Modals (Refuel Assist standards) */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.82);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .overlay-card {
+            background: linear-gradient(180deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.99) 100%);
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 380px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+            transform: translateY(20px) scale(0.96);
+            transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .overlay.active .overlay-card {
+            transform: translateY(0) scale(1);
+        }
+        .overlay-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 12px;
+        }
+        .overlay-desc {
+            font-size: 11px;
+            color: var(--muted);
+            font-weight: 600;
+            line-height: 15px;
+            margin: 0 0 16px 0;
+            text-align: left;
+        }
+        .overlay-title-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .overlay-emoji {
+            font-size: 20px;
+        }
+        .overlay-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .overlay-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            font-weight: bold;
+            font-size: 15px;
+            transition: all 0.2s;
+            padding: 0;
+        }
+        .overlay-close:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .overlay-close:active {
+            transform: scale(0.95);
+        }
+
+        /* Fields & Inputs inside Modals */
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .field-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .input-with-suffix {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-with-suffix input {
+            background: #0f172a;
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            width: 100%;
+            padding: 12px 64px 12px 14px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 18px;
+            font-family: monospace;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.2s;
+        }
+        .input-with-suffix input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+            background: rgba(15, 23, 42, 0.8);
+        }
+        .input-suffix {
+            position: absolute;
+            right: 14px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--primary);
+            pointer-events: none;
+            user-select: none;
+            text-transform: none;
+            font-family: var(--brand-font);
+        }
+
+        /* Clean (Temizle) Button */
+        .btn-clear {
+            width: 100%;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1.5px solid rgba(239, 68, 68, 0.20);
+            color: var(--error);
+            padding: 12px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 13px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            transition: all 0.2s;
+            margin-top: 20px;
+        }
+        .btn-clear:hover {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+        .btn-clear:active {
+            transform: scale(0.98);
+        }
+
+        .footer-text {
+            font-size: 10px;
+            color: var(--muted);
+            text-align: center;
+            margin-top: auto;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            padding: 20px 0 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="card" style="margin-bottom: 24px;">
+            <header class="topbar">
+                <a href="index.html" class="topbar-back" aria-label="Geri">
+                    <svg width="22" height="22" viewBox="0 0 20 20" fill="none"><path d="M13 5l-5 5 5 5" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </a>
+                <div class="topbar-center">
+                    <img src="assets/logo-192.png" alt="logo" class="topbar-logo">
+                    <div class="topbar-text">
+                        <h1 class="topbar-title">REFUEL ASSIST</h1>
+                        <span class="topbar-subtitle">Hızlı Dönüştürücü</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="welcome-section" style="margin-bottom: 20px;">
+                <h2 class="welcome-title" id="welcome-title" style="font-size: 20px; font-weight: 800;">Birim Dönüştürücü</h2>
+                <p class="welcome-desc" id="welcome-desc" style="font-size: 12px; font-weight: 600;">Hesaplama yapmak istediğiniz modülü seçin.</p>
+            </div>
+
+            <div class="module-grid">
+                
+                <button onclick="openOverlay('weight-overlay')" class="module-card" type="button">
+                    <div class="module-card-left">
+                        <div class="module-icon-box">⚖️</div>
+                        <div class="module-info">
+                            <h3 class="module-title" id="mod-weight-title">Ağırlık Dönüşümü</h3>
+                            <p class="module-desc" id="mod-weight-desc">Kilogram (kg) ↔ Pound (lb)</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button onclick="openOverlay('torque-overlay')" class="module-card" type="button">
+                    <div class="module-card-left">
+                        <div class="module-icon-box">🔧</div>
+                        <div class="module-info">
+                            <h3 class="module-title" id="mod-torque-title">Tork Dönüşümü</h3>
+                            <p class="module-desc" id="mod-torque-desc">Nm ↔ lbf·ft ↔ lbf·in</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button onclick="openOverlay('speed-overlay')" class="module-card" type="button">
+                    <div class="module-card-left">
+                        <div class="module-icon-box">⚡</div>
+                        <div class="module-info">
+                            <h3 class="module-title" id="mod-speed-title">Hız Dönüşümü</h3>
+                            <p class="module-desc" id="mod-speed-desc">km/h ↔ mph ↔ knot</p>
+                        </div>
+                    </div>
+                </button>
+
+                <button onclick="openOverlay('temperature-overlay')" class="module-card" type="button">
+                    <div class="module-card-left">
+                        <div class="module-icon-box">🌡️</div>
+                        <div class="module-info">
+                            <h3 class="module-title" id="mod-temp-title">Sıcaklık Dönüşümü</h3>
+                            <p class="module-desc" id="mod-temp-desc">Celsius (°C) ↔ Fahrenheit (°F)</p>
+                        </div>
+                    </div>
+                </button>
+
+            </div>
+
+            <footer class="footer-text" id="footer-text" style="padding-top: 24px;">
+                &copy; 2026 Refuel Assist. Tüm Hakları Saklıdır.
+            </footer>
+        </div>
+
+
+    <div id="weight-overlay" class="overlay">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <div class="overlay-title-box">
+                    <span class="overlay-emoji">⚖️</span>
+                    <h3 class="overlay-title" id="overlay-weight-title">Ağırlık Dönüşümü</h3>
+                </div>
+                <button onclick="closeOverlay('weight-overlay')" class="overlay-close" type="button">✕</button>
+            </div>
+            <p class="overlay-desc" id="overlay-weight-desc">Bir alana değer girdiğinizde diğer birim otomatik olarak hesaplanır.</p>
+            
+            <div class="field-group">
+                <label for="weight-kg" class="field-label" id="lbl-weight-kg">Kilogram (kg)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="weight-kg" placeholder="0.00" step="any">
+                    <span class="input-suffix">kg</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="weight-lb" class="field-label" id="lbl-weight-lb">Pound (lb)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="weight-lb" placeholder="0.00" step="any">
+                    <span class="input-suffix">lb</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="clearGroup('weight')" class="btn-clear" id="btn-weight-clear">Temizle</button>
+        </div>
+    </div>
+
+    <div id="torque-overlay" class="overlay">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <div class="overlay-title-box">
+                    <span class="overlay-emoji">🔧</span>
+                    <h3 class="overlay-title" id="overlay-torque-title">Tork Dönüşümü</h3>
+                </div>
+                <button onclick="closeOverlay('torque-overlay')" class="overlay-close" type="button">✕</button>
+            </div>
+            <p class="overlay-desc" id="overlay-torque-desc">Bir alana değer girdiğinizde diğer tüm birimler otomatik olarak hesaplanır.</p>
+            
+            <div class="field-group">
+                <label for="torque-nm" class="field-label" id="lbl-torque-nm">Newton Metre (Nm)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="torque-nm" placeholder="0.00" step="any">
+                    <span class="input-suffix">Nm</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="torque-lbfft" class="field-label" id="lbl-torque-lbfft">Pound-Foot (lbf·ft)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="torque-lbfft" placeholder="0.00" step="any">
+                    <span class="input-suffix">lbf·ft</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="torque-lbfin" class="field-label" id="lbl-torque-lbfin">Pound-Inch (lbf·in)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="torque-lbfin" placeholder="0.00" step="any">
+                    <span class="input-suffix">lbf·in</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="clearGroup('torque')" class="btn-clear" id="btn-torque-clear">Temizle</button>
+        </div>
+    </div>
+
+    <div id="speed-overlay" class="overlay">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <div class="overlay-title-box">
+                    <span class="overlay-emoji">⚡</span>
+                    <h3 class="overlay-title" id="overlay-speed-title">Hız Dönüşümü</h3>
+                </div>
+                <button onclick="closeOverlay('speed-overlay')" class="overlay-close" type="button">✕</button>
+            </div>
+            <p class="overlay-desc" id="overlay-speed-desc">Bir alana değer girdiğinizde diğer tüm birimler otomatik olarak hesaplanır.</p>
+            
+            <div class="field-group">
+                <label for="speed-kmh" class="field-label" id="lbl-speed-kmh">Kilometre / Saat (km/h)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="speed-kmh" placeholder="0.00" step="any">
+                    <span class="input-suffix">km/h</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="speed-mph" class="field-label" id="lbl-speed-mph">Mil / Saat (mph)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="speed-mph" placeholder="0.00" step="any">
+                    <span class="input-suffix">mph</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="speed-knot" class="field-label" id="lbl-speed-knot">Knot (kt)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="speed-knot" placeholder="0.00" step="any">
+                    <span class="input-suffix">kt</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="clearGroup('speed')" class="btn-clear" id="btn-speed-clear">Temizle</button>
+        </div>
+    </div>
+
+    <div id="temperature-overlay" class="overlay">
+        <div class="overlay-card">
+            <div class="overlay-header">
+                <div class="overlay-title-box">
+                    <span class="overlay-emoji">🌡️</span>
+                    <h3 class="overlay-title" id="overlay-temp-title">Sıcaklık Dönüşümü</h3>
+                </div>
+                <button onclick="closeOverlay('temperature-overlay')" class="overlay-close" type="button">✕</button>
+            </div>
+            <p class="overlay-desc" id="overlay-temp-desc">Bir alana değer girdiğinizde diğer birim otomatik olarak hesaplanır.</p>
+            
+            <div class="field-group">
+                <label for="temp-c" class="field-label" id="lbl-temp-c">Celsius (°C)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="temp-c" placeholder="0.0" step="any">
+                    <span class="input-suffix">°C</span>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="temp-f" class="field-label" id="lbl-temp-f">Fahrenheit (°F)</label>
+                <div class="input-with-suffix">
+                    <input type="number" id="temp-f" placeholder="0.0" step="any">
+                    <span class="input-suffix">°F</span>
+                </div>
+            </div>
+
+            <button type="button" onclick="clearGroup('temp')" class="btn-clear" id="btn-temp-clear">Temizle</button>
+        </div>
+    </div>
+
+
+    <script>
+        // --- ELEMENT TANIMLAMALARI ---
+        const kgInput = document.getElementById('weight-kg');
+        const lbInput = document.getElementById('weight-lb');
+
+        const nmInput = document.getElementById('torque-nm');
+        const lbfftInput = document.getElementById('torque-lbfft');
+        const lbfinInput = document.getElementById('torque-lbfin');
+
+        const kmhInput = document.getElementById('speed-kmh');
+        const mphInput = document.getElementById('speed-mph');
+        const knotInput = document.getElementById('speed-knot');
+
+        const cInput = document.getElementById('temp-c');
+        const fInput = document.getElementById('temp-f');
+
+        // Hassas Sabitler
+        const KG_TO_LB = 2.2046226218;
+        const NM_TO_LBFFT = 0.7375621493;
+        const NM_TO_LBFIN = 8.8507457916;
+        
+        // Hız Dönüşüm Sabitleri (Referans: km/h)
+        const KMH_TO_MPH = 0.6213711922;
+        const KMH_TO_KNOT = 0.5399568035;
+
+        // Overlay Kontrolleri
+        function openOverlay(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden'; // Sayfa kaymasını engeller
+        }
+        function closeOverlay(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = ''; // Normal kaymayı geri getirir
+        }
+
+        // Çıkış Formatlama (Max 4 basamak, gereksiz sıfırları atar)
+        function formatValue(value) {
+            if (isNaN(value) || value === null || value === '') return '';
+            return parseFloat(value.toFixed(4)).toString();
+        }
+
+        // --- AĞIRLIK EVENTLERİ ---
+        kgInput.addEventListener('input', () => {
+            const val = parseFloat(kgInput.value);
+            if (isNaN(val)) { lbInput.value = ''; return; }
+            lbInput.value = formatValue(val * KG_TO_LB);
+        });
+        lbInput.addEventListener('input', () => {
+            const val = parseFloat(lbInput.value);
+            if (isNaN(val)) { kgInput.value = ''; return; }
+            kgInput.value = formatValue(val / KG_TO_LB);
+        });
+
+        // --- TORK EVENTLERİ ---
+        nmInput.addEventListener('input', () => {
+            const val = parseFloat(nmInput.value);
+            if (isNaN(val)) { clearFields(['torque-lbfft', 'torque-lbfin']); return; }
+            lbfftInput.value = formatValue(val * NM_TO_LBFFT);
+            lbfinInput.value = formatValue(val * NM_TO_LBFIN);
+        });
+        lbfftInput.addEventListener('input', () => {
+            const val = parseFloat(lbfftInput.value);
+            if (isNaN(val)) { clearFields(['torque-nm', 'torque-lbfin']); return; }
+            const nm = val / NM_TO_LBFFT;
+            nmInput.value = formatValue(nm);
+            lbfinInput.value = formatValue(nm * NM_TO_LBFIN);
+        });
+        lbfinInput.addEventListener('input', () => {
+            const val = parseFloat(lbfinInput.value);
+            if (isNaN(val)) { clearFields(['torque-nm', 'torque-lbfft']); return; }
+            const nm = val / NM_TO_LBFIN;
+            nmInput.value = formatValue(nm);
+            lbfftInput.value = formatValue(nm * NM_TO_LBFFT);
+        });
+
+        // --- HIZ EVENTLERİ (v2.1 Yenilik) ---
+        kmhInput.addEventListener('input', () => {
+            const val = parseFloat(kmhInput.value);
+            if (isNaN(val)) { clearFields(['speed-mph', 'speed-knot']); return; }
+            mphInput.value = formatValue(val * KMH_TO_MPH);
+            knotInput.value = formatValue(val * KMH_TO_KNOT);
+        });
+        mphInput.addEventListener('input', () => {
+            const val = parseFloat(mphInput.value);
+            if (isNaN(val)) { clearFields(['speed-kmh', 'speed-knot']); return; }
+            const kmh = val / KMH_TO_MPH;
+            kmhInput.value = formatValue(kmh);
+            knotInput.value = formatValue(kmh * KMH_TO_KNOT);
+        });
+        knotInput.addEventListener('input', () => {
+            const val = parseFloat(knotInput.value);
+            if (isNaN(val)) { clearFields(['speed-kmh', 'speed-mph']); return; }
+            const kmh = val / KMH_TO_KNOT;
+            kmhInput.value = formatValue(kmh);
+            mphInput.value = formatValue(kmh * KMH_TO_MPH);
+        });
+
+        // --- SICAKLIK EVENTLERİ ---
+        cInput.addEventListener('input', () => {
+            const val = parseFloat(cInput.value);
+            if (isNaN(val)) { fInput.value = ''; return; }
+            fInput.value = formatValue((val * 9/5) + 32);
+        });
+        fInput.addEventListener('input', () => {
+            const val = parseFloat(fInput.value);
+            if (isNaN(val)) { cInput.value = ''; return; }
+            cInput.value = formatValue((val - 32) * 5/9);
+        });
+
+        // Alan Yardımcı Fonksiyonları
+        function clearFields(ids) {
+            ids.forEach(id => document.getElementById(id).value = '');
+        }
+
+        // Temizleme işlemi bittikten sonra focus kaldırmak veya korumak opsiyoneldir.
+        function clearGroup(group) {
+            if (group === 'weight') { kgInput.value = ''; lbInput.value = ''; }
+            else if (group === 'torque') { nmInput.value = ''; lbfftInput.value = ''; lbfinInput.value = ''; }
+            else if (group === 'speed') { kmhInput.value = ''; mphInput.value = ''; knotInput.value = ''; }
+            else if (group === 'temp') { cInput.value = ''; fInput.value = ''; }
+        }
+
+        // Overlay dışına tıklandığında kapatma esnekliği
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('overlay')) {
+                closeOverlay(e.target.id);
+            }
+        });
+
+        const LANG_STORAGE_KEY = 'refuel_lang';
+        const I18N = {
+            tr: {
+				title: 'Refuel Assist v8.0.0 — Hızlı Dönüştürücü',
+                subtitle: 'Hızlı Dönüştürücü',
+                welcome_title: 'Birim Dönüştürücü',
+                welcome_desc: 'Hesaplama yapmak istediğiniz modülü seçin.',
+                weight_title: 'Ağırlık Dönüşümü',
+                weight_desc: 'Kilogram (kg) ↔ Pound (lb)',
+                torque_title: 'Tork Dönüşümü',
+                torque_desc: 'Nm ↔ lbf·ft ↔ lbf·in',
+                speed_title: 'Hız Dönüşümü',
+                speed_desc: 'km/h ↔ mph ↔ knot',
+                temp_title: 'Sıcaklık Dönüşümü',
+                temp_desc: 'Celsius (°C) ↔ Fahrenheit (°F)',
+                clear: 'Temizle',
+                footer: '&copy; 2026 Refuel Assist. Tüm Hakları Saklıdır.',
+                weight_overlay_desc: 'Bir alana değer girdiğinizde diğer birim otomatik olarak hesaplanır.',
+                torque_overlay_desc: 'Bir alana değer girdiğinizde diğer tüm birimler otomatik olarak hesaplanır.',
+                speed_overlay_desc: 'Bir alana değer girdiğinizde diğer tüm birimler otomatik olarak hesaplanır.',
+                temp_overlay_desc: 'Bir alana değer girdiğinizde diğer birim otomatik olarak hesaplanır.',
+                lbl_weight_kg: 'Kilogram (kg)',
+                lbl_weight_lb: 'Pound (lb)',
+                lbl_torque_nm: 'Newton Metre (Nm)',
+                lbl_torque_lbfft: 'Pound-Foot (lbf·ft)',
+                lbl_torque_lbfin: 'Pound-Inch (lbf·in)',
+                lbl_speed_kmh: 'Kilometre / Saat (km/h)',
+                lbl_speed_mph: 'Mil / Saat (mph)',
+                lbl_speed_knot: 'Knot (kt)',
+                lbl_temp_c: 'Celsius (°C)',
+                lbl_temp_f: 'Fahrenheit (°F)'
+            },
+            en: {
+				title: 'Refuel Assist v8.0.0 — Quick Converter',
+                subtitle: 'Quick Converter',
+                welcome_title: 'Unit Converter',
+                welcome_desc: 'Select the module you want to calculate.',
+                weight_title: 'Weight Conversion',
+                weight_desc: 'Kilograms (kg) ↔ Pounds (lb)',
+                torque_title: 'Torque Conversion',
+                torque_desc: 'Nm ↔ lbf·ft ↔ lbf·in',
+                speed_title: 'Speed Conversion',
+                speed_desc: 'km/h ↔ mph ↔ knot',
+                temp_title: 'Temperature Conversion',
+                temp_desc: 'Celsius (°C) ↔ Fahrenheit (°F)',
+                clear: 'Clear',
+                footer: '&copy; 2026 Refuel Assist. All Rights Reserved.',
+                weight_overlay_desc: 'When you enter a value in one field, the other unit is calculated automatically.',
+                torque_overlay_desc: 'When you enter a value in one field, all other units are calculated automatically.',
+                speed_overlay_desc: 'When you enter a value in one field, all other units are calculated automatically.',
+                temp_overlay_desc: 'When you enter a value in one field, the other unit is calculated automatically.',
+                lbl_weight_kg: 'Kilogram (kg)',
+                lbl_weight_lb: 'Pound (lb)',
+                lbl_torque_nm: 'Newton Meter (Nm)',
+                lbl_torque_lbfft: 'Pound-Foot (lbf·ft)',
+                lbl_torque_lbfin: 'Pound-Inch (lbf·in)',
+                lbl_speed_kmh: 'Kilometers per Hour (km/h)',
+                lbl_speed_mph: 'Miles per Hour (mph)',
+                lbl_speed_knot: 'Knots (kt)',
+                lbl_temp_c: 'Celsius (°C)',
+                lbl_temp_f: 'Fahrenheit (°F)'
+            }
+        };
+
+        function getLang() {
+            const raw = (localStorage.getItem('refuel_assist_lang') || localStorage.getItem(LANG_STORAGE_KEY) || '').toLowerCase();
+            return raw === 'en' ? 'en' : 'tr';
+        }
+
+        function t(key) {
+            const dict = I18N[getLang()] || I18N.tr;
+            return dict[key] ?? (I18N.tr[key] ?? key);
+        }
+
+        function applyLang() {
+            const lang = getLang();
+            const dict = I18N[lang] || I18N.tr;
+            document.documentElement.lang = lang;
+            document.title = dict.title;
+
+            const topbarSubtitle = document.querySelector('.topbar-subtitle');
+            if (topbarSubtitle) topbarSubtitle.textContent = dict.subtitle;
+
+            const welcomeTitle = document.getElementById('welcome-title');
+            const welcomeDesc = document.getElementById('welcome-desc');
+            if (welcomeTitle) welcomeTitle.textContent = dict.welcome_title;
+            if (welcomeDesc) welcomeDesc.textContent = dict.welcome_desc;
+
+            const modWeightTitle = document.getElementById('mod-weight-title');
+            const modWeightDesc = document.getElementById('mod-weight-desc');
+            if (modWeightTitle) modWeightTitle.textContent = dict.weight_title;
+            if (modWeightDesc) modWeightDesc.textContent = dict.weight_desc;
+
+            const modTorqueTitle = document.getElementById('mod-torque-title');
+            const modTorqueDesc = document.getElementById('mod-torque-desc');
+            if (modTorqueTitle) modTorqueTitle.textContent = dict.torque_title;
+            if (modTorqueDesc) modTorqueDesc.textContent = dict.torque_desc;
+
+            const modSpeedTitle = document.getElementById('mod-speed-title');
+            const modSpeedDesc = document.getElementById('mod-speed-desc');
+            if (modSpeedTitle) modSpeedTitle.textContent = dict.speed_title;
+            if (modSpeedDesc) modSpeedDesc.textContent = dict.speed_desc;
+
+            const modTempTitle = document.getElementById('mod-temp-title');
+            const modTempDesc = document.getElementById('mod-temp-desc');
+            if (modTempTitle) modTempTitle.textContent = dict.temp_title;
+            if (modTempDesc) modTempDesc.textContent = dict.temp_desc;
+
+            const footerText = document.getElementById('footer-text');
+            if (footerText) footerText.innerHTML = dict.footer;
+
+            // Overlays
+            const overlayWeightTitle = document.getElementById('overlay-weight-title');
+            const overlayWeightDesc = document.getElementById('overlay-weight-desc');
+            const lblWeightKg = document.getElementById('lbl-weight-kg');
+            const lblWeightLb = document.getElementById('lbl-weight-lb');
+            const btnWeightClear = document.getElementById('btn-weight-clear');
+            if (overlayWeightTitle) overlayWeightTitle.textContent = dict.weight_title;
+            if (overlayWeightDesc) overlayWeightDesc.textContent = dict.weight_overlay_desc;
+            if (lblWeightKg) lblWeightKg.textContent = dict.lbl_weight_kg;
+            if (lblWeightLb) lblWeightLb.textContent = dict.lbl_weight_lb;
+            if (btnWeightClear) btnWeightClear.textContent = dict.clear;
+
+            const overlayTorqueTitle = document.getElementById('overlay-torque-title');
+            const overlayTorqueDesc = document.getElementById('overlay-torque-desc');
+            const lblTorqueNm = document.getElementById('lbl-torque-nm');
+            const lblTorqueLbfft = document.getElementById('lbl-torque-lbfft');
+            const lblTorqueLbfin = document.getElementById('lbl-torque-lbfin');
+            const btnTorqueClear = document.getElementById('btn-torque-clear');
+            if (overlayTorqueTitle) overlayTorqueTitle.textContent = dict.torque_title;
+            if (overlayTorqueDesc) overlayTorqueDesc.textContent = dict.torque_overlay_desc;
+            if (lblTorqueNm) lblTorqueNm.textContent = dict.lbl_torque_nm;
+            if (lblTorqueLbfft) lblTorqueLbfft.textContent = dict.lbl_torque_lbfft;
+            if (lblTorqueLbfin) lblTorqueLbfin.textContent = dict.lbl_torque_lbfin;
+            if (btnTorqueClear) btnTorqueClear.textContent = dict.clear;
+
+            const overlaySpeedTitle = document.getElementById('overlay-speed-title');
+            const overlaySpeedDesc = document.getElementById('overlay-speed-desc');
+            const lblSpeedKmh = document.getElementById('lbl-speed-kmh');
+            const lblSpeedMph = document.getElementById('lbl-speed-mph');
+            const lblSpeedKnot = document.getElementById('lbl-speed-knot');
+            const btnSpeedClear = document.getElementById('btn-speed-clear');
+            if (overlaySpeedTitle) overlaySpeedTitle.textContent = dict.speed_title;
+            if (overlaySpeedDesc) overlaySpeedDesc.textContent = dict.speed_overlay_desc;
+            if (lblSpeedKmh) lblSpeedKmh.textContent = dict.lbl_speed_kmh;
+            if (lblSpeedMph) lblSpeedMph.textContent = dict.lbl_speed_mph;
+            if (lblSpeedKnot) lblSpeedKnot.textContent = dict.lbl_speed_knot;
+            if (btnSpeedClear) btnSpeedClear.textContent = dict.clear;
+
+            const overlayTempTitle = document.getElementById('overlay-temp-title');
+            const overlayTempDesc = document.getElementById('overlay-temp-desc');
+            const lblTempC = document.getElementById('lbl-temp-c');
+            const lblTempF = document.getElementById('lbl-temp-f');
+            const btnTempClear = document.getElementById('btn-temp-clear');
+            if (overlayTempTitle) overlayTempTitle.textContent = dict.temp_title;
+            if (overlayTempDesc) overlayTempDesc.textContent = dict.temp_overlay_desc;
+            if (lblTempC) lblTempC.textContent = dict.lbl_temp_c;
+            if (lblTempF) lblTempF.textContent = dict.lbl_temp_f;
+            if (btnTempClear) btnTempClear.textContent = dict.clear;
+        }
+
+        // Apply language on load
+        applyLang();
+    </script>
+</body>
+</html>
