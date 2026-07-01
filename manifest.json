@@ -1,5 +1,5 @@
 {
-  "name": "Refuel Assist v8.0.2",
+  "name": "Refuel Assist v8.0.3",
   "short_name": "RefuelAssist",
   "id": "refuel-assist-pwa",
   "start_url": "./index.html",
@@ -8,7 +8,7 @@
   "orientation": "portrait",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "version": "8.0.2",
+  "version": "8.0.3",
   "description": "Refuel Assist — Flight operations support (PWA)",
   "categories": ["utilities", "productivity"],
   "icons": [
